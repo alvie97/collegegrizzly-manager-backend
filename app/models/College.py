@@ -1,6 +1,8 @@
-from datetime           import datetime
-from app                import db
-from app.models.common  import PaginatedAPIMixin
+from flask              import url_for
+from datetime               import datetime
+from app                    import db
+from app.models.common      import PaginatedAPIMixin
+from app.models.Scholarship import Scholarship
 
 class College(PaginatedAPIMixin, db.Model):
     id                      = db.Column(db.Integer, primary_key=True)
@@ -90,7 +92,11 @@ class College(PaginatedAPIMixin, db.Model):
             'majors': self.majors,
             'campus_photo': self.campus_photo,
             'logo': self.logo,
-            'hits': self.hits
+            'hits': self.hits,
+            '_links': {
+                'scholarships': url_for('api.scholarships',
+                                        college_id=self.public_id)
+            }
         }
 
     def from_dict(self, data):
