@@ -1,6 +1,5 @@
 import jwt
 import os
-import base64
 from datetime           import datetime, timedelta
 from hashlib            import md5
 from time               import time
@@ -41,8 +40,6 @@ class User(PaginatedAPIMixin, db.Model):
     password_hash       = db.Column(db.String(128))
     last_seen           = db.Column(db.DateTime, default=datetime.utcnow)
     avatar              = db.Column(db.Text, nullable=True)
-    token               = db.Column(db.String(32), index=True, unique=True)
-    token_expiration    = db.Column(db.DateTime)
 
     def __repr__(self):
         return '<User {}>'.format(self.username)
@@ -60,14 +57,10 @@ class User(PaginatedAPIMixin, db.Model):
 
     def to_dict(self):
         data = {
-            'id': self.id,
             'username': self.username,
             'email': self.email,
             'last_seen': self.last_seen.isoformat() + 'Z',
-            '_links': {
-                'self': url_for('api.get_user', id=self.id),
-                'avatar': self.get_avatar(128) if self.avatar is None else self.avatar
-            }
+            'avatar': self.get_avatar(128) if self.avatar is None else self.avatar
         }
         return data
 
@@ -76,44 +69,24 @@ class User(PaginatedAPIMixin, db.Model):
             if field in data:
                 setattr(self, field, data[field])
 
-    #token functions
-
-    def get_token(self, expires_in=3600):
-        now = datetime.utcnow()
-        if self.token and self.token_expiration > now + timedelta(seconds=60):
-            return self.token
-
-        self.token = base64.b64encode(os.urandom(24)).decode('utf-8')
-        self.token_expiration = now + timedelta(seconds=expires_in)
-        db.session.add(self)
-        return self.token
-
-    def revoke_token(self):
-        self.token_expiration = datetime.utcnow() - timedelta(seconds=1)
-
-    @staticmethod
-    def check_token(token):
-        user = User.query.filter_by(token=token).first()
-        if user is None or user.token_expiration < datetime.utcnow():
-            return None
-        return user
 
 class College(db.Model):
     id                      = db.Column(db.Integer, primary_key=True)
-    name                    = db.Column(db.String(256), index=True)
+    public_id               = db.Column(db.String(50), unique=True)
+    name                    = db.Column(db.String(256))
     room_and_board          = db.Column(db.Float(precision=2), default=0)
     created_at              = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at              = db.Column(db.DateTime, default=datetime.utcnow)
-    type_of_institution     = db.Column(db.String(256), index=True)
-    phone                   = db.Column(db.String(256), index=True)
+    type_of_institution     = db.Column(db.String(256), nullable=True)
+    phone                   = db.Column(db.String(256), nullable=True)
     website                 = db.Column(db.Text, nullable=True)
     in_state_tuition        = db.Column(db.Float(precision=2), default=0)
     out_of_state_tuition    = db.Column(db.Float(precision=2), default=0)
-    location                = db.Column(db.String(256), index=True)
+    location                = db.Column(db.String(256), nullable=True)
     in_state_requirement    = db.Column(db.Text, nullable=True)
     counties                = db.Column(db.Text, nullable=True)
-    religious_affiliation   = db.Column(db.String(256), index=True)
-    setting                 = db.Column(db.String(256), index=True)
+    religious_affiliation   = db.Column(db.String(256), nullable=True)
+    setting                 = db.Column(db.String(256), nullable=True)
     number_of_students      = db.Column(db.Integer, default=0)
     #ranking                 = db.Column(db.Decimal(precision=5, scale=2), default=0)
     unweighted_hs_gpa       = db.Column(db.Numeric(precision=4, scale=2), default=0)
@@ -126,11 +99,73 @@ class College(db.Model):
     total_ofs               = db.Column(db.Float(precision=2), default=0)
     total_is                = db.Column(db.Float(precision=2), default=0)
 
+    ATTR_FIELDS = [
+        'public_id',
+        'name',
+        'room_and_board',
+        'created_at',
+        'updated_at',
+        'type_of_institution',
+        'phone',
+        'website',
+        'in_state_tuition',
+        'out_of_state_tuition',
+        'location',
+        'in_state_requirement',
+        'counties',
+        'religious_affiliation',
+        'setting',
+        'number_of_students',
+        'unweighted_hs_gpa',
+        'sat',
+        'act',
+        'majors',
+        'campus_photo',
+        'logo',
+        'hits',
+        'total_ofs',
+        'total_is'
+    ]
+
     def __repr__(self):
-        return '<College {}>'.format(self.body)
+        return '<College {}>'.format(self.name)
 
     def calc_total_ofs(self):
         self.total_ofs = self.room_and_board + self.out_of_state_tuition
 
     def calc_total_is(self):
         self.total_is = self.room_and_board + self.in_state_tuition
+
+    def to_dict(self):
+        return {
+            'public_id': self.public_id,
+            'name': self.name,
+            'room_and_board': self.room_and_board,
+            'created_at': self.created_at,
+            'updated_at': self.updated_at,
+            'type_of_institution': self.type_of_institution,
+            'phone': self.phone,
+            'website': self.website,
+            'in_state_tuition': self.in_state_tuition,
+            'out_of_state_tuition': self.out_of_state_tuition,
+            'location': self.location,
+            'in_state_requirement': self.in_state_requirement,
+            'counties': self.counties,
+            'religious_affiliation': self.religious_affiliation,
+            'setting': self.setting,
+            'number_of_students': self.number_of_students,
+            'unweighted_hs_gpa': self.unweighted_hs_gpa,
+            'sat': self.sat,
+            'act': self.act,
+            'majors': self.majors,
+            'campus_photo': self.campus_photo,
+            'logo': self.logo,
+            'hits': self.hits,
+            'total_ofs': self.total_ofs,
+            'total_is': self.total_is,
+        }
+
+    def from_dict(self, data):
+        for field in self.ATTR_FIELDS:
+            if field in data:
+                setattr(self, field, data[field])

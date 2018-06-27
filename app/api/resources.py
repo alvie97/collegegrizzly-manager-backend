@@ -1,11 +1,13 @@
 from flask_restful import Resource
+from flask import jsonify, request
 
 class Colleges(Resource):
     def get(self):
         return {'message': 'get all colleges'}
 
     def post(self):
-        return {'message': 'create college'}
+        data = request.get_json()
+        return {'message': 'create college data: {}'.format(data)}
 
 class College(Resource):
     def get(self, college_id):
