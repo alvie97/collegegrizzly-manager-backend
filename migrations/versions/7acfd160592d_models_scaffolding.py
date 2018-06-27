@@ -1,9 +1,8 @@
-"""user and College models
+"""Models scaffolding
 
-
-Revision ID: 055223727e77
+Revision ID: 7acfd160592d
 Revises: 
-Create Date: 2018-06-27 12:26:29.637614
+Create Date: 2018-06-27 19:22:17.559683
 
 """
 from alembic import op
@@ -11,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '055223727e77'
+revision = '7acfd160592d'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -23,14 +22,14 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('public_id', sa.String(length=50), nullable=True),
     sa.Column('name', sa.String(length=256), nullable=True),
-    sa.Column('room_and_board', sa.Float(precision=2), nullable=True),
+    sa.Column('room_and_board', sa.Numeric(precision=8, scale=2), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('type_of_institution', sa.String(length=256), nullable=True),
     sa.Column('phone', sa.String(length=256), nullable=True),
     sa.Column('website', sa.Text(), nullable=True),
-    sa.Column('in_state_tuition', sa.Float(precision=2), nullable=True),
-    sa.Column('out_of_state_tuition', sa.Float(precision=2), nullable=True),
+    sa.Column('in_state_tuition', sa.Numeric(precision=8, scale=2), nullable=True),
+    sa.Column('out_of_state_tuition', sa.Numeric(precision=8, scale=2), nullable=True),
     sa.Column('location', sa.String(length=256), nullable=True),
     sa.Column('in_state_requirement', sa.Text(), nullable=True),
     sa.Column('counties', sa.Text(), nullable=True),
@@ -44,8 +43,6 @@ def upgrade():
     sa.Column('campus_photo', sa.Text(), nullable=True),
     sa.Column('logo', sa.Text(), nullable=True),
     sa.Column('hits', sa.BigInteger(), nullable=True),
-    sa.Column('total_ofs', sa.Float(precision=2), nullable=True),
-    sa.Column('total_is', sa.Float(precision=2), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('public_id')
     )
