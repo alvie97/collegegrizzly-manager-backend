@@ -28,6 +28,8 @@ class College(PaginatedAPIMixin, db.Model):
     campus_photo            = db.Column(db.Text, nullable=True)
     logo                    = db.Column(db.Text, nullable=True)
     hits                    = db.Column(db.BigInteger, default=0)
+    Scholarships            = db.relationship('Scholarship',
+                                              backref='person', lazy=True)
 
     ATTR_FIELDS = [
         'public_id',
