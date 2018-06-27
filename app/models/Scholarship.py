@@ -73,13 +73,7 @@ class Scholarship(PaginatedAPIMixin, db.Model):
     ]
 
     def __repr__(self):
-        return '<College {}>'.format(self.name)
-
-    def total_ofs(self):
-        self.total_ofs = self.room_and_board + self.out_of_state_tuition
-
-    def total_is(self):
-        self.total_is = self.room_and_board + self.in_state_tuition
+        return '<Scholarship {}>'.format(self.name)
 
     def to_dict(self):
         return {
