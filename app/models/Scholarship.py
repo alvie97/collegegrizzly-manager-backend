@@ -81,7 +81,6 @@ class Scholarship(PaginatedAPIMixin, db.Model):
             'name': self.name,
             'created_at': self.created_at.isoformat() + 'Z',
             'updated_at': self.updated_at.isoformat() + 'Z',
-            'college_id': self.college_id,
             'act': self.act,
             'sat': self.sat,
             'amount': self.amount,

@@ -1,17 +1,20 @@
-from flask_restful      import Resource
-from flask              import jsonify, request, current_app
-from app                import db
-from app.models.College import College as CollegeModel
-from app.models.User    import User
+from flask_restful          import Resource
+from flask                  import jsonify, request, current_app
+from app                    import db
+from app.models.College     import College as CollegeModel
+from app.models.Scholarship import Scholarship as ScholarshipModel
+from app.models.User        import User
 import uuid
 
 class Colleges(Resource):
     def get(self):
         page = request.args.get('page', 1, type=int)
-        data = CollegeModel.to_collection_dict(CollegeModel.query,
-                                    page,
-                                    current_app.config['COLLEGES_PER_PAGE'],
-                                    'api.colleges')
+        data = CollegeModel.to_collection_dict(
+                CollegeModel.query,
+                page,
+                current_app.config['COLLEGES_PER_PAGE'],
+                'api.colleges')
+
         return data
 
     def post(self):
@@ -46,18 +49,61 @@ class College(Resource):
         return college.to_dict()
 
 class Scholarships(Resource):
-    def get(self):
-        return {'message': 'get all scholarships'}
+    def get(self, college_id=None):
+        if college_id is not None:
+            college = CollegeModel.query.filter_by(public_id=college_id).first()
+            if college is None:
+                return {'message': 'College not found'}, 404
+
+            page = request.args.get('page', 1, type=int)
+            data = ScholarshipModel.to_collection_dict(
+                college.Scholarships,
+                page,
+                current_app.config['SCHOLARSHIPS_PER_PAGE'],
+                'api.scholarships', college_id=college_id)
+
+            return data
+
+        page = request.args.get('page', 1, type=int)
+        data = ScholarshipModel.to_collection_dict(
+                ScholarshipModel.query,
+                page,
+                current_app.config['SCHOLARSHIPS_PER_PAGE'],
+                'api.scholarships')
+
+        return data
 
     def post(self, college_id):
-        return {
-            'message': 'create new scholarship for college {}'
-                            .format(college_id)
-        }
+        college = CollegeModel.query.filter_by(public_id=college_id).first()
+
+        if college is None:
+            return {'message': 'college not found'}, 404
+
+        data = request.get_json()
+
+        scholarship = ScholarshipModel(
+            public_id=str(uuid.uuid4()), college=college, **data)
+        db.session.add(scholarship)
+        db.session.commit()
+
+        return scholarship.to_dict()
 
 class Scholarship(Resource):
     def get(self, scholarship_id):
-        return {'message': 'get scholarship {}'.format(scholarship_id)}
+        scholarship = ScholarshipModel.query.filter_by(public_id=scholarship_id).first()
+
+        if scholarship is None:
+            return {'message': 'no scholarship found'}, 404
+
+        return scholarship.to_dict()
 
     def put(self, scholarship_id):
-        return {'message': 'update scholarship {}'.format(scholarship_id)}
+        scholarship = ScholarshipModel.query.filter_by(public_id=scholarship_id).first()
+
+        if scholarship is None:
+            return {'message': 'no scholarship found'}, 404
+
+        data = request.get_json()
+        scholarship.from_dict(data)
+        db.session.commit()
+        return scholarship.to_dict()

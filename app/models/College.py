@@ -31,7 +31,8 @@ class College(PaginatedAPIMixin, db.Model):
     logo                    = db.Column(db.Text, nullable=True)
     hits                    = db.Column(db.BigInteger, default=0)
     Scholarships            = db.relationship('Scholarship',
-                                              backref='person', lazy=True)
+                                              backref='college',
+                                              lazy='dynamic')
 
     ATTR_FIELDS = [
         'public_id',

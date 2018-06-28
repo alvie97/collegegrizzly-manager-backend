@@ -17,4 +17,4 @@ class Config(object):
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     ADMINS = ['alvie97m@gmail.com']
     COLLEGES_PER_PAGE = 10
-    SCHOLARSHIPS_PER_PAGE = 15
+    SCHOLARSHIPS_PER_PAGE = 1
