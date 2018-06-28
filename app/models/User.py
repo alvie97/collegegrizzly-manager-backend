@@ -10,7 +10,6 @@ from app.models.common  import PaginatedAPIMixin
 
 class User(PaginatedAPIMixin, db.Model):
     id                  = db.Column(db.Integer, primary_key=True)
-    username            = db.Column(db.String(64), index=True, unique=True)
     email               = db.Column(db.String(120), index=True, unique=True)
     password_hash       = db.Column(db.String(128))
     last_seen           = db.Column(db.DateTime, default=datetime.utcnow)
@@ -32,7 +31,6 @@ class User(PaginatedAPIMixin, db.Model):
 
     def to_dict(self):
         data = {
-            'username': self.username,
             'email': self.email,
             'last_seen': self.last_seen.isoformat() + 'Z',
             'avatar': self.get_avatar(128) if self.avatar is None else self.avatar
@@ -40,6 +38,6 @@ class User(PaginatedAPIMixin, db.Model):
         return data
 
     def from_dict(self, data):
-        for field in ['username', 'email']:
+        for field in ['email']:
             if field in data:
                 setattr(self, field, data[field])

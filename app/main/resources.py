@@ -1,9 +1,8 @@
 from flask_restful          import Resource
-from flask                  import jsonify, request, current_app
+from flask                  import request, current_app
 from app                    import db
 from app.models.College     import College as CollegeModel
 from app.models.Scholarship import Scholarship as ScholarshipModel
-from app.models.User        import User
 import uuid
 
 class Colleges(Resource):
@@ -13,7 +12,7 @@ class Colleges(Resource):
                 CollegeModel.query,
                 page,
                 current_app.config['COLLEGES_PER_PAGE'],
-                'api.colleges')
+                'colleges')
 
         return data
 
@@ -60,7 +59,7 @@ class Scholarships(Resource):
                 college.Scholarships,
                 page,
                 current_app.config['SCHOLARSHIPS_PER_PAGE'],
-                'api.scholarships', college_id=college_id)
+                'scholarships', college_id=college_id)
 
             return data
 
@@ -69,7 +68,7 @@ class Scholarships(Resource):
                 ScholarshipModel.query,
                 page,
                 current_app.config['SCHOLARSHIPS_PER_PAGE'],
-                'api.scholarships')
+                'scholarships')
 
         return data
 

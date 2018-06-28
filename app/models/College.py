@@ -1,4 +1,4 @@
-from flask              import url_for
+from flask                  import url_for
 from datetime               import datetime
 from app                    import db
 from app.models.common      import PaginatedAPIMixin
@@ -95,7 +95,7 @@ class College(PaginatedAPIMixin, db.Model):
             'logo': self.logo,
             'hits': self.hits,
             '_links': {
-                'scholarships': url_for('api.scholarships',
+                'scholarships': url_for('scholarships',
                                         college_id=self.public_id)
             }
         }
