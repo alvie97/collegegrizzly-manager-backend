@@ -3,6 +3,7 @@ from datetime               import datetime
 from app                    import db
 from app.models.common      import PaginatedAPIMixin
 from app.models.Scholarship import Scholarship
+from hashlib                import md5
 
 class College(PaginatedAPIMixin, db.Model):
     id                      = db.Column(db.Integer, primary_key=True)
@@ -33,6 +34,11 @@ class College(PaginatedAPIMixin, db.Model):
     Scholarships            = db.relationship('Scholarship',
                                               backref='college',
                                               lazy='dynamic')
+
+    def get_avatar(self, size):
+        digest = md5('test@email.com'.encode('utf-8')).hexdigest()
+        return 'https://www.gravatar.com/avatar/{}?d=identicon&s={}'.format(
+            digest, size)
 
     ATTR_FIELDS = [
         'public_id',
@@ -91,8 +97,10 @@ class College(PaginatedAPIMixin, db.Model):
             'sat': self.sat,
             'act': self.act,
             'majors': self.majors,
-            'campus_photo': self.campus_photo,
-            'logo': self.logo,
+            'logo': self.get_avatar(128) if self.logo is None \
+                else self.logo,
+            'campus_photo': self.get_avatar(1920) if self.campus_photo is None \
+                else self.campus_photo,
             'hits': self.hits,
             '_links': {
                 'scholarships': url_for('scholarships',

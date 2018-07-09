@@ -57,18 +57,13 @@ class Scholarships(Resource):
             page = request.args.get('page', 1, type=int)
             data = ScholarshipModel.to_collection_dict(
                 college.Scholarships,
-                page,
-                current_app.config['SCHOLARSHIPS_PER_PAGE'],
-                'scholarships', college_id=college_id)
+                paginate=False,
+                college_id=college_id)
 
             return data
 
         page = request.args.get('page', 1, type=int)
-        data = ScholarshipModel.to_collection_dict(
-                ScholarshipModel.query,
-                page,
-                current_app.config['SCHOLARSHIPS_PER_PAGE'],
-                'scholarships')
+        data = ScholarshipModel.to_collection_dict(ScholarshipModel.query, paginate=False)
 
         return data
 
