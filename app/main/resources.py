@@ -98,6 +98,6 @@ class Scholarship(Resource):
             return {'message': 'no scholarship found'}, 404
 
         data = request.get_json()
-        scholarship.from_dict(data)
+        scholarship.from_dict({data['key']: data['val']})
         db.session.commit()
-        return scholarship.to_dict()
+        return data;
