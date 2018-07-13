@@ -43,7 +43,7 @@ class College(Resource):
 
         data = request.get_json() or {}
 
-        college.from_dict(data)
+        college.from_dict({data['key']: data['value']})
         db.session.commit()
         return college.to_dict()
 
@@ -98,6 +98,6 @@ class Scholarship(Resource):
             return {'message': 'no scholarship found'}, 404
 
         data = request.get_json()
-        scholarship.from_dict({data['key']: data['val']})
+        scholarship.from_dict({data['key']: data['value']})
         db.session.commit()
         return data;
