@@ -112,3 +112,4 @@ class College(PaginatedAPIMixin, db.Model):
         for field in self.ATTR_FIELDS:
             if field in data:
                 setattr(self, field, data[field])
+        self.updated_at = datetime.utcnow()
