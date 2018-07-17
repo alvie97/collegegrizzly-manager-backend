@@ -8,9 +8,19 @@ import uuid
 class Colleges(Resource):
     def get(self):
         page = request.args.get('page', 1, type=int)
-        per_page = request.args.get('per_page', 1, type=int)
+        per_page = request.args.get(
+            'per_page', current_app.config['COLLEGES_PER_PAGE'], type=int)
+
+        search = request.args.get('search', '', type=str)
+
+        if search:
+            query = CollegeModel.query.filter(
+                CollegeModel.name.like('%{}%'.format(search)))
+        else:
+            query = CollegeModel.query
+
         data = CollegeModel.to_collection_dict(
-                CollegeModel.query,
+                query,
                 page,
                 per_page,
                 'colleges')
