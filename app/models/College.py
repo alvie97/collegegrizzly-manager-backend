@@ -33,6 +33,7 @@ class College(PaginatedAPIMixin, db.Model):
     hits                    = db.Column(db.BigInteger, default=0)
     Scholarships            = db.relationship('Scholarship',
                                               backref='college',
+                                              cascade='all, delete-orphan',
                                               lazy='dynamic')
 
     def get_avatar(self, size):

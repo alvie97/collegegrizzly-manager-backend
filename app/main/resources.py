@@ -29,9 +29,13 @@ class Colleges(Resource):
 
     def delete(self):
         data = request.get_json() or {}
-        CollegeModel.query.filter(
-            CollegeModel.public_id.in_(data['ids'])) \
-            .delete(synchronize_session='fetch')
+
+
+        colleges = CollegeModel.query.filter(
+            CollegeModel.public_id.in_(data['ids'])).all()
+
+        for college in colleges:
+            db.session.delete(college)
 
         db.session.commit()
 
