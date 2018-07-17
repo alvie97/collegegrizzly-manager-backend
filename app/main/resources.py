@@ -27,6 +27,16 @@ class Colleges(Resource):
 
         return data
 
+    def delete(self):
+        data = request.get_json() or {}
+        CollegeModel.query.filter(
+            CollegeModel.public_id.in_(data['ids'])) \
+            .delete(synchronize_session='fetch')
+
+        db.session.commit()
+
+        return {'message': 'Colleges deleted'}
+
     def post(self):
         data = request.get_json() or {}
 
