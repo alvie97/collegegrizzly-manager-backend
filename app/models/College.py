@@ -1,8 +1,9 @@
 from flask                  import url_for
 from datetime               import datetime
-from app                    import db
+from app                    import db, photos
 from app.models.common      import PaginatedAPIMixin
 from app.models.Scholarship import Scholarship
+from app.models.Picture     import Picture
 from hashlib                import md5
 
 class College(PaginatedAPIMixin, db.Model):
@@ -28,18 +29,17 @@ class College(PaginatedAPIMixin, db.Model):
     sat                     = db.Column(db.Integer, default=0)
     act                     = db.Column(db.Integer, default=0)
     majors                  = db.Column(db.Text, nullable=True)
-    campus_photo            = db.Column(db.Text, nullable=True)
-    logo                    = db.Column(db.Text, nullable=True)
     hits                    = db.Column(db.BigInteger, default=0)
     Scholarships            = db.relationship('Scholarship',
                                               backref='college',
                                               cascade='all, delete-orphan',
                                               lazy='dynamic')
 
-    def get_avatar(self, size):
-        digest = md5('test@email.com'.encode('utf-8')).hexdigest()
-        return 'https://www.gravatar.com/avatar/{}?d=identicon&s={}'.format(
-            digest, size)
+    Pictures                = db.relationship('Picture',
+                                              backref='college',
+                                              cascade='all, delete-orphan',
+                                              lazy='dynamic')
+
 
     ATTR_FIELDS = [
         'public_id',
@@ -61,11 +61,13 @@ class College(PaginatedAPIMixin, db.Model):
         'unweighted_hs_gpa',
         'sat',
         'act',
-        'majors',
-        'campus_photo',
-        'logo',
-        'hits'
+        'majors'
     ]
+
+    def get_avatar(self, size):
+        digest = md5('test@email.com'.encode('utf-8')).hexdigest()
+        return 'https://www.gravatar.com/avatar/{}?d=identicon&s={}'.format(
+            digest, size)
 
     def __repr__(self):
         return '<College {}>'.format(self.name)
@@ -75,6 +77,14 @@ class College(PaginatedAPIMixin, db.Model):
 
     def total_is(self):
         self.total_is = self.room_and_board + self.in_state_tuition
+
+    def get_logo(self):
+        logo = self.Pictures.filter_by(type='logo').first()
+
+        if logo == None:
+            return self.get_avatar(128)
+
+        return photos.url(logo.name)
 
     def to_dict(self):
         return {
@@ -98,13 +108,12 @@ class College(PaginatedAPIMixin, db.Model):
             'sat': self.sat,
             'act': self.act,
             'majors': self.majors,
-            'logo': self.get_avatar(128) if self.logo is None \
-                else self.logo,
-            'campus_photo': self.get_avatar(1920) if self.campus_photo is None \
-                else self.campus_photo,
+            'logo': self.get_logo(),
             'hits': self.hits,
             '_links': {
                 'scholarships': url_for('scholarships',
+                                        college_id=self.public_id),
+                'pictures': url_for('pictures',
                                         college_id=self.public_id)
             }
         }

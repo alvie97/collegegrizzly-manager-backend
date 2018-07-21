@@ -39,11 +39,7 @@ class Scholarship(PaginatedAPIMixin, db.Model):
     group_by                                    = db.Column(db.Integer, nullable=True)
 
     ATTR_FIELDS = [
-        'public_id',
         'name',
-        'created_at',
-        'updated_at',
-        'college_id',
         'act',
         'sat',
         'amount',
