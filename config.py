@@ -18,4 +18,5 @@ class Config(object):
     ADMINS = ['alvie97m@gmail.com']
     COLLEGES_PER_PAGE = 10
     SCHOLARSHIPS_PER_PAGE = 1
-    UPLOADED_PHOTOS_DEST = 'static/pictures'
+    UPLOADED_PHOTOS_DEST = 'static/photos/'
+    UPLOADED_PHOTOS_URL = 'http://localhost:5000/api/file/photos/'

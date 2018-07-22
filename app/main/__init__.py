@@ -1,4 +1,4 @@
-from flask import Blueprint
+from flask import Blueprint, jsonify
 from app   import api
 
 bp = Blueprint('main', __name__)
@@ -9,6 +9,7 @@ from .resources.Scholarship  import Scholarship
 from .resources.Scholarships import Scholarships
 from .resources.Picture      import Picture
 from .resources.Pictures     import Pictures
+from .resources.File         import File
 
 api.add_resource(College, '/colleges/<string:college_id>', endpoint='college')
 api.add_resource(Colleges, '/colleges', endpoint='colleges')
@@ -26,3 +27,4 @@ api.add_resource(Pictures,
                  '/pictures',
                  '/colleges/<string:college_id>/pictures',
                  endpoint='pictures')
+api.add_resource(File, '/file/<path:folder>/<path:filename>', endpoint='file')
