@@ -33,6 +33,7 @@ class Picture(PaginatedAPIMixin, db.Model):
     def from_dict(self, data):
         for field in self.ATTR_FIELDS:
             if field in data:
-                setattr(self, field, data[field])
+                setattr(self, field, data[field].lower() if field == 'type' \
+                        else data[field])
 
         self.updated_at = datetime.utcnow()
