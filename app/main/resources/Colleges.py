@@ -28,13 +28,11 @@ class Colleges(Resource):
 
     def delete(self):
         data = request.get_json() or {}
+        if not 'public_id' in data:
+            return {'message': 'no public_id attribute found'}, 404
 
-        colleges = CollegeModel.query.filter(
-            CollegeModel.public_id.in_(data['ids'])).all()
-
-        for college in colleges:
-            db.session.delete(college)
-
+        college = CollegeModel.query.filter_by(public_id=data['public_id'])
+        college.delete()
         db.session.commit()
 
         return {'message': 'Colleges deleted'}

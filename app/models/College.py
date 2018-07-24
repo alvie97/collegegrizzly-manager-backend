@@ -86,6 +86,18 @@ class College(PaginatedAPIMixin, db.Model):
 
         return photos.url(logo.name)
 
+    def delete(self):
+        """
+        Scholarships doesn't need to be removed manually
+        because, the cascade option takes care of it
+        """
+        pics = self.Pictures.all()
+
+        for pic in pics:
+            pic.delete()
+
+        db.session.delete(self)
+
     def to_dict(self):
         return {
             'public_id': self.public_id,
