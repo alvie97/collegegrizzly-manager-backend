@@ -40,7 +40,9 @@ class Scholarships(Resource):
         data = request.get_json()
 
         scholarship = ScholarshipModel(
-            public_id=str(uuid.uuid4()), college=college, **data)
+            public_id=str(uuid.uuid4()).replace('-', ''),
+                college=college,
+                **data)
         db.session.add(scholarship)
         db.session.commit()
 

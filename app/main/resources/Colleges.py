@@ -42,7 +42,7 @@ class Colleges(Resource):
     def post(self):
         data = request.get_json() or {}
 
-        college = CollegeModel(public_id=str(uuid.uuid4()), **data)
+        college = CollegeModel(public_id=str(uuid.uuid4()).replace('-', ''), **data)
 
         db.session.add(college)
         db.session.commit()

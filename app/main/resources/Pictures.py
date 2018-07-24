@@ -48,10 +48,22 @@ class Pictures(Resource):
         if not 'type' in data:
             data['type'] = 'campus'
 
-        picture = PictureModel(public_id=str(uuid.uuid4()),
+        picture = PictureModel(public_id=str(uuid.uuid4()).replace('-', ''),
                                name=filename,
                                college=college, **data)
         db.session.add(picture)
         db.session.commit()
 
         return picture.public_id
+
+    def delete(self):
+        data = request.get_json() or {}
+
+        pictures = PictureModel.query.filter(
+            PictureModel.public_id.in_(data['ids'])).all()
+
+        for picture in pictures:
+            picture.delete()
+        db.session.commit()
+
+        return {'message': 'Colleges deleted'}

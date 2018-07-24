@@ -3,6 +3,7 @@ from time     import time
 from flask    import current_app, url_for
 from app      import db, photos
 from .common  import PaginatedAPIMixin
+import os
 
 class Picture(PaginatedAPIMixin, db.Model):
     id          = db.Column(db.Integer, primary_key=True)
@@ -19,6 +20,13 @@ class Picture(PaginatedAPIMixin, db.Model):
 
     def __repr__(self):
         return '<Picture {}>'.format(self.name)
+
+    def delete(self):
+        try:
+            os.remove(photos.path(self.name))
+            db.session.delete(self)
+        except OSError:
+            pass
 
     def to_dict(self):
         return {
