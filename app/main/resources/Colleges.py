@@ -15,14 +15,21 @@ class Colleges(Resource):
         if search:
             query = CollegeModel.query.filter(
                 CollegeModel.name.like('%{}%'.format(search)))
+
+            data = CollegeModel.to_collection_dict(
+                query,
+                page,
+                per_page,
+                'colleges',
+                search=search)
         else:
             query = CollegeModel.query
-
-        data = CollegeModel.to_collection_dict(
+            data = CollegeModel.to_collection_dict(
                 query,
                 page,
                 per_page,
                 'colleges')
+
 
         return data
 
