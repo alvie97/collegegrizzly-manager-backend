@@ -4,6 +4,7 @@ class County(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(256))
     fips_code = db.Column(db.String(10), index=True, unique=True)
+    state_id = db.Column(db.Integer, db.ForeignKey('state.id'))
 
     ATTR_FIELDS = [ "name", "fips_code" ]
 
