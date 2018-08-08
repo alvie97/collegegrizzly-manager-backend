@@ -6,8 +6,9 @@ from app.models.Scholarship import Scholarship
 from app.models.Picture import Picture
 from app.models.State import State
 from app.models.County import County
-from app.models.Place import State
+from app.models.Place import Place
 from app.models.Consolidated_city import Consolidated_city
+from app.models.Major import Major
 from app.models.relation_tables import (
     college_state, college_county, college_place, college_consolidated_city,
     college_major)
@@ -131,7 +132,7 @@ class College(PaginatedAPIMixin, db.Model):
           Consolidated_city.name == consolidated_city_name).count() > 0
 
   def has_major(self, major_name):
-    return self.majors.filter(Major.name == major).count() > 0
+    return self.majors.filter(Major.name == major_name).count() > 0
 
   def get_avatar(self, size):
     digest = md5("test@email.com".encode("utf-8")).hexdigest()
@@ -139,10 +140,10 @@ class College(PaginatedAPIMixin, db.Model):
         digest, size)
 
   def total_ofs(self):
-    self.total_ofs = self.room_and_board + self.out_of_state_tuition
+    return self.room_and_board + self.out_of_state_tuition
 
   def total_is(self):
-    self.total_is = self.room_and_board + self.in_state_tuition
+    return self.room_and_board + self.in_state_tuition
 
   def get_logo(self):
     logo = self.Pictures.filter_by(type="logo").first()
@@ -184,20 +185,16 @@ class College(PaginatedAPIMixin, db.Model):
         "sat": self.sat,
         "act": self.act,
         "logo": self.get_logo(),
+        "majors": self.majors,
+        "in_state_requirement": {
+            "state": self.in_state_states,
+            "counties": self.in_state_counties,
+            "places": self.in_state_places,
+            "consolidated_cities": self.in_state_consolidated_cities
+        },
         "_links": {
             "scholarships": url_for("scholarships", college_id=self.public_id),
             "pictures": url_for("pictures", college_id=self.public_id),
-            "majors": url_for("majors", college_id=self.public_id),
-            "in_state_requirement": {
-                "state":
-                url_for("states", college_id=self.public_id),
-                "counties":
-                url_for("counties", college_id=self.public_id),
-                "places":
-                url_for("places", college_id=self.public_id),
-                "consolidated_cities":
-                url_for("consolidated_cities", college_id=self.public_id)
-            }
         }
     }
 

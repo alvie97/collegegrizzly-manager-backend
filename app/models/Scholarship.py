@@ -5,8 +5,10 @@ from app import db
 from app.models.common import PaginatedAPIMixin
 from app.models.State import State
 from app.models.County import County
-from app.models.Place import State
+from app.models.Place import Place
 from app.models.Consolidated_city import Consolidated_city
+from app.models.Ethnicity import Ethnicity
+from app.models.Program import Program
 from app.models.relation_tables import (
     scholarship_state, scholarship_county, scholarship_place,
     scholarship_consolidated_city, scholarship_program, scholarship_ethnicity,
@@ -93,8 +95,11 @@ class Scholarship(PaginatedAPIMixin, db.Model):
   def add_consolidated_city(self, consolidated_city):
     self.consolidated_cities.append(consolidated_city)
 
-  def add_major(self, major):
-    self.majors.append(major)
+  def add_ethnicity(self, ethnicity):
+    self.ethnicities.append(ethnicity)
+
+  def add_program(self, progam):
+    self.programs.append(progam)
 
   def remove_state(self, state):
     self.states.remove(state)
@@ -108,8 +113,11 @@ class Scholarship(PaginatedAPIMixin, db.Model):
   def remove_consolidated_city(self, consolidated_city):
     self.consolidated_cities.remove(consolidated_city)
 
-  def remove_major(self, major):
-    self.majors.remove(major)
+  def remove_ethnicity(self, ethnicity):
+    self.ethnicities.remove(ethnicity)
+
+  def remove_program(self, progam):
+    self.programs.remove(progam)
 
   def has_state(self, state_name, fips_code=None):
     if fips_code is not None:
@@ -139,8 +147,23 @@ class Scholarship(PaginatedAPIMixin, db.Model):
       return self.consolidated_cities.filter(
           Consolidated_city.name == consolidated_city_name).count() > 0
 
-  def has_major(self, major_name):
-    return self.majors.filter(Major.name == major).count() > 0
+  def has_ethnicity(self, ethnicity_name):
+    return self.ethnicities.filter(Ethnicity.name == ethnicity_name).count() > 0
+
+  def has_program(self, program_name):
+    return self.programs.filter(Program.name == program_name).count() > 0
+
+  def needs_scholarship(self, scholarship):
+    if not self.needs(scholarship):
+      self.scholarships_needed.append(scholarship)
+
+  def remove_needed_scholarship(self, scholarship):
+    if self.needs(scholarship):
+      self.scholarships_needed.remove(scholarship)
+
+  def needs(self, scholarship):
+    return self.scholarships_needed.filter(
+        scholarships_needed.c.needed_id == scholarship.id).count() > 0
 
   def to_dict(self):
     return {
@@ -190,6 +213,16 @@ class Scholarship(PaginatedAPIMixin, db.Model):
             self.type,
         "description":
             self.description,
+        "programs":
+            self.programs,
+        "ethnicities":
+            self.ethnicities,
+        "location_requirement": {
+            "states": self.states,
+            "counties": self.counties,
+            "places": self.places,
+            "consolidated_cities": self.consolidated_cities
+        }
     }
 
   def from_dict(self, data):
