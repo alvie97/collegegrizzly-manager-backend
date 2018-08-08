@@ -1,69 +1,67 @@
-from flask_restful      import Resource
-from flask              import request, current_app
-from app                import db, photos
+from flask_restful import Resource
+from flask import request, current_app
+from app import db, photos
 from app.models.College import College as CollegeModel
 from app.models.Picture import Picture as PictureModel
 import uuid
 
+
 class Pictures(Resource):
-    def get(self, college_id=None):
-        if college_id is not None:
-            college = CollegeModel.query \
-                .filter_by(public_id=college_id).first()
-            if college is None:
-                return {'message': 'College not found'}, 404
 
-            resources = college.Pictures.all()
+  def get(self, college_id=None):
+    if college_id is not None:
+      college = CollegeModel.query.filter_by(public_id=college_id).first()
+      if college is None:
+        return {'message': 'College not found'}, 404
 
-            data = {
-                'items': [item.to_dict() for item in resources]
-            }
+      resources = college.Pictures.all()
 
-            return data
+      data = {'items': [item.to_dict() for item in resources]}
 
-        page = request.args.get('page', 1, type=int)
-        per_page = request.args.get(
-            'per_page', current_app.config['COLLEGES_PER_PAGE'], type=int)
+      return data
 
-        data = PictureModel.to_collection_dict(
-                PictureModel.query,
-                page,
-                per_page,
-                'pictures')
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get(
+        'per_page', current_app.config['COLLEGES_PER_PAGE'], type=int)
 
-        return data
+    data = PictureModel.to_collection_dict(PictureModel.query, page, per_page,
+                                           'pictures')
 
-    def post(self, college_id):
+    return data
 
-        if not 'picture' in request.files:
-            return {'message': 'file missing'}, 404
+  def post(self, college_id):
 
-        college = CollegeModel.query.filter_by(public_id=college_id).first()
+    if not 'picture' in request.files:
+      return {'message': 'file missing'}, 404
 
-        if college is None:
-            return {'message': 'college not found'}, 404
+    college = CollegeModel.query.filter_by(public_id=college_id).first()
 
-        filename = photos.save(request.files['picture'])
-        data = request.get_json() or {}
-        if not 'type' in data:
-            data['type'] = 'campus'
+    if college is None:
+      return {'message': 'college not found'}, 404
 
-        picture = PictureModel(public_id=str(uuid.uuid4()).replace('-', ''),
-                               name=filename,
-                               college=college, **data)
-        db.session.add(picture)
-        db.session.commit()
+    filename = photos.save(request.files['picture'])
+    data = request.get_json() or {}
+    if not 'type' in data:
+      data['type'] = 'campus'
 
-        return picture.public_id
+    picture = PictureModel(
+        public_id=str(uuid.uuid4()).replace('-', ''),
+        name=filename,
+        college=college,
+        **data)
+    db.session.add(picture)
+    db.session.commit()
 
-    def delete(self):
-        data = request.get_json() or {}
+    return picture.public_id
 
-        pictures = PictureModel.query.filter(
-            PictureModel.public_id.in_(data['ids'])).all()
+  def delete(self):
+    data = request.get_json() or {}
 
-        for picture in pictures:
-            picture.delete()
-        db.session.commit()
+    pictures = PictureModel.query.filter(
+        PictureModel.public_id.in_(data['ids'])).all()
 
-        return {'message': 'Colleges deleted'}
+    for picture in pictures:
+      picture.delete()
+    db.session.commit()
+
+    return {'message': 'Colleges deleted'}

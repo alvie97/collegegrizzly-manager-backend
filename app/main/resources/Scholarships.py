@@ -1,49 +1,44 @@
-from flask_restful          import Resource
-from flask                  import request, current_app
-from app                    import db
-from app.models.College     import College as CollegeModel
+from flask_restful import Resource
+from flask import request, current_app
+from app import db
+from app.models.College import College as CollegeModel
 from app.models.Scholarship import Scholarship as ScholarshipModel
 import uuid
 
+
 class Scholarships(Resource):
-    def get(self, college_id=None):
-        if college_id is not None:
-            college = CollegeModel.query.filter_by(public_id=college_id).first()
-            if college is None:
-                return {'message': 'College not found'}, 404
 
-            resources = college.Scholarships.all()
-            data = {
-                'items': [item.to_dict() for item in resources]
-            }
+  def get(self, college_id=None):
+    if college_id is not None:
+      college = CollegeModel.query.filter_by(public_id=college_id).first()
+      if college is None:
+        return {'message': 'College not found'}, 404
 
-            return data
+      resources = college.Scholarships.all()
+      data = {'items': [item.to_dict() for item in resources]}
 
-        page = request.args.get('page', 1, type=int)
-        per_page = request.args.get(
-            'per_page', current_app.config['SCHOLARSHIPS_PER_PAGE'], type=int)
+      return data
 
-        data = ScholarshipModel.to_collection_dict(
-                ScholarshipModel.query,
-                page,
-                per_page,
-                'scholarships')
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get(
+        'per_page', current_app.config['SCHOLARSHIPS_PER_PAGE'], type=int)
 
-        return data
+    data = ScholarshipModel.to_collection_dict(ScholarshipModel.query, page,
+                                               per_page, 'scholarships')
 
-    def post(self, college_id):
-        college = CollegeModel.query.filter_by(public_id=college_id).first()
+    return data
 
-        if college is None:
-            return {'message': 'college not found'}, 404
+  def post(self, college_id):
+    college = CollegeModel.query.filter_by(public_id=college_id).first()
 
-        data = request.get_json()
+    if college is None:
+      return {'message': 'college not found'}, 404
 
-        scholarship = ScholarshipModel(
-            public_id=str(uuid.uuid4()).replace('-', ''),
-                college=college,
-                **data)
-        db.session.add(scholarship)
-        db.session.commit()
+    data = request.get_json()
 
-        return scholarship.public_id
+    scholarship = ScholarshipModel(
+        public_id=str(uuid.uuid4()).replace('-', ''), college=college, **data)
+    db.session.add(scholarship)
+    db.session.commit()
+
+    return scholarship.public_id

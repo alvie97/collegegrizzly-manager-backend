@@ -1,47 +1,46 @@
 from datetime import datetime, timedelta
-from time     import time
-from flask    import current_app, url_for
-from app      import db, photos
-from .common  import PaginatedAPIMixin
+from time import time
+from flask import current_app, url_for
+from app import db, photos
+from .common import PaginatedAPIMixin
 import os
 
+
 class Picture(PaginatedAPIMixin, db.Model):
-    id          = db.Column(db.Integer, primary_key=True)
-    public_id   = db.Column(db.String(50), unique=True)
-    name        = db.Column(db.Text)
-    created_at  = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at  = db.Column(db.DateTime, default=datetime.utcnow)
-    type        = db.Column(db.String(256), default='campus')
-    college_id  = db.Column(db.Integer, db.ForeignKey('college.id'))
+  id = db.Column(db.Integer, primary_key=True)
+  public_id = db.Column(db.String(50), unique=True)
+  name = db.Column(db.Text)
+  created_at = db.Column(db.DateTime, default=datetime.utcnow)
+  updated_at = db.Column(db.DateTime, default=datetime.utcnow)
+  type = db.Column(db.String(256), default='campus')
+  college_id = db.Column(db.Integer, db.ForeignKey('college.id'))
 
-    ATTR_FIELDS = [
-        'type'
-    ]
+  ATTR_FIELDS = ['type']
 
-    def __repr__(self):
-        return '<Picture {}>'.format(self.name)
+  def __repr__(self):
+    return '<Picture {}>'.format(self.name)
 
-    def delete(self):
-        try:
-            os.remove(photos.path(self.name))
-            db.session.delete(self)
-        except OSError:
-            pass
+  def delete(self):
+    try:
+      os.remove(photos.path(self.name))
+      db.session.delete(self)
+    except OSError:
+      pass
 
-    def to_dict(self):
-        return {
-            'public_id': self.public_id,
-            'name': self.name,
-            'path': photos.url(self.name),
-            'created_at': self.created_at.isoformat() + 'Z',
-            'updated_at': self.updated_at.isoformat() + 'Z',
-            'type': self.type
-        }
+  def to_dict(self):
+    return {
+        'public_id': self.public_id,
+        'name': self.name,
+        'path': photos.url(self.name),
+        'created_at': self.created_at.isoformat() + 'Z',
+        'updated_at': self.updated_at.isoformat() + 'Z',
+        'type': self.type
+    }
 
-    def from_dict(self, data):
-        for field in self.ATTR_FIELDS:
-            if field in data:
-                setattr(self, field, data[field].lower() if field == 'type' \
-                        else data[field])
+  def from_dict(self, data):
+    for field in self.ATTR_FIELDS:
+      if field in data:
+        setattr(self, field, data[field].lower() if field == 'type' \
+                else data[field])
 
-        self.updated_at = datetime.utcnow()
+    self.updated_at = datetime.utcnow()
