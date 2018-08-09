@@ -1,12 +1,23 @@
-from app import create_app, db
-from app.models import User, College
+from app import create_app, db, cli
+from app.models.College import College
+from app.models.Scholarship import Scholarship
+from app.models.State import State
+from app.models.County import County
+from app.models.Place import Place
+from app.models.Consolidated_city import Consolidated_city
 
 app = create_app()
+cli.register(app)
+
 
 @app.shell_context_processor
 def make_shell_context():
-    return {
-        'db': db,
-        'User': User,
-        'College': College
-    }
+  return {
+      "db": db,
+      "College": College,
+      "Scholarship": Scholarship,
+      "State": State,
+      "County": County,
+      "Place": Place,
+      "Consolidated_city": Consolidated_city,
+  }

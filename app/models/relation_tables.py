@@ -1,6 +1,6 @@
 from app import db
 
-#college relationships
+# college relationships
 college_major = db.Table(
     "college_major",
     db.Column("college_id", db.Integer, db.ForeignKey("college.id")),
@@ -27,7 +27,7 @@ college_consolidated_city = db.Table(
     db.Column("consolidated_city_id", db.Integer,
               db.ForeignKey("consolidated_city.id")))
 
-#scholarship relationships
+# scholarship relationships
 
 scholarships_needed = db.Table(
     "scholarships_needed",

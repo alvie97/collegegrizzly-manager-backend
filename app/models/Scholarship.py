@@ -1,6 +1,4 @@
-from datetime import datetime, timedelta
-from time import time
-from flask import current_app, url_for
+from datetime import datetime
 from app import db
 from app.models.common import PaginatedAPIMixin
 from app.models.State import State
@@ -21,7 +19,7 @@ class Scholarship(PaginatedAPIMixin, db.Model):
   name = db.Column(db.String(256))
   created_at = db.Column(db.DateTime, default=datetime.utcnow)
   updated_at = db.Column(db.DateTime, default=datetime.utcnow)
-  scholarship_id = db.Column(db.Integer, db.ForeignKey('scholarship.id'))
+  college_id = db.Column(db.Integer, db.ForeignKey('college.id'))
   act = db.Column(db.SmallInteger, default=0)
   sat = db.Column(db.SmallInteger, default=0)
   amount = db.Column(db.String(256), nullable=True)
@@ -51,7 +49,7 @@ class Scholarship(PaginatedAPIMixin, db.Model):
       secondary=scholarships_needed,
       primaryjoin=(scholarships_needed.c.needs_id == id),
       secondaryjoin=(scholarships_needed.c.needed_id == id),
-      backref="scholarships_needed")
+      backref="needed_by_scholarships")
   states = db.relationship(
       "State",
       secondary=scholarship_state,
@@ -70,9 +68,9 @@ class Scholarship(PaginatedAPIMixin, db.Model):
       backref=db.backref("scholarships", lazy="dynamic"))
 
   ATTR_FIELDS = [
-      "name", "act", "sat", "amount", "amount_expression",
-      "unweighted_hs_gpa", "class_rank", "legal_status",
-      "relevant_information", "graduated_spring_before_scholarship",
+      "name", "act", "sat", "amount", "amount_expression", "unweighted_hs_gpa",
+      "class_rank", "legal_status", "relevant_information",
+      "graduated_spring_before_scholarship",
       "paid_full_time_christian_ministry_parent", "parents_higher_education",
       "siblings_currently_in_scholarship", "application_needed",
       "first_choice_national_merit", "exclude_from_match", "group_by",
@@ -82,7 +80,7 @@ class Scholarship(PaginatedAPIMixin, db.Model):
   def __repr__(self):
     return '<Scholarship {}>'.format(self.name)
 
-  #relationships methods
+  # relationships methods
   def add_state(self, state):
     self.states.append(state)
 
@@ -127,8 +125,7 @@ class Scholarship(PaginatedAPIMixin, db.Model):
 
   def has_county(self, county_name, fips_code=None):
     if fips_code is not None:
-      return self.counties.filter(
-          County.fips_code == fips_code).count() > 0
+      return self.counties.filter(County.fips_code == fips_code).count() > 0
     else:
       return self.counties.filter(County.name == county_name).count() > 0
 
@@ -148,7 +145,8 @@ class Scholarship(PaginatedAPIMixin, db.Model):
           Consolidated_city.name == consolidated_city_name).count() > 0
 
   def has_ethnicity(self, ethnicity_name):
-    return self.ethnicities.filter(Ethnicity.name == ethnicity_name).count() > 0
+    return self.ethnicities.filter(
+        Ethnicity.name == ethnicity_name).count() > 0
 
   def has_program(self, program_name):
     return self.programs.filter(Program.name == program_name).count() > 0

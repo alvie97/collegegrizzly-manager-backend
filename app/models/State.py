@@ -1,17 +1,14 @@
 from app import db
-from app.models.County import County
-from app.models.Place import Place
-from app.models.Consolidated_city import Consolidated_city
 
 
-class State(db.model):
+class State(db.Model):
   id = db.Column(db.Integer, primary_key=True)
   name = db.Column(db.String(256))
   fips_code = db.Column(db.String(10), index=True, unique=True)
-  counties = db.relationship("counties", backref="state", lazy="dynamic")
-  places = db.relationship("places", backref="state", lazy="dynamic")
+  counties = db.relationship("County", backref="state", lazy="dynamic")
+  places = db.relationship("Place", backref="state", lazy="dynamic")
   consolidated_cities = db.relationship(
-      "consolidated_cities", backref="state", lazy="dynamic")
+      "Consolidated_city", backref="state", lazy="dynamic")
 
   ATTR_FIELDS = ["name", "fips_code"]
 

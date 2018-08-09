@@ -2,8 +2,6 @@ from flask import url_for
 from datetime import datetime
 from app import db, photos
 from app.models.common import PaginatedAPIMixin
-from app.models.Scholarship import Scholarship
-from app.models.Picture import Picture
 from app.models.State import State
 from app.models.County import County
 from app.models.Place import Place
@@ -46,7 +44,8 @@ class College(PaginatedAPIMixin, db.Model):
       cascade="all, delete-orphan",
       lazy="dynamic")
 
-  majors = db.relationship("Major", secondary=college_major, backref="colleges")
+  majors = db.relationship(
+      "Major", secondary=college_major, backref="colleges")
 
   in_state_states = db.relationship(
       "State", secondary=college_state, backref="colleges")
@@ -69,7 +68,7 @@ class College(PaginatedAPIMixin, db.Model):
   def __repr__(self):
     return "<College {}>".format(self.name)
 
-  #relationship methods
+  # relationship methods
   def add_state(self, state):
     self.in_state_states.append(state)
 
@@ -148,7 +147,7 @@ class College(PaginatedAPIMixin, db.Model):
   def get_logo(self):
     logo = self.Pictures.filter_by(type="logo").first()
 
-    if logo == None:
+    if logo is None:
       return self.get_avatar(128)
 
     return photos.url(logo.name)
@@ -193,8 +192,10 @@ class College(PaginatedAPIMixin, db.Model):
             "consolidated_cities": self.in_state_consolidated_cities
         },
         "_links": {
-            "scholarships": url_for("scholarships", college_id=self.public_id),
-            "pictures": url_for("pictures", college_id=self.public_id),
+            "scholarships":
+                url_for("scholarships", college_id=self.public_id),
+            "pictures":
+                url_for("pictures", college_id=self.public_id),
         }
     }
 
