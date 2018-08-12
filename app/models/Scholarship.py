@@ -41,31 +41,42 @@ class Scholarship(PaginatedAPIMixin, db.Model):
   type = db.Column(db.String(256))
   description = db.Column(db.Text)
   ethnicities = db.relationship(
-      "Ethnicity", secondary=scholarship_ethnicity, backref="scholarships")
+      "Ethnicity",
+      secondary=scholarship_ethnicity,
+      backref=db.backref("scholarships", lazy="dynamic"),
+      lazy="dynamic")
   programs = db.relationship(
-      "Program", secondary=scholarship_program, backref="scholarships")
+      "Program",
+      secondary=scholarship_program,
+      backref=db.backref("scholarships", lazy="dynamic"),
+      lazy="dynamic")
   scholarships_needed = db.relationship(
       "Scholarship",
       secondary=scholarships_needed,
       primaryjoin=(scholarships_needed.c.needs_id == id),
       secondaryjoin=(scholarships_needed.c.needed_id == id),
-      backref="needed_by_scholarships")
+      backref=db.backref("needed_by_scholarships", lazy="dynamic"),
+      lazy="dynamic")
   states = db.relationship(
       "State",
       secondary=scholarship_state,
-      backref=db.backref("scholarships", lazy="dynamic"))
+      backref=db.backref("scholarships", lazy="dynamic"),
+      lazy="dynamic")
   counties = db.relationship(
       "County",
       secondary=scholarship_county,
-      backref=db.backref("scholarships", lazy="dynamic"))
+      backref=db.backref("scholarships", lazy="dynamic"),
+      lazy="dynamic")
   places = db.relationship(
       "Place",
       secondary=scholarship_place,
-      backref=db.backref("scholarships", lazy="dynamic"))
+      backref=db.backref("scholarships", lazy="dynamic"),
+      lazy="dynamic")
   consolidated_cities = db.relationship(
       "Consolidated_city",
       secondary=scholarship_consolidated_city,
-      backref=db.backref("scholarships", lazy="dynamic"))
+      backref=db.backref("scholarships", lazy="dynamic"),
+      lazy="dynamic")
 
   ATTR_FIELDS = [
       "name", "act", "sat", "amount", "amount_expression", "unweighted_hs_gpa",

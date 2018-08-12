@@ -45,14 +45,24 @@ class College(PaginatedAPIMixin, db.Model):
       lazy="dynamic")
 
   majors = db.relationship(
-      "Major", secondary=college_major, backref="colleges")
-
+      "Major",
+      secondary=college_major,
+      backref=db.backref("colleges", lazy="dynamic"))
   in_state_states = db.relationship(
-      "State", secondary=college_state, backref="colleges")
+      "State",
+      secondary=college_state,
+      backref=db.backref("colleges", lazy="dynamic"),
+      lazy="dynamic")
   in_state_counties = db.relationship(
-      "County", secondary=college_county, backref="colleges")
+      "County",
+      secondary=college_county,
+      backref=db.backref("colleges", lazy="dynamic"),
+      lazy="dynamic")
   in_state_places = db.relationship(
-      "Place", secondary=college_place, backref="colleges")
+      "Place",
+      secondary=college_place,
+      backref=db.backref("colleges", lazy="dynamic"),
+      lazy="dynamic")
   in_state_consolidated_cities = db.relationship(
       "Consolidated_city",
       secondary=college_consolidated_city,
@@ -154,9 +164,9 @@ class College(PaginatedAPIMixin, db.Model):
 
   def delete(self):
     """
-        Scholarships doesn"t need to be removed manually
-        because, the cascade option takes care of it
-        """
+            Scholarships doesn"t need to be removed manually
+            because, the cascade option takes care of it
+            """
     pics = self.Pictures.all()
 
     for pic in pics:

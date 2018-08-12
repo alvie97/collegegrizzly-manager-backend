@@ -5,6 +5,9 @@ from app.models.State import State
 from app.models.County import County
 from app.models.Place import Place
 from app.models.Consolidated_city import Consolidated_city
+from app.models.Ethnicity import Ethnicity
+from app.models.Major import Major
+from app.models.Program import Program
 
 app = create_app()
 cli.register(app)
@@ -20,4 +23,7 @@ def make_shell_context():
       "County": County,
       "Place": Place,
       "Consolidated_city": Consolidated_city,
+      "Major": Major,
+      "Ethnicity": Ethnicity,
+      "Program": Program
   }
