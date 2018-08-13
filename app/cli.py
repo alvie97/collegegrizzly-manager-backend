@@ -1,9 +1,9 @@
 import os
 from app import db
-from app.models.State import State
-from app.models.County import County
-from app.models.Place import Place
-from app.models.Consolidated_city import Consolidated_city
+from app.models.state import State
+from app.models.county import County
+from app.models.place import Place
+from app.models.consolidated_city import ConsolidatedCity
 from scripts.us_states_prcss import process_fips_codes
 
 
@@ -36,7 +36,7 @@ def register(app):
         db.session.add(place_instance)
       for consolidated_city_code, consolidated_city in state[
           "consolidated_cities"].items():
-        consolidated_city_instance = Consolidated_city(
+        consolidated_city_instance = ConsolidatedCity(
             name=consolidated_city["name"],
             state=state_instance,
             fips_code=state_code + consolidated_city_code)

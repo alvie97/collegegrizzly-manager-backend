@@ -1,12 +1,12 @@
 from datetime import datetime
 from app import db
 from app.models.common import PaginatedAPIMixin
-from app.models.State import State
-from app.models.County import County
-from app.models.Place import Place
-from app.models.Consolidated_city import Consolidated_city
-from app.models.Ethnicity import Ethnicity
-from app.models.Program import Program
+from app.models.state import State
+from app.models.county import County
+from app.models.place import Place
+from app.models.consolidated_city import ConsolidatedCity
+from app.models.ethnicity import Ethnicity
+from app.models.program import Program
 from app.models.relation_tables import (
     scholarship_state, scholarship_county, scholarship_place,
     scholarship_consolidated_city, scholarship_program, scholarship_ethnicity,
@@ -73,7 +73,7 @@ class Scholarship(PaginatedAPIMixin, db.Model):
       backref=db.backref("scholarships", lazy="dynamic"),
       lazy="dynamic")
   consolidated_cities = db.relationship(
-      "Consolidated_city",
+      "ConsolidatedCity",
       secondary=scholarship_consolidated_city,
       backref=db.backref("scholarships", lazy="dynamic"),
       lazy="dynamic")
@@ -150,10 +150,10 @@ class Scholarship(PaginatedAPIMixin, db.Model):
   def has_consolidated_city(self, consolidated_city_name, fips_code=None):
     if fips_code is not None:
       return self.consolidated_cities.filter(
-          Consolidated_city.fips_code == fips_code).count() > 0
+          ConsolidatedCity.fips_code == fips_code).count() > 0
     else:
       return self.consolidated_cities.filter(
-          Consolidated_city.name == consolidated_city_name).count() > 0
+          ConsolidatedCity.name == consolidated_city_name).count() > 0
 
   def has_ethnicity(self, ethnicity_name):
     return self.ethnicities.filter(

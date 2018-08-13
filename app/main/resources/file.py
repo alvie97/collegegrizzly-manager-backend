@@ -1,5 +1,5 @@
 from flask_restful import Resource
-from flask import request, current_app, send_from_directory
+from flask import send_from_directory
 import os
 
 

@@ -1,18 +1,17 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint
 from app import api
 
 bp = Blueprint('main', __name__)
 
-from .resources.College import College
-from .resources.Colleges import Colleges
-from .resources.Scholarship import Scholarship
-from .resources.Scholarships import Scholarships
-from .resources.Picture import Picture
-from .resources.Pictures import Pictures
-from .resources.File import File
+from .resources.college import College, Colleges, InStateRequirement
+from .resources.scholarship import Scholarship, Scholarships
+from .resources.picture import Picture, Pictures
+from .resources.file import File
 
 api.add_resource(College, '/colleges/<string:college_id>', endpoint='college')
 api.add_resource(Colleges, '/colleges', endpoint='colleges')
+api.add_resource(InStateRequirement,
+                 "/colleges/<string:college_id>/in_state_requirement")
 api.add_resource(
     Scholarship,
     '/scholarships/<string:scholarship_id>',

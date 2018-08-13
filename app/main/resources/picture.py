@@ -3,7 +3,39 @@ from flask import request, current_app
 from app import db, photos
 from app.models.College import College as CollegeModel
 from app.models.Picture import Picture as PictureModel
-import uuid
+from app.common.utils import generate_public_id
+
+
+class Picture(Resource):
+
+  def get(self, picture_id):
+    picture = PictureModel.query.filter_by(public_id=picture_id).first()
+
+    if picture is None:
+      return {'message': 'no picture found'}, 404
+
+    return picture.to_dict()
+
+  def put(self, picture_id):
+    picture = PictureModel.query.filter_by(public_id=picture_id).first()
+
+    if picture is None:
+      return {'message': 'no picture found'}, 404
+
+    data = request.get_json()
+    picture.from_dict({data['key']: data['value']})
+    db.session.commit()
+    return data
+
+  def delete(self, picture_id):
+    picture = PictureModel.query.filter_by(public_id=picture_id).first()
+
+    if picture is None:
+      return {'message': 'no picture found'}, 404
+
+    db.session.delete(picture)
+    db.session.commit()
+    return {'message': 'picture deleted'}
 
 
 class Pictures(Resource):
@@ -31,7 +63,7 @@ class Pictures(Resource):
 
   def post(self, college_id):
 
-    if not 'picture' in request.files:
+    if 'picture' not in request.files:
       return {'message': 'file missing'}, 404
 
     college = CollegeModel.query.filter_by(public_id=college_id).first()
@@ -41,11 +73,11 @@ class Pictures(Resource):
 
     filename = photos.save(request.files['picture'])
     data = request.get_json() or {}
-    if not 'type' in data:
+    if 'type' not in data:
       data['type'] = 'campus'
 
     picture = PictureModel(
-        public_id=str(uuid.uuid4()).replace('-', ''),
+        public_id=generate_public_id(),
         name=filename,
         college=college,
         **data)
@@ -64,4 +96,4 @@ class Pictures(Resource):
       picture.delete()
     db.session.commit()
 
-    return {'message': 'Colleges deleted'}
+    return {'message': 'Pictures deleted'}

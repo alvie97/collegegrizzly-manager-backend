@@ -2,11 +2,11 @@ from flask import url_for
 from datetime import datetime
 from app import db, photos
 from app.models.common import PaginatedAPIMixin
-from app.models.State import State
-from app.models.County import County
-from app.models.Place import Place
-from app.models.Consolidated_city import Consolidated_city
-from app.models.Major import Major
+from app.models.state import State
+from app.models.county import County
+from app.models.place import Place
+from app.models.consolidated_city import ConsolidatedCity
+from app.models.major import Major
 from app.models.relation_tables import (
     college_state, college_county, college_place, college_consolidated_city,
     college_major)
@@ -32,13 +32,13 @@ class College(PaginatedAPIMixin, db.Model):
   unweighted_hs_gpa = db.Column(db.Numeric(4, 2), default=0)
   sat = db.Column(db.Integer, default=0)
   act = db.Column(db.Integer, default=0)
-  Scholarships = db.relationship(
+  scholarships = db.relationship(
       "Scholarship",
       backref="college",
       cascade="all, delete-orphan",
       lazy="dynamic")
 
-  Pictures = db.relationship(
+  pictures = db.relationship(
       "Picture",
       backref="college",
       cascade="all, delete-orphan",
@@ -64,7 +64,7 @@ class College(PaginatedAPIMixin, db.Model):
       backref=db.backref("colleges", lazy="dynamic"),
       lazy="dynamic")
   in_state_consolidated_cities = db.relationship(
-      "Consolidated_city",
+      "ConsolidatedCity",
       secondary=college_consolidated_city,
       backref="colleges")
 
@@ -109,14 +109,14 @@ class College(PaginatedAPIMixin, db.Model):
   def remove_major(self, major):
     self.majors.remove(major)
 
-  def has_state(self, state_name, fips_code=None):
+  def has_state(self, state_name=None, fips_code=None):
     if fips_code is not None:
       return self.in_state_states.filter(
           State.fips_code == fips_code).count() > 0
     else:
       return self.in_state_states.filter(State.name == state_name).count() > 0
 
-  def has_county(self, county_name, fips_code=None):
+  def has_county(self, county_name=None, fips_code=None):
     if fips_code is not None:
       return self.in_state_counties.filter(
           County.fips_code == fips_code).count() > 0
@@ -124,7 +124,7 @@ class College(PaginatedAPIMixin, db.Model):
       return self.in_state_counties.filter(
           County.name == county_name).count() > 0
 
-  def has_place(self, place_name, fips_code=None):
+  def has_place(self, place_name=None, fips_code=None):
     if fips_code is not None:
       return self.in_state_places.filter(
           Place.fips_code == fips_code).count() > 0
@@ -132,13 +132,13 @@ class College(PaginatedAPIMixin, db.Model):
       return self.in_place_name_place_names.filter(
           Place.name == place_name).count() > 0
 
-  def has_consolidated_city(self, consolidated_city_name, fips_code=None):
+  def has_consolidated_city(self, consolidated_city_name=None, fips_code=None):
     if fips_code is not None:
       return self.in_state_consolidated_cities.filter(
-          Consolidated_city.fips_code == fips_code).count() > 0
+          ConsolidatedCity.fips_code == fips_code).count() > 0
     else:
       return self.in_state_consolidated_cities.filter(
-          Consolidated_city.name == consolidated_city_name).count() > 0
+          ConsolidatedCity.name == consolidated_city_name).count() > 0
 
   def has_major(self, major_name):
     return self.majors.filter(Major.name == major_name).count() > 0
@@ -207,6 +207,14 @@ class College(PaginatedAPIMixin, db.Model):
             "pictures":
                 url_for("pictures", college_id=self.public_id),
         }
+    }
+
+  def in_state_requirement():
+    return {
+        "state": self.in_state_states,
+        "counties": self.in_state_counties,
+        "places": self.in_state_places,
+        "consolidated_cities": self.in_state_consolidated_cities
     }
 
   def from_dict(self, data):
