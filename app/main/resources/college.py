@@ -16,7 +16,7 @@ class College(Resource):
     college = CollegeModel.query.filter_by(public_id=college_id).first()
 
     if college is None:
-      return {'message': 'no college found'}, 404
+      return {"message": "no college found"}, 404
 
     return college.to_dict()
 
@@ -24,11 +24,11 @@ class College(Resource):
     college = CollegeModel.query.filter_by(public_id=college_id).first()
 
     if college is None:
-      return {'message': 'no college found'}, 404
+      return {"message": "no college found"}, 404
 
     data = request.get_json() or {}
 
-    college.from_dict({data['key']: data['value']})
+    college.from_dict({data["key"]: data["value"]})
     db.session.commit()
     return college.to_dict()
 
@@ -36,34 +36,34 @@ class College(Resource):
 class Colleges(Resource):
 
   def get(self):
-    page = request.args.get('page', 1, type=int)
+    page = request.args.get("page", 1, type=int)
     per_page = request.args.get(
-        'per_page', current_app.config['COLLEGES_PER_PAGE'], type=int)
+        "per_page", current_app.config["COLLEGES_PER_PAGE"], type=int)
 
-    search = request.args.get('search', '', type=str)
+    search = request.args.get("search", "", type=str)
 
     if search:
       query = CollegeModel.query.filter(
-          CollegeModel.name.like('%{}%'.format(search)))
+          CollegeModel.name.like("%{}%".format(search)))
 
       data = CollegeModel.to_collection_dict(
-          query, page, per_page, 'colleges', search=search)
+          query, page, per_page, "colleges", search=search)
     else:
       query = CollegeModel.query
-      data = CollegeModel.to_collection_dict(query, page, per_page, 'colleges')
+      data = CollegeModel.to_collection_dict(query, page, per_page, "colleges")
 
     return data
 
   def delete(self):
     data = request.get_json() or {}
-    if 'public_id' not in data:
-      return {'message': 'no public_id attribute found'}, 404
+    if "public_id" not in data:
+      return {"message": "no public_id attribute found"}, 404
 
-    college = CollegeModel.query.filter_by(public_id=data['public_id'])
+    college = CollegeModel.query.filter_by(public_id=data["public_id"])
     college.delete()
     db.session.commit()
 
-    return {'message': 'Colleges deleted'}
+    return {"message": "Colleges deleted"}
 
   def post(self):
     data = request.get_json() or {}

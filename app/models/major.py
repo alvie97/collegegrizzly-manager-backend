@@ -1,7 +1,8 @@
 from app import db
+from app.models.common import PaginatedAPIMixin
 
 
-class Major(db.Model):
+class Major(db.Model, PaginatedAPIMixin):
   id = db.Column(db.Integer, primary_key=True)
   name = db.Column(db.String(256), unique=True, index=True)
   description = db.Column(db.Text, nullable=True)

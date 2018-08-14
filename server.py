@@ -1,13 +1,13 @@
 from app import create_app, db, cli
-from app.models.College import College
-from app.models.Scholarship import Scholarship
-from app.models.State import State
-from app.models.County import County
-from app.models.Place import Place
-from app.models.Consolidated_city import Consolidated_city
-from app.models.Ethnicity import Ethnicity
-from app.models.Major import Major
-from app.models.Program import Program
+from app.models.college import College
+from app.models.scholarship import Scholarship
+from app.models.state import State
+from app.models.county import County
+from app.models.place import Place
+from app.models.consolidated_city import ConsolidatedCity
+from app.models.ethnicity import Ethnicity
+from app.models.major import Major
+from app.models.program import Program
 
 app = create_app()
 cli.register(app)
@@ -22,7 +22,7 @@ def make_shell_context():
       "State": State,
       "County": County,
       "Place": Place,
-      "Consolidated_city": Consolidated_city,
+      "Consolidated_city": ConsolidatedCity,
       "Major": Major,
       "Ethnicity": Ethnicity,
       "Program": Program

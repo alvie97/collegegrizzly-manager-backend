@@ -1,7 +1,8 @@
 from app import db
+from app.models.common import PaginatedAPIMixin
 
 
-class Place(db.Model):
+class Place(db.Model, PaginatedAPIMixin):
   id = db.Column(db.Integer, primary_key=True)
   name = db.Column(db.String(256))
   fips_code = db.Column(db.String(10), index=True, unique=True)

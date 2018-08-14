@@ -13,7 +13,7 @@ class Scholarship(Resource):
         public_id=scholarship_id).first()
 
     if scholarship is None:
-      return {'message': 'no scholarship found'}, 404
+      return {"message": "no scholarship found"}, 404
 
     return scholarship.to_dict()
 
@@ -22,10 +22,10 @@ class Scholarship(Resource):
         public_id=scholarship_id).first()
 
     if scholarship is None:
-      return {'message': 'no scholarship found'}, 404
+      return {"message": "no scholarship found"}, 404
 
     data = request.get_json()
-    scholarship.from_dict({data['key']: data['value']})
+    scholarship.from_dict({data["key"]: data["value"]})
     db.session.commit()
     return data
 
@@ -34,11 +34,11 @@ class Scholarship(Resource):
         public_id=scholarship_id).first()
 
     if scholarship is None:
-      return {'message': 'no scholarship found'}, 404
+      return {"message": "no scholarship found"}, 404
 
     db.session.delete(scholarship)
     db.session.commit()
-    return {'message': 'scholarship deleted'}
+    return {"message": "scholarship deleted"}
 
 
 class Scholarships(Resource):
@@ -47,19 +47,19 @@ class Scholarships(Resource):
     if college_id is not None:
       college = CollegeModel.query.filter_by(public_id=college_id).first()
       if college is None:
-        return {'message': 'College not found'}, 404
+        return {"message": "College not found"}, 404
 
       resources = college.Scholarships.all()
-      data = {'items': [item.to_dict() for item in resources]}
+      data = {"items": [item.to_dict() for item in resources]}
 
       return data
 
-    page = request.args.get('page', 1, type=int)
+    page = request.args.get("page", 1, type=int)
     per_page = request.args.get(
-        'per_page', current_app.config['SCHOLARSHIPS_PER_PAGE'], type=int)
+        "per_page", current_app.config["SCHOLARSHIPS_PER_PAGE"], type=int)
 
     data = ScholarshipModel.to_collection_dict(ScholarshipModel.query, page,
-                                               per_page, 'scholarships')
+                                               per_page, "scholarships")
 
     return data
 
@@ -67,7 +67,7 @@ class Scholarships(Resource):
     college = CollegeModel.query.filter_by(public_id=college_id).first()
 
     if college is None:
-      return {'message': 'college not found'}, 404
+      return {"message": "college not found"}, 404
 
     data = request.get_json()
 
