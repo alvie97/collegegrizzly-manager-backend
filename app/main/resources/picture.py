@@ -46,7 +46,7 @@ class Pictures(Resource):
       if college is None:
         return {'message': 'College not found'}, 404
 
-      resources = college.Pictures.all()
+      resources = college.pictures.all()
 
       data = {'items': [item.to_dict() for item in resources]}
 

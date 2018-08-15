@@ -66,7 +66,8 @@ class College(PaginatedAPIMixin, db.Model):
   in_state_consolidated_cities = db.relationship(
       "ConsolidatedCity",
       secondary=college_consolidated_city,
-      backref="colleges")
+      backref=db.backref("colleges", lazy="dynamic"),
+      lazy="dynamic")
 
   ATTR_FIELDS = [
       "public_id", "name", "room_and_board", "created_at", "updated_at",
@@ -80,34 +81,44 @@ class College(PaginatedAPIMixin, db.Model):
 
   # relationship methods
   def add_state(self, state):
-    self.in_state_states.append(state)
+    if not self.has_state(fips_code=state.fips_code):
+      self.in_state_states.append(state)
 
   def add_county(self, county):
-    self.in_state_county.append(county)
+    if not self.has_county(fips_code=county.fips_code):
+      self.in_state_county.append(county)
 
   def add_place(self, place):
-    self.in_state_places.append(place)
+    if not self.has_place(fips_code=place.fips_code):
+      self.in_state_places.append(place)
 
   def add_consolidated_city(self, consolidated_city):
-    self.in_state_consolidated_cities.append(consolidated_city)
+    if not self.has_consolidated_city(fips_code=consolidated_city.fips_code):
+      self.in_state_consolidated_cities.append(consolidated_city)
 
   def add_major(self, major):
-    self.majors.append(major)
+    if not self.has_major(major.name):
+      self.majors.append(major)
 
   def remove_state(self, state):
-    self.in_state_states.remove(state)
+    if self.has_state(fips_code=state.fips_code):
+      self.in_state_states.remove(state)
 
   def remove_county(self, county):
-    self.in_state_county.remove(county)
+    if self.has_county(fips_code=county.fips_code):
+      self.in_state_county.remove(county)
 
   def remove_place(self, place):
-    self.in_state_places.remove(place)
+    if self.has_place(fips_code=place.fips_code):
+      self.in_state_places.remove(place)
 
   def remove_consolidated_city(self, consolidated_city):
-    self.in_state_consolidated_cities.remove(consolidated_city)
+    if self.has_consolidated_city(fips_code=consolidated_city.fips_code):
+      self.in_state_consolidated_cities.remove(consolidated_city)
 
   def remove_major(self, major):
-    self.majors.remove(major)
+    if self.has_major(major.name):
+      self.majors.remove(major)
 
   def has_state(self, state_name=None, fips_code=None):
     if fips_code is not None:
@@ -129,8 +140,7 @@ class College(PaginatedAPIMixin, db.Model):
       return self.in_state_places.filter(
           Place.fips_code == fips_code).count() > 0
     else:
-      return self.in_place_name_place_names.filter(
-          Place.name == place_name).count() > 0
+      return self.in_state_places.filter(Place.name == place_name).count() > 0
 
   def has_consolidated_city(self, consolidated_city_name=None, fips_code=None):
     if fips_code is not None:
@@ -142,6 +152,18 @@ class College(PaginatedAPIMixin, db.Model):
 
   def has_major(self, major_name):
     return self.majors.filter(Major.name == major_name).count() > 0
+
+  def get_states_requirement(self, page, per_page):
+    return self.to_collection_dict(
+        self.in_state_states,
+        page,
+        per_page,
+        "college_in_state_requirement_states",
+        entity_id=self.public_id)
+
+  def get_majors(self):
+
+    return [major.to_dict() for major in self.majors]
 
   def get_avatar(self, size):
     digest = md5("test@email.com".encode("utf-8")).hexdigest()
@@ -155,7 +177,7 @@ class College(PaginatedAPIMixin, db.Model):
     return self.room_and_board + self.in_state_tuition
 
   def get_logo(self):
-    logo = self.Pictures.filter_by(type="logo").first()
+    logo = self.pictures.filter_by(type="logo").first()
 
     if logo is None:
       return self.get_avatar(128)
@@ -164,15 +186,26 @@ class College(PaginatedAPIMixin, db.Model):
 
   def delete(self):
     """
-            Scholarships doesn"t need to be removed manually
+            Scholarships don't need to be removed manually
             because, the cascade option takes care of it
             """
-    pics = self.Pictures.all()
+    pics = self.pictures.all()
 
     for pic in pics:
       pic.delete()
 
     db.session.delete(self)
+
+  def in_state_requirement(self):
+    return {
+        "state": self.get_states_requirement(1, 15)
+        # "counties":
+        #     url_for("college_in_state_requirement_counties"),
+        # "places":
+        #     url_for("college_in_state_requirement_places"),
+        # "consolidated_cities":
+        #     url_for("college_in_state_requirement_consolidated_cities")
+    }
 
   def to_dict(self):
     return {
@@ -194,27 +227,15 @@ class College(PaginatedAPIMixin, db.Model):
         "sat": self.sat,
         "act": self.act,
         "logo": self.get_logo(),
-        "majors": self.majors,
-        "in_state_requirement": {
-            "state": self.in_state_states,
-            "counties": self.in_state_counties,
-            "places": self.in_state_places,
-            "consolidated_cities": self.in_state_consolidated_cities
-        },
+        "majors": self.get_majors(),
         "_links": {
             "scholarships":
                 url_for("scholarships", college_id=self.public_id),
             "pictures":
                 url_for("pictures", college_id=self.public_id),
+            "in_state_requirement":
+                self.in_state_requirement()
         }
-    }
-
-  def in_state_requirement():
-    return {
-        "state": self.in_state_states,
-        "counties": self.in_state_counties,
-        "places": self.in_state_places,
-        "consolidated_cities": self.in_state_consolidated_cities
     }
 
   def from_dict(self, data):

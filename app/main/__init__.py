@@ -3,27 +3,38 @@ from app import api
 
 bp = Blueprint("main", __name__)
 
-from .resources.college import College, Colleges, InStateRequirement, Majors
+from app.models.college import College as CollegeModel
+from app.models.scholarship import Scholarship as ScholarshipModel
+from .resources.college import College, Colleges, CollegeMajors
 from .resources.scholarship import Scholarship, Scholarships
 from .resources.picture import Picture, Pictures
 from .resources.file import File
 from .resources.locations.usa.states import (States, State, Counties, Places,
                                              ConsolidatedCities)
+from .resources.common.utils import StateRequirement
 
-api.add_resource(College, "/colleges/<string:college_id>", endpoint="college")
 api.add_resource(Colleges, "/colleges", endpoint="colleges")
-api.add_resource(InStateRequirement,
-                 "/colleges/<string:college_id>/in_state_requirement")
-api.add_resource(Majors, "/colleges/<string:college_id>/majors")
+api.add_resource(College, "/colleges/<string:college_id>", endpoint="college")
+api.add_resource(CollegeMajors, "/colleges/<string:college_id>/majors")
 api.add_resource(
-    Scholarship,
-    "/scholarships/<string:scholarship_id>",
-    endpoint="scholarship")
+    StateRequirement,
+    "/colleges/<string:entity_id>/in_state_requirement/states",
+    endpoint="college_in_state_requirement_states",
+    resource_class_kwargs={"entity": CollegeModel})
 api.add_resource(
     Scholarships,
     "/scholarships",
     "/colleges/<string:college_id>/scholarships",
     endpoint="scholarships")
+api.add_resource(
+    Scholarship,
+    "/scholarships/<string:scholarship_id>",
+    endpoint="scholarship")
+api.add_resource(
+    StateRequirement,
+    "/scholarships/<string:entity_id>/location_requirement/states",
+    endpoint="scholarship_location_requirement_states",
+    resource_class_kwargs={"entity": ScholarshipModel})
 api.add_resource(Picture, "/pictures/<string:picture_id>", endpoint="picture")
 api.add_resource(
     Pictures,

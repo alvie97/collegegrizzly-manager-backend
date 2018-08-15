@@ -49,7 +49,7 @@ class Scholarships(Resource):
       if college is None:
         return {"message": "College not found"}, 404
 
-      resources = college.Scholarships.all()
+      resources = college.scholarships.all()
       data = {"items": [item.to_dict() for item in resources]}
 
       return data
