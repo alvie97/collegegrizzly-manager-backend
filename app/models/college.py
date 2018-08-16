@@ -1,16 +1,18 @@
-from flask import url_for
 from datetime import datetime
+from hashlib import md5
+
+from flask import url_for
+
 from app import db, photos
 from app.models.common import PaginatedAPIMixin
-from app.models.state import State
-from app.models.county import County
-from app.models.place import Place
 from app.models.consolidated_city import ConsolidatedCity
+from app.models.county import County
 from app.models.major import Major
-from app.models.relation_tables import (
-    college_state, college_county, college_place, college_consolidated_city,
-    college_major)
-from hashlib import md5
+from app.models.place import Place
+from app.models.relation_tables import (college_consolidated_city,
+                                        college_county, college_major,
+                                        college_place, college_state)
+from app.models.state import State
 
 
 class College(PaginatedAPIMixin, db.Model):
@@ -80,78 +82,104 @@ class College(PaginatedAPIMixin, db.Model):
     return "<College {}>".format(self.name)
 
   # relationship methods
-  def add_state(self, state):
-    if not self.has_state(fips_code=state.fips_code):
-      self.in_state_states.append(state)
-
-  def add_county(self, county):
-    if not self.has_county(fips_code=county.fips_code):
-      self.in_state_county.append(county)
-
-  def add_place(self, place):
-    if not self.has_place(fips_code=place.fips_code):
-      self.in_state_places.append(place)
-
-  def add_consolidated_city(self, consolidated_city):
-    if not self.has_consolidated_city(fips_code=consolidated_city.fips_code):
-      self.in_state_consolidated_cities.append(consolidated_city)
-
   def add_major(self, major):
     if not self.has_major(major.name):
       self.majors.append(major)
-
-  def remove_state(self, state):
-    if self.has_state(fips_code=state.fips_code):
-      self.in_state_states.remove(state)
-
-  def remove_county(self, county):
-    if self.has_county(fips_code=county.fips_code):
-      self.in_state_county.remove(county)
-
-  def remove_place(self, place):
-    if self.has_place(fips_code=place.fips_code):
-      self.in_state_places.remove(place)
-
-  def remove_consolidated_city(self, consolidated_city):
-    if self.has_consolidated_city(fips_code=consolidated_city.fips_code):
-      self.in_state_consolidated_cities.remove(consolidated_city)
 
   def remove_major(self, major):
     if self.has_major(major.name):
       self.majors.remove(major)
 
-  def has_state(self, state_name=None, fips_code=None):
-    if fips_code is not None:
-      return self.in_state_states.filter(
-          State.fips_code == fips_code).count() > 0
+  def get_location_entity_query(self, location_obj):
+    if isinstance(location_obj, State):
+      location_query = self.in_state_states
+      location_entity = State
+    elif isinstance(location_obj, County):
+      location_query = self.in_state_counties
+      location_entity = County
+    elif isinstance(location_obj, Place):
+      location_query = self.in_state_places
+      location_entity = Place
+    elif isinstance(location_obj, ConsolidatedCity):
+      location_query = self.in_state_consolidated_cities
+      location_entity = ConsolidatedCity
     else:
-      return self.in_state_states.filter(State.name == state_name).count() > 0
+      return None
 
-  def has_county(self, county_name=None, fips_code=None):
-    if fips_code is not None:
-      return self.in_state_counties.filter(
-          County.fips_code == fips_code).count() > 0
-    else:
-      return self.in_state_counties.filter(
-          County.name == county_name).count() > 0
+    return location_entity, location_query
 
-  def has_place(self, place_name=None, fips_code=None):
-    if fips_code is not None:
-      return self.in_state_places.filter(
-          Place.fips_code == fips_code).count() > 0
-    else:
-      return self.in_state_places.filter(Place.name == place_name).count() > 0
+  def add_location(self, location_obj):
+    instance = self.get_location_entity_query(location_obj)
+    if instance is None:
+      return False
 
-  def has_consolidated_city(self, consolidated_city_name=None, fips_code=None):
-    if fips_code is not None:
-      return self.in_state_consolidated_cities.filter(
-          ConsolidatedCity.fips_code == fips_code).count() > 0
+    location_entity, location_query = instance
+
+    if not self.has_location(location_entity, location_obj.fips_code):
+      location_query.append(location_obj)
+      return True
+    return False
+
+  def remove_location(self, location_obj):
+    instance = self.get_location_entity_query(location_obj)
+    if instance is None:
+      return False
+
+    location_entity, location_query = instance
+
+    if self.has_location(location_entity, location_obj.fips_code):
+      location_query.remove(location_obj)
+      return True
+    return False
+
+  def has_location(self, location_entity, fips_code):
+    if location_entity is State:
+      location_query = self.in_state_states
+    elif location_entity is County:
+      location_query = self.in_state_counties
+    elif location_entity is Place:
+      location_query = self.in_state_places
+    elif location_entity is ConsolidatedCity:
+      location_query = self.in_state_consolidated_cities
     else:
-      return self.in_state_consolidated_cities.filter(
-          ConsolidatedCity.name == consolidated_city_name).count() > 0
+      return None
+
+    return location_query.filter(
+        location_entity.fips_code == fips_code).count() > 0
 
   def has_major(self, major_name):
     return self.majors.filter(Major.name == major_name).count() > 0
+
+  def get_location_requirement(self, location_entity, page, per_page):
+
+    if location_entity is State:
+      location_name = "states"
+      location_query = self.in_state_states
+      location_url = "college_in_state_requirement_states"
+    elif location_entity is County:
+      location_name = "counties"
+      location_query = self.in_state_counties
+      location_url = "college_in_state_requirement_counties"
+    elif location_entity is Place:
+      location_name = "places"
+      location_query = self.in_state_places
+      location_url = "college_in_state_requirement_places"
+    elif location_entity is ConsolidatedCity:
+      location_name = "consolidated_cities"
+      location_query = self.in_state_consolidated_cities
+      location_url = "college_in_state_requirement_consolidated_cities"
+    else:
+      return {"error": "Entity not a location"}
+
+    return {
+        location_name:
+            self.to_collection_dict(
+                location_query,
+                page,
+                per_page,
+                location_url,
+                entity_obj_id=self.public_id)
+    }
 
   def get_states_requirement(self, page, per_page):
     return self.to_collection_dict(
@@ -159,6 +187,14 @@ class College(PaginatedAPIMixin, db.Model):
         page,
         per_page,
         "college_in_state_requirement_states",
+        entity_id=self.public_id)
+
+  def get_counties_requirement(self, page, per_page):
+    return self.to_collection_dict(
+        self.in_state_counties,
+        page,
+        per_page,
+        "college_in_state_requirement_counties",
         entity_id=self.public_id)
 
   def get_majors(self):
@@ -198,13 +234,14 @@ class College(PaginatedAPIMixin, db.Model):
 
   def in_state_requirement(self):
     return {
-        "state": self.get_states_requirement(1, 15)
-        # "counties":
-        #     url_for("college_in_state_requirement_counties"),
-        # "places":
-        #     url_for("college_in_state_requirement_places"),
-        # "consolidated_cities":
-        #     url_for("college_in_state_requirement_consolidated_cities")
+        "state":
+            self.get_location_requirement(State, 1, 15),
+        "counties":
+            self.get_location_requirement(County, 1, 15),
+        "places":
+            self.get_location_requirement(Place, 1, 15),
+        "consolidated_cities":
+            self.get_location_requirement(ConsolidatedCity, 1, 15)
     }
 
   def to_dict(self):
