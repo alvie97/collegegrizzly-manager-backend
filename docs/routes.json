@@ -1,0 +1,218 @@
+[
+  {
+    "route": {
+      "urls": ["colleges/"],
+      "methods": [
+        {
+          "method": "GET",
+          "description": "get all colleges"
+        },
+        {
+          "method": "POST",
+          "description": "add college",
+          "request_example": {
+            "name": "Example College Name"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "route": {
+      "urls": ["colleges/:id"],
+      "parameters": ["id"],
+      "methods": [
+        {
+          "method": "GET",
+          "description": "get college of id :id"
+        },
+        {
+          "method": "PATCH",
+          "description": "change college information of id :id",
+          "request_example": {
+            "name": "Example College Name"
+          }
+        },
+        {
+          "method": "DELETE",
+          "description": "delete college of id :id"
+        }
+      ]
+    }
+  },
+  {
+    "route": {
+      "urls": ["colleges/:id/scholarships"],
+      "parameters": ["id"],
+      "methods": [
+        {
+          "method": "GET",
+          "description": "get all scholarships of college :id"
+        },
+        {
+          "method": "POST",
+          "description": "add scholarship and add it to college :id",
+          "request_example": {
+            "name": "Example Scholarship name"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "route": {
+      "urls": [
+        "colleges/:college_id/scholarships/:scholarship_id",
+        "scholarships/:scholarship_id"
+      ],
+      "parameters": ["college_id", "scholarship_id"],
+      "methods": [
+        {
+          "method": "GET",
+          "description": "get scholarship :scholarship_id"
+        },
+        {
+          "method": "PATCH",
+          "description": "change scholarship :scholarship_id information",
+          "request_example": {
+            "name": "Example Scholarship name changed"
+          }
+        },
+        {
+          "method": "DELETE",
+          "description": "delete scholarship :scholarship_id"
+        }
+      ]
+    }
+  },
+  {
+    "route": {
+      "urls": ["colleges/:id/in_state_requirement/states"],
+      "parameters": ["id"],
+      "methods": [
+        {
+          "method": "GET",
+          "description": "get in state requirement states"
+        },
+        {
+          "method": "POST",
+          "description": "add state(s) to in state requirement",
+          "body_example": {
+            "locations_fips": ["fips01"]
+          }
+        },
+        {
+          "method": "DELETE",
+          "description": "remove state(s) from in state requirement",
+          "body_example": {
+            "locations_fips": ["fips01"]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "route": {
+      "urls": ["colleges/:id/in_state_requirement/counties"],
+      "parameters": ["id"],
+      "methods": [
+        {
+          "method": "GET",
+          "description": "get in state requirement counties"
+        },
+        {
+          "method": "POST",
+          "description": "add county(ies) to in state requirement",
+          "body_example": {
+            "locations_fips": ["fips01"]
+          }
+        },
+        {
+          "method": "DELETE",
+          "description": "remove county(ies) from in state requirement",
+          "body_example": {
+            "locations_fips": ["fips01"]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "route": {
+      "urls": ["colleges/:id/in_state_requirement/places"],
+      "parameters": ["id"],
+      "methods": [
+        {
+          "method": "GET",
+          "description": "get in state requirement places"
+        },
+        {
+          "method": "POST",
+          "description": "add place(s) to in state requirement",
+          "body_example": {
+            "locations_fips": ["fips01"]
+          }
+        },
+        {
+          "method": "DELETE",
+          "description": "remove place(s) from in state requirement",
+          "body_example": {
+            "locations_fips": ["fips01"]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "route": {
+      "urls": ["colleges/:id/in_state_requirement/consolidate_cities"],
+      "parameters": ["id"],
+      "methods": [
+        {
+          "method": "GET",
+          "description": "get in state requirement consolidate_cities"
+        },
+        {
+          "method": "POST",
+          "description": "add consolidated city(ies) to in state requirement",
+          "body_example": {
+            "locations_fips": ["fips01"]
+          }
+        },
+        {
+          "method": "DELETE",
+          "description": "remove city(ies) from in state requirement",
+          "body_example": {
+            "locations_fips": ["fips01"]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "route": {
+      "urls": ["colleges/:id/majors"],
+      "parameters": ["id"],
+      "methods": [
+        {
+          "method": "GET",
+          "description": "get all majors"
+        },
+        {
+          "method": "POST",
+          "description": "add major and add it to college :id",
+          "body_example": {
+            "majors": ["Unique major01 name", "Unique major02 name"]
+          }
+        },
+        {
+          "method": "DELETE",
+          "description": "remove major(s) from college :id majors",
+          "body_example": {
+            "majors": ["Unique major01 name"]
+          }
+        }
+      ]
+    }
+  }
+]
