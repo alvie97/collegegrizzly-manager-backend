@@ -2,16 +2,17 @@ from flask import request
 from flask_restful import Resource
 
 from app import db
-from app.common.utils import get_entity
+from app.common.utils import get_entity_of_resource
 
 
 class LocationRequirement(Resource):
 
   def __init__(self, **kwargs):
     self.entity = kwargs["entity"]
+    self.entity_name = kwargs["entity_name"]
     self.location_entity = kwargs["location_entity"]
 
-  @get_entity
+  @get_entity_of_resource
   def get(self, entity_obj_id, entity_obj):
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 15, type=int)
@@ -19,7 +20,7 @@ class LocationRequirement(Resource):
     return entity_obj.get_location_requirement(self.location_entity, page,
                                                per_page)
 
-  @get_entity
+  @get_entity_of_resource
   def post(self, entity_obj_id, entity_obj):
     data = request.get_json() or {}
 
@@ -42,9 +43,9 @@ class LocationRequirement(Resource):
       db.session.commit()
       return {"_meta": meta}
 
-    return {"message": "No data provided"}, 404
+    return {"message": "No data provided"}, 400
 
-  @get_entity
+  @get_entity_of_resource
   def delete(self, entity_obj_id, entity_obj):
     data = request.get_json() or {}
 
@@ -68,4 +69,4 @@ class LocationRequirement(Resource):
       db.session.commit()
       return {"_meta": meta}
 
-    return {"message": "No data provided"}, 404
+    return {"message": "No data provided"}, 400

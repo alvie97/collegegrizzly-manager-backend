@@ -1,41 +1,35 @@
 from uuid import uuid4
 
-from app.models.college import College
-from app.models.scholarship import Scholarship
-
 
 def generate_public_id():
   return str(uuid4()).replace('-', '')
 
 
-def get_college(f):
+def get_entity(entity, entity_name):
+
+  def get_entity_decorator(f):
+
+    def f_wrapper(*args, **kwargs):
+      entity_obj = entity.query.filter_by(public_id=kwargs[entity_name +
+                                                           "_id"]).first()
+      if entity_obj is None:
+        return {"message": "No entity found"}, 404
+
+      return f(entity_obj=entity_obj, *args, **kwargs)
+
+    return f_wrapper
+
+  return get_entity_decorator
+
+
+def get_entity_of_resource(f):
 
   def f_wrapper(*args, **kwargs):
-    college = College.query.filter_by(public_id=kwargs["college_id"]).first()
-    if college is None:
-      return {"message": "No college found"}, 404
+    entity_obj = args[0].entity.query.filter_by(
+        public_id=kwargs[args[0].entity_name + "_id"]).first()
+    if entity_obj is None:
+      return {"message": "No entity found"}, 404
 
-    return f(college=college, *args, **kwargs)
-
-  return f_wrapper
-
-
-def get_entity(f):
-
-  def f_wrapper(*args, **kwargs):
-    if args[0].entity is College:
-      college = College.query.filter_by(
-          public_id=kwargs["entity_obj_id"]).first()
-      if college is None:
-        return {"message": "No college found"}, 404
-
-      return f(entity_obj=college, *args, **kwargs)
-    else:
-      scholarship = Scholarship.query.filter_by(
-          public_id=kwargs["entity_id"]).first()
-      if scholarship is None:
-        return {"message": "No scholarship found"}, 404
-
-      return f(entity_obj=scholarship, *args, **kwargs)
+    return f(entity_obj=entity_obj, *args, **kwargs)
 
   return f_wrapper

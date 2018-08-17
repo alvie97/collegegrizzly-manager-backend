@@ -44,8 +44,7 @@ class Scholarship(PaginatedAPIMixin, db.Model):
   ethnicities = db.relationship(
       "Ethnicity",
       secondary=scholarship_ethnicity,
-      backref=db.backref("scholarships", lazy="dynamic"),
-      lazy="dynamic")
+      backref=db.backref("scholarships", lazy="dynamic"))
   programs = db.relationship(
       "Program",
       secondary=scholarship_program,
@@ -153,14 +152,20 @@ class Scholarship(PaginatedAPIMixin, db.Model):
   def add_ethnicity(self, ethnicity):
     self.ethnicities.append(ethnicity)
 
-  def add_program(self, progam):
-    self.programs.append(progam)
+  def add_program(self, program):
+    if not self.has_program(program.name):
+      self.programs.append(program)
+      return True
+    return False
 
   def remove_ethnicity(self, ethnicity):
     self.ethnicities.remove(ethnicity)
 
-  def remove_program(self, progam):
-    self.programs.remove(progam)
+  def remove_program(self, program):
+    if self.has_program(program.name):
+      self.programs.remove(program)
+      return True
+    return False
 
   def has_ethnicity(self, ethnicity_name):
     return self.ethnicities.filter(
@@ -181,6 +186,9 @@ class Scholarship(PaginatedAPIMixin, db.Model):
     return self.scholarships_needed.filter(
         scholarships_needed.c.needed_id == scholarship.id).count() > 0
 
+  def get_programs(self):
+    return [program.to_dict() for program in self.programs.all()]
+
   def get_location_requirement(self, location_entity, page, per_page):
 
     if location_entity is State:
@@ -198,7 +206,7 @@ class Scholarship(PaginatedAPIMixin, db.Model):
     else:
       location_name = "consolidated_cities"
       location_query = self.consolidated_cities
-      location_url = "scholarship_location_requirement_cities"
+      location_url = "scholarship_location_requirement_consolidated_cities"
 
     return {
         location_name:
@@ -207,7 +215,19 @@ class Scholarship(PaginatedAPIMixin, db.Model):
                 page,
                 per_page,
                 location_url,
-                entity_obj_id=self.public_id)
+                scholarship_id=self.public_id)
+    }
+
+  def location_requirements(self):
+    return {
+        "state":
+            self.get_location_requirement(State, 1, 15),
+        "counties":
+            self.get_location_requirement(County, 1, 15),
+        "places":
+            self.get_location_requirement(Place, 1, 15),
+        "consolidated_cities":
+            self.get_location_requirement(ConsolidatedCity, 1, 15)
     }
 
   def to_dict(self):
@@ -229,7 +249,7 @@ class Scholarship(PaginatedAPIMixin, db.Model):
         "amount_expression":
             self.amount_expression,
         "unweighted_hs_gpa":
-            self.unweighted_hs_gpa,
+            str(self.unweighted_hs_gpa),
         "class_rank":
             self.class_rank,
         "legal_status":
@@ -259,15 +279,11 @@ class Scholarship(PaginatedAPIMixin, db.Model):
         "description":
             self.description,
         "programs":
-            self.programs,
-        "ethnicities":
-            self.ethnicities,
-        "location_requirement": {
-            "states": self.get_states_requirement(1, 15),
-            "counties": self.get_counties_requirement(1, 15),
-            # "places": self.places,
-            # "consolidated_cities": self.consolidated_cities
-        }
+            self.get_programs(),
+        # "ethnicities":
+        #     self.ethnicities,
+        "location_requirement":
+            self.location_requirements()
     }
 
   def from_dict(self, data):

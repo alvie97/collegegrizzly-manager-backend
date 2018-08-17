@@ -183,24 +183,8 @@ class College(PaginatedAPIMixin, db.Model):
                 page,
                 per_page,
                 location_url,
-                entity_obj_id=self.public_id)
+                college_id=self.public_id)
     }
-
-  def get_states_requirement(self, page, per_page):
-    return self.to_collection_dict(
-        self.in_state_states,
-        page,
-        per_page,
-        "college_in_state_requirement_states",
-        entity_id=self.public_id)
-
-  def get_counties_requirement(self, page, per_page):
-    return self.to_collection_dict(
-        self.in_state_counties,
-        page,
-        per_page,
-        "college_in_state_requirement_counties",
-        entity_id=self.public_id)
 
   def get_majors(self):
 

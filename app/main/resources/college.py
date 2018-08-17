@@ -3,9 +3,10 @@ from flask import request, current_app
 from app import db
 from app.models.college import College as CollegeModel
 from app.models.major import Major as MajorModel
-from app.common.utils import generate_public_id, get_college
+from app.common.utils import generate_public_id, get_entity
 
 
+# TODO: use get_entity decorator to get College
 class College(Resource):
 
   def get(self, college_id):
@@ -74,12 +75,14 @@ class Colleges(Resource):
 
 class CollegeMajors(Resource):
 
-  @get_college
-  def get(self, college_id, college):
+  @get_entity(CollegeModel, "college")
+  def get(self, college_id, entity_obj):
+    college = entity_obj
     return {"majors": college.get_majors()}
 
-  @get_college
-  def post(self, college_id, college):
+  @get_entity(CollegeModel, "college")
+  def post(self, college_id, entity_obj):
+    college = entity_obj
     data = request.get_json() or {}
 
     if not data or "majors" not in data:
@@ -106,8 +109,9 @@ class CollegeMajors(Resource):
 
     return {"_meta": meta}
 
-  @get_college
-  def delete(self, college_id, college):
+  @get_entity(CollegeModel, "college")
+  def delete(self, college_id, entity_obj):
+    college = entity_obj
     data = request.get_json() or {}
 
     if not data or "majors" not in data:

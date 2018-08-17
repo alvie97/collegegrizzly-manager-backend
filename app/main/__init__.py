@@ -5,13 +5,10 @@ bp = Blueprint("main", __name__)
 
 from app.models.college import College as CollegeModel
 from app.models.scholarship import Scholarship as ScholarshipModel
-from app.models.state import State as StateModel
-from app.models.county import County as CountyModel
-from app.models.place import Place as PlaceModel
-from app.models.consolidated_city import ConsolidatedCity as ConsolCityModel
 
 from .resources.college import College, Colleges, CollegeMajors
-from .resources.scholarship import Scholarship, Scholarships
+from .resources.scholarship import (Scholarship, Scholarships,
+                                    ScholarshipPrograms)
 from .resources.picture import Picture, Pictures
 from .resources.file import File
 from .resources.locations.usa.states import (States, State, Counties, Places,
@@ -25,40 +22,43 @@ api.add_resource(College, "/colleges/<string:college_id>", endpoint="college")
 api.add_resource(CollegeMajors, "/colleges/<string:college_id>/majors")
 api.add_resource(
     LocationRequirement,
-    "/colleges/<string:entity_obj_id>/in_state_requirement/states",
+    "/colleges/<string:college_id>/in_state_requirement/states",
     endpoint="college_in_state_requirement_states",
     resource_class_kwargs={
         "entity": CollegeModel,
-        "location_entity": StateModel
+        "entity_name": "college"
     })
 api.add_resource(
     LocationRequirement,
-    "/colleges/<string:entity_obj_id>/in_state_requirement/counties",
+    "/colleges/<string:college_id>/in_state_requirement/counties",
     endpoint="college_in_state_requirement_counties",
     resource_class_kwargs={
         "entity": CollegeModel,
-        "location_entity": CountyModel
+        "entity_name": "college"
     })
 api.add_resource(
     LocationRequirement,
-    "/colleges/<string:entity_obj_id>/in_state_requirement/places",
+    "/colleges/<string:college_id>/in_state_requirement/places",
     endpoint="college_in_state_requirement_places",
     resource_class_kwargs={
         "entity": CollegeModel,
-        "location_entity": PlaceModel
+        "entity_name": "college"
     })
+
 api.add_resource(
     LocationRequirement,
-    "/colleges/<string:entity_obj_id>"
+    "/colleges/<string:scholarship_id>"
     "/in_state_requirement/consolidated_cities",
     endpoint="college_in_state_requirement_consolidated_cities",
     resource_class_kwargs={
         "entity": CollegeModel,
-        "location_entity": ConsolCityModel
+        "entity_name": "college"
     })
 
 # Scholarships routes
 
+# TODO: split this route into two routes, one for all scholarship and one
+# for college scholarships
 api.add_resource(
     Scholarships,
     "/scholarships",
@@ -68,38 +68,41 @@ api.add_resource(
     Scholarship,
     "/scholarships/<string:scholarship_id>",
     endpoint="scholarship")
+api.add_resource(ScholarshipPrograms,
+                 "/scholarships/<string:scholarship_id>/programs")
 api.add_resource(
     LocationRequirement,
-    "/scholarships/<string:entity_obj_id>/location_requirement/states",
+    "/scholarships/<string:scholarship_id>/location_requirement/states",
     endpoint="scholarship_location_requirement_states",
     resource_class_kwargs={
         "entity": ScholarshipModel,
-        "location_entity": StateModel
+        "entity_name": "scholarship"
     })
+
 api.add_resource(
     LocationRequirement,
-    "/scholarships/<string:entity_obj_id>/location_requirement/counties",
+    "/scholarships/<string:scholarship_id>/location_requirement/counties",
     endpoint="scholarship_location_requirement_counties",
     resource_class_kwargs={
         "entity": ScholarshipModel,
-        "location_entity": CountyModel
+        "entity_name": "scholarship"
     })
 api.add_resource(
     LocationRequirement,
-    "/scholarships/<string:entity_obj_id>/location_requirement/places",
+    "/scholarships/<string:scholarship_id>/location_requirement/places",
     endpoint="scholarship_location_requirement_places",
     resource_class_kwargs={
         "entity": ScholarshipModel,
-        "location_entity": PlaceModel
+        "entity_name": "scholarship"
     })
 api.add_resource(
     LocationRequirement,
-    "/scholarships/<string:entity_obj_id>"
+    "/scholarships/<string:scholarship_id>"
     "/location_requirement/consolidated_cities",
     endpoint="scholarship_location_requirement_consolidated_cities",
     resource_class_kwargs={
         "entity": ScholarshipModel,
-        "location_entity": ConsolCityModel
+        "entity_name": "scholarship"
     })
 
 # Pictures routes

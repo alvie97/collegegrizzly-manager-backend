@@ -3,9 +3,11 @@ from flask import request, current_app
 from app import db
 from app.models.scholarship import Scholarship as ScholarshipModel
 from app.models.college import College as CollegeModel
-from app.common.utils import generate_public_id
+from app.models.program import Program as ProgramModel
+from app.common.utils import generate_public_id, get_entity
 
 
+# TODO: use get entity decorator to get scholarships
 class Scholarship(Resource):
 
   def get(self, scholarship_id):
@@ -77,3 +79,72 @@ class Scholarships(Resource):
     db.session.commit()
 
     return scholarship.public_id
+
+
+class ScholarshipPrograms(Resource):
+
+  @get_entity(ScholarshipModel, "scholarship")
+  def get(self, scholarship_id, entity_obj):
+    scholarship = entity_obj
+    return {"programs": scholarship.get_programs()}
+
+  @get_entity(ScholarshipModel, "scholarship")
+  def post(self, scholarship_id, entity_obj):
+    scholarship = entity_obj
+    data = request.get_json() or {}
+
+    if not data or "programs" not in data:
+      return {"message": "No data provided"}, 400
+
+    meta = {"to_add": len(data["programs"]), "added": 0, "failed_to_add": 0}
+
+    created = False
+    for program in data["programs"]:
+      program_to_add = ProgramModel.query.filter_by(
+          name=program["name"]).first()
+
+      if program_to_add is None:
+        program_to_add = ProgramModel(
+            name=program["name"],
+            round_qualification=program["round_qualification"])
+        db.session.add(program_to_add)
+        created = True
+
+      if scholarship.add_program(program_to_add):
+        meta["added"] += 1
+      else:
+        meta["failed_to_add"] += 1
+
+    if meta["added"] > 0 or created:
+      db.session.commit()
+
+    return {"_meta": meta}
+
+  @get_entity(ScholarshipModel, "scholarship")
+  def delete(self, scholarship_id, entity_obj):
+    scholarship = entity_obj
+    data = request.get_json() or {}
+
+    if not data or "programs" not in data:
+      return {"message": "No data provided"}, 400
+
+    meta = {
+        "to_remove": len(data["programs"]),
+        "removed": 0,
+        "failed_to_remove": 0
+    }
+
+    for program in data["programs"]:
+      program_to_remove = ProgramModel.query.filter_by(
+          name=program["name"]).first()
+
+      if program_to_remove is not None and scholarship.remove_program(
+          program_to_remove):
+        meta["removed"] += 1
+      else:
+        meta["failed_to_remove"] += 1
+
+    if meta["removed"] > 0:
+      db.session.commit()
+
+    return {"_meta": meta}
