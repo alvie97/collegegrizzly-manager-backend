@@ -49,7 +49,8 @@ class College(PaginatedAPIMixin, db.Model):
   majors = db.relationship(
       "Major",
       secondary=college_major,
-      backref=db.backref("colleges", lazy="dynamic"))
+      backref=db.backref("colleges", lazy="dynamic"),
+      lazy="dynamic")
   in_state_states = db.relationship(
       "State",
       secondary=college_state,
@@ -85,10 +86,14 @@ class College(PaginatedAPIMixin, db.Model):
   def add_major(self, major):
     if not self.has_major(major.name):
       self.majors.append(major)
+      return True
+    return False
 
   def remove_major(self, major):
     if self.has_major(major.name):
       self.majors.remove(major)
+      return True
+    return False
 
   def get_location_entity_query(self, location_obj):
     if isinstance(location_obj, State):
@@ -199,7 +204,7 @@ class College(PaginatedAPIMixin, db.Model):
 
   def get_majors(self):
 
-    return [major.to_dict() for major in self.majors]
+    return [major.to_dict() for major in self.majors.all()]
 
   def get_avatar(self, size):
     digest = md5("test@email.com".encode("utf-8")).hexdigest()

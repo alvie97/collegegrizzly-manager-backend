@@ -76,38 +76,58 @@ class CollegeMajors(Resource):
 
   @get_college
   def get(self, college_id, college):
-    return {"majors": college.majors}
+    return {"majors": college.get_majors()}
 
   @get_college
-  def put(self, college_id, college):
-    majors = request.get_json() or {}
+  def post(self, college_id, college):
+    data = request.get_json() or {}
 
-    if majors:
-      return
+    if not data or "majors" not in data:
+      return {"message": "No data recieved"}, 400
 
-    for major in majors:
-      if not college.has_major(major):
-        new_major = MajorModel.query.filter_by(name=major).first()
-        if new_major is None:
-          new_major = MajorModel(name=major)
-          db.session.add(new_major)
-          db.session.commit()
-        college.add_major(new_major)
+    meta = {"to_add": len(data["majors"]), "added": 0, "failed_to_add": 0}
 
-    db.session.commit()
-    return {"majors": college.majors}
+    added_to_session = False
+    for major in data["majors"]:
+      major_to_add = MajorModel.query.filter_by(name=major).first()
+
+      if major_to_add is None:
+        major_to_add = MajorModel(name=major)
+        db.session.add(major_to_add)
+        added_to_session = True
+
+      if college.add_major(major_to_add):
+        meta["added"] += 1
+      else:
+        meta["failed_to_add"] += 1
+
+    if added_to_session or meta["added"] > 0:
+      db.session.commit()
+
+    return {"_meta": meta}
 
   @get_college
   def delete(self, college_id, college):
-    majors = request.get_json() or {}
+    data = request.get_json() or {}
 
-    if majors:
-      return
+    if not data or "majors" not in data:
+      return {"message": "No data recieved"}, 400
 
-    for major in majors:
-      if college.has_major(major):
-        major_to_delete = MajorModel.query.filter_by(name=major).first()
-        college.remove_major(major_to_delete)
+    meta = {
+        "to_remove": len(data["majors"]),
+        "removed": 0,
+        "failed_to_remove": 0
+    }
 
-    db.session.commit()
-    return {"majors": college.majors}
+    for major in data["majors"]:
+      major_to_remove = MajorModel.query.filter_by(name=major).first()
+
+      if major_to_remove is not None and college.remove_major(major_to_remove):
+        meta["removed"] += 1
+      else:
+        meta["failed_to_remove"] += 1
+
+    if meta["removed"] > 0:
+      db.session.commit()
+
+    return {"_meta": meta}
