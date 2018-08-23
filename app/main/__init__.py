@@ -1,14 +1,13 @@
 from flask import Blueprint
 from app import api
-
 bp = Blueprint("main", __name__)
 
 from app.models.college import College as CollegeModel
 from app.models.scholarship import Scholarship as ScholarshipModel
 
 from .resources.college import College, Colleges, CollegeMajors
-from .resources.scholarship import (Scholarship, Scholarships,
-                                    ScholarshipPrograms)
+from .resources.scholarship import (
+    Scholarship, Scholarships, ScholarshipPrograms, ScholarshipEthnicities)
 from .resources.picture import Picture, Pictures
 from .resources.file import File
 from .resources.locations.usa.states import (States, State, Counties, Places,
@@ -47,7 +46,7 @@ api.add_resource(
 
 api.add_resource(
     LocationRequirement,
-    "/colleges/<string:scholarship_id>"
+    "/colleges/<string:college_id>"
     "/in_state_requirement/consolidated_cities",
     endpoint="college_in_state_requirement_consolidated_cities",
     resource_class_kwargs={
@@ -70,6 +69,8 @@ api.add_resource(
     endpoint="scholarship")
 api.add_resource(ScholarshipPrograms,
                  "/scholarships/<string:scholarship_id>/programs")
+api.add_resource(ScholarshipEthnicities,
+                 "/scholarships/<string:scholarship_id>/ethnicities")
 api.add_resource(
     LocationRequirement,
     "/scholarships/<string:scholarship_id>/location_requirement/states",

@@ -4,6 +4,7 @@ from app import db
 from app.models.scholarship import Scholarship as ScholarshipModel
 from app.models.college import College as CollegeModel
 from app.models.program import Program as ProgramModel
+from app.models.ethnicity import Ethnicity as EthnicityModel
 from app.common.utils import generate_public_id, get_entity
 
 
@@ -140,6 +141,73 @@ class ScholarshipPrograms(Resource):
 
       if program_to_remove is not None and scholarship.remove_program(
           program_to_remove):
+        meta["removed"] += 1
+      else:
+        meta["failed_to_remove"] += 1
+
+    if meta["removed"] > 0:
+      db.session.commit()
+
+    return {"_meta": meta}
+
+class ScholarshipEthnicities(Resource):
+
+  @get_entity(ScholarshipModel, "scholarship")
+  def get(self, scholarship_id, entity_obj):
+    scholarship = entity_obj
+    return {"ethnicities": scholarship.get_ethnicities()}
+
+  @get_entity(ScholarshipModel, "scholarship")
+  def post(self, scholarship_id, entity_obj):
+    scholarship = entity_obj
+    data = request.get_json() or {}
+
+    if not data or "ethnicities" not in data:
+      return {"message": "No data provided"}, 400
+
+    meta = {"to_add": len(data["ethnicities"]), "added": 0, "failed_to_add": 0}
+
+    created = False
+    for ethnicity in data["ethnicities"]:
+      ethnicity_to_add = EthnicityModel.query.filter_by(
+          name=ethnicity["name"]).first()
+
+      if ethnicity_to_add is None:
+        ethnicity_to_add = EthnicityModel(
+            name=ethnicity["name"])
+        db.session.add(ethnicity_to_add)
+        created = True
+
+      if scholarship.add_ethnicity(ethnicity_to_add):
+        meta["added"] += 1
+      else:
+        meta["failed_to_add"] += 1
+
+    if meta["added"] > 0 or created:
+      db.session.commit()
+
+    return {"_meta": meta}
+
+  @get_entity(ScholarshipModel, "scholarship")
+  def delete(self, scholarship_id, entity_obj):
+    scholarship = entity_obj
+    data = request.get_json() or {}
+
+    if not data or "ethnicities" not in data:
+      return {"message": "No data provided"}, 400
+
+    meta = {
+        "to_remove": len(data["ethnicities"]),
+        "removed": 0,
+        "failed_to_remove": 0
+    }
+
+    for ethnicity in data["ethnicities"]:
+      ethnicity_to_remove = EthnicityModel.query.filter_by(
+          name=ethnicity["name"]).first()
+
+      if ethnicity_to_remove is not None and scholarship.remove_ethnicity(
+          ethnicity_to_remove):
         meta["removed"] += 1
       else:
         meta["failed_to_remove"] += 1

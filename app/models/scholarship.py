@@ -14,6 +14,7 @@ from app.models.relation_tables import (
 from app.models.state import State
 
 
+# TODO: add common interface for add_, remove_, has_... models
 class Scholarship(PaginatedAPIMixin, db.Model):
   id = db.Column(db.Integer, primary_key=True)
   public_id = db.Column(db.String(50), unique=True)
@@ -44,7 +45,8 @@ class Scholarship(PaginatedAPIMixin, db.Model):
   ethnicities = db.relationship(
       "Ethnicity",
       secondary=scholarship_ethnicity,
-      backref=db.backref("scholarships", lazy="dynamic"))
+      backref=db.backref("scholarships", lazy="dynamic"),
+      lazy="dynamic")
   programs = db.relationship(
       "Program",
       secondary=scholarship_program,
@@ -150,7 +152,10 @@ class Scholarship(PaginatedAPIMixin, db.Model):
         location_entity.fips_code == fips_code).count() > 0
 
   def add_ethnicity(self, ethnicity):
-    self.ethnicities.append(ethnicity)
+    if not self.has_ethnicity(ethnicity.name):
+      self.ethnicities.append(ethnicity)
+      return True
+    return False
 
   def add_program(self, program):
     if not self.has_program(program.name):
@@ -159,7 +164,10 @@ class Scholarship(PaginatedAPIMixin, db.Model):
     return False
 
   def remove_ethnicity(self, ethnicity):
-    self.ethnicities.remove(ethnicity)
+    if self.has_ethnicity(ethnicity.name):
+      self.ethnicities.remove(ethnicity)
+      return True
+    return False
 
   def remove_program(self, program):
     if self.has_program(program.name):
@@ -188,6 +196,9 @@ class Scholarship(PaginatedAPIMixin, db.Model):
 
   def get_programs(self):
     return [program.to_dict() for program in self.programs.all()]
+
+  def get_ethnicities(self):
+    return [ethnicity.to_dict() for ethnicity in self.ethnicities.all()]
 
   def get_location_requirement(self, location_entity, page, per_page):
 
@@ -280,8 +291,8 @@ class Scholarship(PaginatedAPIMixin, db.Model):
             self.description,
         "programs":
             self.get_programs(),
-        # "ethnicities":
-        #     self.ethnicities,
+        "ethnicities":
+            self.get_ethnicities(),
         "location_requirement":
             self.location_requirements()
     }
