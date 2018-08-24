@@ -76,13 +76,11 @@ class Colleges(Resource):
 class CollegeMajors(Resource):
 
   @get_entity(CollegeModel, "college")
-  def get(self, college_id, entity_obj):
-    college = entity_obj
+  def get(self, college_id, college):
     return {"majors": college.get_majors()}
 
   @get_entity(CollegeModel, "college")
-  def post(self, college_id, entity_obj):
-    college = entity_obj
+  def post(self, college_id, college):
     data = request.get_json() or {}
 
     if not data or "majors" not in data:
@@ -110,8 +108,7 @@ class CollegeMajors(Resource):
     return {"_meta": meta}
 
   @get_entity(CollegeModel, "college")
-  def delete(self, college_id, entity_obj):
-    college = entity_obj
+  def delete(self, college_id, college):
     data = request.get_json() or {}
 
     if not data or "majors" not in data:

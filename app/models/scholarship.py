@@ -1,4 +1,5 @@
 from datetime import datetime
+from flask import url_for
 
 from app import db
 from app.models.common import PaginatedAPIMixin
@@ -182,17 +183,28 @@ class Scholarship(PaginatedAPIMixin, db.Model):
   def has_program(self, program_name):
     return self.programs.filter(Program.name == program_name).count() > 0
 
-  def needs_scholarship(self, scholarship):
-    if not self.needs(scholarship):
+  def add_needed_scholarship(self, scholarship):
+    if not self.needs_scholarship(scholarship):
       self.scholarships_needed.append(scholarship)
+      return True
+    return False
 
   def remove_needed_scholarship(self, scholarship):
     if self.needs(scholarship):
       self.scholarships_needed.remove(scholarship)
+      return True
+    return False
 
-  def needs(self, scholarship):
+  def needs_scholarship(self, scholarship):
     return self.scholarships_needed.filter(
         scholarships_needed.c.needed_id == scholarship.id).count() > 0
+
+  def get_scholarships_needed(self):
+    return [{
+        "public_id": scholarship.public_id,
+        "name": scholarship.name,
+        "url": url_for("scholarship", scholarship_id=scholarship.public_id)
+    } for scholarship in self.scholarships_needed.all()]
 
   def get_programs(self):
     return [program.to_dict() for program in self.programs.all()]
@@ -294,7 +306,9 @@ class Scholarship(PaginatedAPIMixin, db.Model):
         "ethnicities":
             self.get_ethnicities(),
         "location_requirement":
-            self.location_requirements()
+            self.location_requirements(),
+        "scholarships_needed":
+            self.get_scholarships_needed()
     }
 
   def from_dict(self, data):

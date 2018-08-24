@@ -7,7 +7,8 @@ from app.models.scholarship import Scholarship as ScholarshipModel
 
 from .resources.college import College, Colleges, CollegeMajors
 from .resources.scholarship import (
-    Scholarship, Scholarships, ScholarshipPrograms, ScholarshipEthnicities)
+    Scholarship, Scholarships, ScholarshipPrograms, ScholarshipEthnicities,
+  ScholarshipsNeeded)
 from .resources.picture import Picture, Pictures
 from .resources.file import File
 from .resources.locations.usa.states import (States, State, Counties, Places,
@@ -71,6 +72,8 @@ api.add_resource(ScholarshipPrograms,
                  "/scholarships/<string:scholarship_id>/programs")
 api.add_resource(ScholarshipEthnicities,
                  "/scholarships/<string:scholarship_id>/ethnicities")
+api.add_resource(ScholarshipsNeeded,
+                 "/scholarships/<string:scholarship_id>/scholarships_needed")
 api.add_resource(
     LocationRequirement,
     "/scholarships/<string:scholarship_id>/location_requirement/states",

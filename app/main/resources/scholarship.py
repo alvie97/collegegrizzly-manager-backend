@@ -85,13 +85,11 @@ class Scholarships(Resource):
 class ScholarshipPrograms(Resource):
 
   @get_entity(ScholarshipModel, "scholarship")
-  def get(self, scholarship_id, entity_obj):
-    scholarship = entity_obj
+  def get(self, scholarship_id, scholarship):
     return {"programs": scholarship.get_programs()}
 
   @get_entity(ScholarshipModel, "scholarship")
-  def post(self, scholarship_id, entity_obj):
-    scholarship = entity_obj
+  def post(self, scholarship_id, scholarship):
     data = request.get_json() or {}
 
     if not data or "programs" not in data:
@@ -122,8 +120,7 @@ class ScholarshipPrograms(Resource):
     return {"_meta": meta}
 
   @get_entity(ScholarshipModel, "scholarship")
-  def delete(self, scholarship_id, entity_obj):
-    scholarship = entity_obj
+  def delete(self, scholarship_id, scholarship):
     data = request.get_json() or {}
 
     if not data or "programs" not in data:
@@ -150,16 +147,15 @@ class ScholarshipPrograms(Resource):
 
     return {"_meta": meta}
 
+
 class ScholarshipEthnicities(Resource):
 
   @get_entity(ScholarshipModel, "scholarship")
-  def get(self, scholarship_id, entity_obj):
-    scholarship = entity_obj
+  def get(self, scholarship_id, scholarship):
     return {"ethnicities": scholarship.get_ethnicities()}
 
   @get_entity(ScholarshipModel, "scholarship")
-  def post(self, scholarship_id, entity_obj):
-    scholarship = entity_obj
+  def post(self, scholarship_id, scholarship):
     data = request.get_json() or {}
 
     if not data or "ethnicities" not in data:
@@ -173,8 +169,7 @@ class ScholarshipEthnicities(Resource):
           name=ethnicity["name"]).first()
 
       if ethnicity_to_add is None:
-        ethnicity_to_add = EthnicityModel(
-            name=ethnicity["name"])
+        ethnicity_to_add = EthnicityModel(name=ethnicity["name"])
         db.session.add(ethnicity_to_add)
         created = True
 
@@ -189,8 +184,7 @@ class ScholarshipEthnicities(Resource):
     return {"_meta": meta}
 
   @get_entity(ScholarshipModel, "scholarship")
-  def delete(self, scholarship_id, entity_obj):
-    scholarship = entity_obj
+  def delete(self, scholarship_id, scholarship):
     data = request.get_json() or {}
 
     if not data or "ethnicities" not in data:
@@ -208,6 +202,72 @@ class ScholarshipEthnicities(Resource):
 
       if ethnicity_to_remove is not None and scholarship.remove_ethnicity(
           ethnicity_to_remove):
+        meta["removed"] += 1
+      else:
+        meta["failed_to_remove"] += 1
+
+    if meta["removed"] > 0:
+      db.session.commit()
+
+    return {"_meta": meta}
+
+
+class ScholarshipsNeeded(Resource):
+
+  @get_entity(ScholarshipModel, "scholarship")
+  def get(self, scholarship_id, scholarship):
+
+    return {"scholarships_nedded": scholarship.get_scholarships_needed()}
+
+  @get_entity(ScholarshipModel, "scholarship")
+  def post(self, scholarship_id, scholarship):
+    data = request.get_json() or {}
+
+    if not data or "scholarships_needed" not in data:
+      return {"message": "No data provided"}, 400
+
+    meta = {
+        "to_add": len(data["scholarships_needed"]),
+        "added": 0,
+        "failed_to_add": 0
+    }
+
+    for scholarship_needed in data["scholarships_needed"]:
+      scholarship_to_add = ScholarshipModel.query.filter_by(
+          public_id=scholarship_needed["public_id"]).first()
+
+      if scholarship_to_add is not None and scholarship.add_needed_scholarship(
+          scholarship_to_add):
+        meta["added"] += 1
+      else:
+        meta["failed_to_add"] += 1
+
+    if meta["added"] > 0:
+      db.session.commit()
+
+    return {"_meta": meta}
+
+  @get_entity(ScholarshipModel, "scholarship")
+  @get_entity(CollegeModel, "college")
+  def delete(self, college_id, college, scholarship_id, scholarship):
+    data = request.get_json() or {}
+
+    if not data or "scholarships_needed" not in data:
+      return {"message": "No data provided"}, 400
+
+    meta = {
+        "to_remove": len(data["scholarships_needed"]),
+        "removed": 0,
+        "failed_to_remove": 0
+    }
+
+    for scholarship_needed in data["scholarships_needed"]:
+      scholarship_to_remove = college.scholarships.query.filter_by(
+          public_id=scholarship_needed["public_id"]).first()
+
+      if scholarship_to_remove is not None  \
+        and scholarship.remove_needed_scholarship(
+          scholarship_to_remove):
         meta["removed"] += 1
       else:
         meta["failed_to_remove"] += 1
