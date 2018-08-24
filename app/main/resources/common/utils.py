@@ -13,7 +13,7 @@ class LocationRequirement(Resource):
     self.location_entity = kwargs["location_entity"]
 
   @get_entity_of_resource
-  def get(self, entity_obj_id, entity_obj):
+  def get(self, entity_obj, **kwargs):
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 15, type=int)
 
@@ -21,7 +21,7 @@ class LocationRequirement(Resource):
                                                per_page)
 
   @get_entity_of_resource
-  def post(self, entity_obj_id, entity_obj):
+  def post(self, entity_obj, **kwargs):
     data = request.get_json() or {}
 
     if data:
@@ -46,7 +46,7 @@ class LocationRequirement(Resource):
     return {"message": "No data provided"}, 400
 
   @get_entity_of_resource
-  def delete(self, entity_obj_id, entity_obj):
+  def delete(self, entity_obj, **kwargs):
     data = request.get_json() or {}
 
     if data:

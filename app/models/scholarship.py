@@ -190,7 +190,7 @@ class Scholarship(PaginatedAPIMixin, db.Model):
     return False
 
   def remove_needed_scholarship(self, scholarship):
-    if self.needs(scholarship):
+    if self.needs_scholarship(scholarship):
       self.scholarships_needed.remove(scholarship)
       return True
     return False

@@ -13,9 +13,10 @@ def get_entity(entity, entity_name):
       entity_obj = entity.query.filter_by(public_id=kwargs[entity_name +
                                                            "_id"]).first()
       if entity_obj is None:
-        return {"message": "No entity found"}, 404
+        return {"message": "No " + entity_name + " found"}, 404
       
       kwargs[entity_name] = entity_obj
+      del kwargs[entity_name + "_id"]
       return f(*args, **kwargs)
 
     return f_wrapper

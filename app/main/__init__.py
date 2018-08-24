@@ -4,11 +4,15 @@ bp = Blueprint("main", __name__)
 
 from app.models.college import College as CollegeModel
 from app.models.scholarship import Scholarship as ScholarshipModel
+from app.models.state import State as StateModel
+from app.models.county import County as CountyModel
+from app.models.place import Place as PlaceModel
+from app.models.consolidated_city import ConsolidatedCity as ConsCityModel
 
 from .resources.college import College, Colleges, CollegeMajors
-from .resources.scholarship import (
-    Scholarship, Scholarships, ScholarshipPrograms, ScholarshipEthnicities,
-  ScholarshipsNeeded)
+from .resources.scholarship import (Scholarship, Scholarships,
+                                    ScholarshipPrograms,
+                                    ScholarshipEthnicities, ScholarshipsNeeded)
 from .resources.picture import Picture, Pictures
 from .resources.file import File
 from .resources.locations.usa.states import (States, State, Counties, Places,
@@ -26,7 +30,8 @@ api.add_resource(
     endpoint="college_in_state_requirement_states",
     resource_class_kwargs={
         "entity": CollegeModel,
-        "entity_name": "college"
+        "entity_name": "college",
+        "location_entity": StateModel
     })
 api.add_resource(
     LocationRequirement,
@@ -34,7 +39,8 @@ api.add_resource(
     endpoint="college_in_state_requirement_counties",
     resource_class_kwargs={
         "entity": CollegeModel,
-        "entity_name": "college"
+        "entity_name": "college",
+        "location_entity": CountyModel
     })
 api.add_resource(
     LocationRequirement,
@@ -42,7 +48,8 @@ api.add_resource(
     endpoint="college_in_state_requirement_places",
     resource_class_kwargs={
         "entity": CollegeModel,
-        "entity_name": "college"
+        "entity_name": "college",
+        "location_entity": PlaceModel
     })
 
 api.add_resource(
@@ -52,7 +59,8 @@ api.add_resource(
     endpoint="college_in_state_requirement_consolidated_cities",
     resource_class_kwargs={
         "entity": CollegeModel,
-        "entity_name": "college"
+        "entity_name": "college",
+        "location_entity": ConsCityModel
     })
 
 # Scholarships routes
@@ -72,15 +80,18 @@ api.add_resource(ScholarshipPrograms,
                  "/scholarships/<string:scholarship_id>/programs")
 api.add_resource(ScholarshipEthnicities,
                  "/scholarships/<string:scholarship_id>/ethnicities")
-api.add_resource(ScholarshipsNeeded,
-                 "/scholarships/<string:scholarship_id>/scholarships_needed")
+api.add_resource(
+    ScholarshipsNeeded, "/colleges/<string:college_id>"
+    "/scholarships/<string:scholarship_id>/scholarships_needed",
+    "/scholarships/<string:scholarship_id>/scholarships_needed")
 api.add_resource(
     LocationRequirement,
     "/scholarships/<string:scholarship_id>/location_requirement/states",
     endpoint="scholarship_location_requirement_states",
     resource_class_kwargs={
         "entity": ScholarshipModel,
-        "entity_name": "scholarship"
+        "entity_name": "scholarship",
+        "location_entity": StateModel
     })
 
 api.add_resource(
@@ -89,7 +100,8 @@ api.add_resource(
     endpoint="scholarship_location_requirement_counties",
     resource_class_kwargs={
         "entity": ScholarshipModel,
-        "entity_name": "scholarship"
+        "entity_name": "scholarship",
+        "location_entity": CountyModel
     })
 api.add_resource(
     LocationRequirement,
@@ -97,7 +109,8 @@ api.add_resource(
     endpoint="scholarship_location_requirement_places",
     resource_class_kwargs={
         "entity": ScholarshipModel,
-        "entity_name": "scholarship"
+        "entity_name": "scholarship",
+        "location_entity": PlaceModel
     })
 api.add_resource(
     LocationRequirement,
@@ -106,7 +119,8 @@ api.add_resource(
     endpoint="scholarship_location_requirement_consolidated_cities",
     resource_class_kwargs={
         "entity": ScholarshipModel,
-        "entity_name": "scholarship"
+        "entity_name": "scholarship",
+        "location_entity": ConsCityModel
     })
 
 # Pictures routes
