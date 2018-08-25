@@ -9,7 +9,8 @@ from app.models.county import County as CountyModel
 from app.models.place import Place as PlaceModel
 from app.models.consolidated_city import ConsolidatedCity as ConsCityModel
 
-from .resources.college import College, Colleges, CollegeMajors
+from .resources.college import (College, Colleges, CollegeMajors,
+                                CollegeScholarships)
 from .resources.scholarship import (Scholarship, Scholarships,
                                     ScholarshipPrograms,
                                     ScholarshipEthnicities, ScholarshipsNeeded)
@@ -23,6 +24,7 @@ from .resources.common.utils import LocationRequirement
 
 api.add_resource(Colleges, "/colleges", endpoint="colleges")
 api.add_resource(College, "/colleges/<string:college_id>", endpoint="college")
+# TODO: add majors routes
 api.add_resource(CollegeMajors, "/colleges/<string:college_id>/majors")
 api.add_resource(
     LocationRequirement,
@@ -62,16 +64,12 @@ api.add_resource(
         "entity_name": "college",
         "location_entity": ConsCityModel
     })
+api.add_resource(CollegeScholarships,
+                 "/colleges/<string:college_id>/scholarships")
 
 # Scholarships routes
 
-# TODO: split this route into two routes, one for all scholarship and one
-# for college scholarships
-api.add_resource(
-    Scholarships,
-    "/scholarships",
-    "/colleges/<string:college_id>/scholarships",
-    endpoint="scholarships")
+api.add_resource(Scholarships, "/scholarships", endpoint="scholarships")
 api.add_resource(
     Scholarship,
     "/scholarships/<string:scholarship_id>",
@@ -126,6 +124,7 @@ api.add_resource(
 # Pictures routes
 
 api.add_resource(Picture, "/pictures/<string:picture_id>", endpoint="picture")
+# TODO: split route in two pictures and CollegePictures
 api.add_resource(
     Pictures,
     "/pictures",
@@ -134,7 +133,7 @@ api.add_resource(
 api.add_resource(File, "/file/<path:folder>/<path:filename>", endpoint="file")
 
 # Locations routes
-
+# TODO: single locations routes
 api.add_resource(States, "/locations/usa/states")
 api.add_resource(State, "/locations/usa/states/<string:fips_code>")
 api.add_resource(

@@ -226,10 +226,12 @@ class Scholarship(PaginatedAPIMixin, db.Model):
       location_name = "places"
       location_query = self.places
       location_url = "scholarship_location_requirement_places"
-    else:
+    elif location_entity is ConsolidatedCity:
       location_name = "consolidated_cities"
       location_query = self.consolidated_cities
       location_url = "scholarship_location_requirement_consolidated_cities"
+    else:
+      return {"error": "Entity not a location"}
 
     return {
         location_name:
@@ -243,14 +245,22 @@ class Scholarship(PaginatedAPIMixin, db.Model):
 
   def location_requirements(self):
     return {
-        "state":
-            self.get_location_requirement(State, 1, 15),
+        "states":
+            url_for(
+                "scholarship_location_requirement_states",
+                scholarship_id=self.public_id),
         "counties":
-            self.get_location_requirement(County, 1, 15),
+            url_for(
+                "scholarship_location_requirement_counties",
+                scholarship_id=self.public_id),
         "places":
-            self.get_location_requirement(Place, 1, 15),
+            url_for(
+                "scholarship_location_requirement_places",
+                scholarship_id=self.public_id),
         "consolidated_cities":
-            self.get_location_requirement(ConsolidatedCity, 1, 15)
+            url_for(
+                "scholarship_location_requirement_consolidated_cities",
+                scholarship_id=self.public_id)
     }
 
   def to_dict(self):

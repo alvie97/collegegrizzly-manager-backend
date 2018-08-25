@@ -46,17 +46,7 @@ class Scholarship(Resource):
 
 class Scholarships(Resource):
 
-  def get(self, college_id=None):
-    if college_id is not None:
-      college = CollegeModel.query.filter_by(public_id=college_id).first()
-      if college is None:
-        return {"message": "College not found"}, 404
-
-      resources = college.scholarships.all()
-      data = {"items": [item.to_dict() for item in resources]}
-
-      return data
-
+  def get(self):
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get(
         "per_page", current_app.config["SCHOLARSHIPS_PER_PAGE"], type=int)

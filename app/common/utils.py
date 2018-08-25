@@ -35,3 +35,9 @@ def get_entity_of_resource(f):
     return f(entity_obj=entity_obj, *args, **kwargs)
 
   return f_wrapper
+
+# DEBUG functions
+# TODO: put in debug module
+
+def debug_message(message, d_type):
+  print(d_type, ':', message)

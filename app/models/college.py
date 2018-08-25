@@ -223,14 +223,22 @@ class College(PaginatedAPIMixin, db.Model):
 
   def in_state_requirement(self):
     return {
-        "state":
-            self.get_location_requirement(State, 1, 15),
+        "states":
+            url_for(
+                "college_in_state_requirement_states",
+                college_id=self.public_id),
         "counties":
-            self.get_location_requirement(County, 1, 15),
+            url_for(
+                "college_in_state_requirement_counties",
+                college_id=self.public_id),
         "places":
-            self.get_location_requirement(Place, 1, 15),
+            url_for(
+                "college_in_state_requirement_places",
+                college_id=self.public_id),
         "consolidated_cities":
-            self.get_location_requirement(ConsolidatedCity, 1, 15)
+            url_for(
+                "college_in_state_requirement_consolidated_cities",
+                college_id=self.public_id)
     }
 
   def to_dict(self):

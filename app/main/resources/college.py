@@ -1,5 +1,5 @@
 from flask_restful import Resource
-from flask import request, current_app
+from flask import request, current_app, url_for
 from app import db
 from app.models.college import College as CollegeModel
 from app.models.major import Major as MajorModel
@@ -21,13 +21,27 @@ class College(Resource):
     college = CollegeModel.query.filter_by(public_id=college_id).first()
 
     if college is None:
-      return {"message": "no college found"}, 404
+      return {"message": "No college found"}, 404
 
     data = request.get_json() or {}
 
-    college.from_dict({data["key"]: data["value"]})
+    if not data:
+      return {"message": "No data provided"}, 400
+
+    college.from_dict(data)
     db.session.commit()
-    return college.to_dict()
+    return {"college": college.to_dict()}
+
+  def delete(self, college_id):
+    college = CollegeModel.query.filter_by(public_id=college_id).first()
+
+    if college is None:
+      return {"message": "College not found"}, 404
+
+    college.delete()
+    db.session.commit()
+
+    return {"message": "College deleted"}
 
 
 class Colleges(Resource):
@@ -51,17 +65,6 @@ class Colleges(Resource):
 
     return data
 
-  def delete(self):
-    data = request.get_json() or {}
-    if "public_id" not in data:
-      return {"message": "no public_id attribute found"}, 404
-
-    college = CollegeModel.query.filter_by(public_id=data["public_id"])
-    college.delete()
-    db.session.commit()
-
-    return {"message": "Colleges deleted"}
-
   def post(self):
     data = request.get_json() or {}
 
@@ -70,7 +73,22 @@ class Colleges(Resource):
     db.session.add(college)
     db.session.commit()
 
-    return college.to_dict()
+    return {"college_id": college.public_id}
+
+
+class CollegeScholarships(Resource):
+
+  @get_entity(CollegeModel, "college")
+  def get(self, college):
+
+    return {
+        "scholarships": [{
+            "name":
+                scholarship.name,
+            "url":
+                url_for("scholarships", scholarship_id=scholarship.public_id)
+        } for scholarship in college.scholarships]
+    }
 
 
 class CollegeMajors(Resource):
@@ -90,10 +108,10 @@ class CollegeMajors(Resource):
 
     added_to_session = False
     for major in data["majors"]:
-      major_to_add = MajorModel.query.filter_by(name=major).first()
+      major_to_add = MajorModel.query.filter_by(name=major["name"]).first()
 
       if major_to_add is None:
-        major_to_add = MajorModel(name=major)
+        major_to_add = MajorModel(name=major["name"])
         db.session.add(major_to_add)
         added_to_session = True
 
