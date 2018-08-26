@@ -1,4 +1,4 @@
-"""backref of scholarships_needed changed to scneeded_by_scholarships
+"""backref of scholarships_needed changed to needed_by_scholarships
 
 Revision ID: 2dfdf76f6fbd
 Revises: 653d45cbd701

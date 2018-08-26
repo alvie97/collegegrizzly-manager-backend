@@ -206,7 +206,7 @@ class ScholarshipsNeeded(Resource):
   @get_entity(ScholarshipModel, "scholarship")
   def get(self, scholarship):
 
-    return {"scholarships_nedded": scholarship.get_scholarships_needed()}
+    return {"scholarships_needed": scholarship.get_scholarships_needed()}
 
   @get_entity(ScholarshipModel, "scholarship")
   @get_entity(CollegeModel, "college")
