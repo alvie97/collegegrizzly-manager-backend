@@ -15,7 +15,7 @@ class College(Resource):
     if college is None:
       return {"message": "no college found"}, 404
 
-    return college.to_dict()
+    return {"college": college.to_dict()}
 
   def put(self, college_id):
     college = CollegeModel.query.filter_by(public_id=college_id).first()
@@ -86,7 +86,7 @@ class CollegeScholarships(Resource):
             "name":
                 scholarship.name,
             "url":
-                url_for("scholarships", scholarship_id=scholarship.public_id)
+                url_for("scholarship", scholarship_id=scholarship.public_id)
         } for scholarship in college.scholarships]
     }
 

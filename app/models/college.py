@@ -264,7 +264,7 @@ class College(PaginatedAPIMixin, db.Model):
         "majors": self.get_majors(),
         "_links": {
             "scholarships":
-                url_for("scholarships", college_id=self.public_id),
+                url_for("college_scholarships", college_id=self.public_id),
             "pictures":
                 url_for("pictures", college_id=self.public_id),
             "in_state_requirement":

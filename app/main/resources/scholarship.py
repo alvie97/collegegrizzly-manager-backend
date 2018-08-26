@@ -18,7 +18,7 @@ class Scholarship(Resource):
     if scholarship is None:
       return {"message": "no scholarship found"}, 404
 
-    return scholarship.to_dict()
+    return {"scholarship": scholarship.to_dict()}
 
   def put(self, scholarship_id):
     scholarship = ScholarshipModel.query.filter_by(
@@ -28,9 +28,9 @@ class Scholarship(Resource):
       return {"message": "no scholarship found"}, 404
 
     data = request.get_json()
-    scholarship.from_dict({data["key"]: data["value"]})
+    scholarship.from_dict(data)
     db.session.commit()
-    return data
+    return {"scholarship": scholarship.to_dict()}
 
   def delete(self, scholarship_id):
     scholarship = ScholarshipModel.query.filter_by(
@@ -41,7 +41,7 @@ class Scholarship(Resource):
 
     db.session.delete(scholarship)
     db.session.commit()
-    return {"message": "scholarship deleted"}
+    return {"message": "Scholarship deleted"}
 
 
 class Scholarships(Resource):
@@ -69,7 +69,7 @@ class Scholarships(Resource):
     db.session.add(scholarship)
     db.session.commit()
 
-    return scholarship.public_id
+    return {"scholarship_id": scholarship.public_id}
 
 
 class ScholarshipPrograms(Resource):
@@ -93,9 +93,9 @@ class ScholarshipPrograms(Resource):
           name=program["name"]).first()
 
       if program_to_add is None:
-        program_to_add = ProgramModel(
-            name=program["name"],
-            round_qualification=program["round_qualification"])
+        program_to_add = ProgramModel(name=program["name"])
+        if "round_qualification" in program:
+          program_to_add.round_qualification = program["round_qualification"]
         db.session.add(program_to_add)
         created = True
 
@@ -123,8 +123,7 @@ class ScholarshipPrograms(Resource):
     }
 
     for program in data["programs"]:
-      program_to_remove = ProgramModel.query.filter_by(
-          name=program["name"]).first()
+      program_to_remove = ProgramModel.query.filter_by(name=program).first()
 
       if program_to_remove is not None and scholarship.remove_program(
           program_to_remove):
@@ -188,7 +187,7 @@ class ScholarshipEthnicities(Resource):
 
     for ethnicity in data["ethnicities"]:
       ethnicity_to_remove = EthnicityModel.query.filter_by(
-          name=ethnicity["name"]).first()
+          name=ethnicity).first()
 
       if ethnicity_to_remove is not None and scholarship.remove_ethnicity(
           ethnicity_to_remove):
@@ -224,8 +223,10 @@ class ScholarshipsNeeded(Resource):
     }
 
     for scholarship_needed in data["scholarships_needed"]:
+      if scholarship_needed == scholarship.public_id:
+        continue
       scholarship_to_add = college.scholarships.filter_by(
-          public_id=scholarship_needed["public_id"]).first()
+          public_id=scholarship_needed).first()
 
       if scholarship_to_add is not None and scholarship.add_needed_scholarship(
           scholarship_to_add):
@@ -253,11 +254,10 @@ class ScholarshipsNeeded(Resource):
 
     for scholarship_needed in data["scholarships_needed"]:
       scholarship_to_remove = ScholarshipModel.query.filter_by(
-          public_id=scholarship_needed["public_id"]).first()
+          public_id=scholarship_needed).first()
 
-      if scholarship_to_remove is not None  \
-        and scholarship.remove_needed_scholarship(
-          scholarship_to_remove):
+      if scholarship_to_remove is not None \
+      and scholarship.remove_needed_scholarship(scholarship_to_remove):
         meta["removed"] += 1
       else:
         meta["failed_to_remove"] += 1

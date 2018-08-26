@@ -64,12 +64,18 @@ api.add_resource(
         "entity_name": "college",
         "location_entity": ConsCityModel
     })
-api.add_resource(CollegeScholarships,
-                 "/colleges/<string:college_id>/scholarships")
+api.add_resource(
+    CollegeScholarships,
+    "/colleges/<string:college_id>/scholarships",
+    endpoint="college_scholarships")
 
 # Scholarships routes
 
-api.add_resource(Scholarships, "/scholarships", endpoint="scholarships")
+api.add_resource(
+    Scholarships,
+    "/colleges/<string:college_id>/scholarships",
+    "/scholarships",
+    endpoint="scholarships")
 api.add_resource(
     Scholarship,
     "/scholarships/<string:scholarship_id>",
