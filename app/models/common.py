@@ -1,5 +1,6 @@
-from flask import current_app, url_for
+from flask import url_for
 from app import db
+from datetime import datetime
 
 
 class PaginatedAPIMixin(object):
@@ -28,3 +29,24 @@ class PaginatedAPIMixin(object):
     }
 
     return data
+
+
+class DateAudit(object):
+
+  created_at = db.Column(db.DateTime, default=datetime.utcnow)
+  updated_at = db.Column(
+      db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+  def audit_dates(self):
+    return {
+        "created_at": self.created_at.isoformat() + 'Z',
+        "updated_at": self.updated_at.isoformat() + 'Z'
+    }
+
+
+class BaseMixin(object):
+
+  def from_dict(self, data):
+    for field in self.ATTR_FIELDS:
+      if field in data:
+        setattr(self, field, data[field])

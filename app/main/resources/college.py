@@ -6,23 +6,14 @@ from app.models.major import Major as MajorModel
 from app.common.utils import generate_public_id, get_entity
 
 
-# TODO: use get_entity decorator to get College
 class College(Resource):
 
-  def get(self, college_id):
-    college = CollegeModel.query.filter_by(public_id=college_id).first()
-
-    if college is None:
-      return {"message": "no college found"}, 404
-
+  @get_entity(CollegeModel, "college")
+  def get(self, college):
     return {"college": college.to_dict()}
 
-  def put(self, college_id):
-    college = CollegeModel.query.filter_by(public_id=college_id).first()
-
-    if college is None:
-      return {"message": "No college found"}, 404
-
+  @get_entity(CollegeModel, "college")
+  def put(self, college):
     data = request.get_json() or {}
 
     if not data:
@@ -32,12 +23,8 @@ class College(Resource):
     db.session.commit()
     return {"college": college.to_dict()}
 
-  def delete(self, college_id):
-    college = CollegeModel.query.filter_by(public_id=college_id).first()
-
-    if college is None:
-      return {"message": "College not found"}, 404
-
+  @get_entity(CollegeModel, "college")
+  def delete(self, college):
     college.delete()
     db.session.commit()
 
@@ -83,10 +70,9 @@ class CollegeScholarships(Resource):
 
     return {
         "scholarships": [{
-            "name":
-                scholarship.name,
-            "url":
-                url_for("scholarship", scholarship_id=scholarship.public_id)
+            "name": scholarship.name,
+            "url": url_for(
+                "scholarship", scholarship_id=scholarship.public_id)
         } for scholarship in college.scholarships]
     }
 

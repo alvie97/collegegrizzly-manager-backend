@@ -1,8 +1,8 @@
 from app import db
-from app.models.common import PaginatedAPIMixin
+from app.models.common import PaginatedAPIMixin, BaseMixin
 
 
-class Major(db.Model, PaginatedAPIMixin):
+class Major(db.Model, PaginatedAPIMixin, BaseMixin):
   id = db.Column(db.Integer, primary_key=True)
   name = db.Column(db.String(256), unique=True, index=True)
   description = db.Column(db.Text, nullable=True)
@@ -14,8 +14,3 @@ class Major(db.Model, PaginatedAPIMixin):
 
   def to_dict(self):
     return {"name": self.name, "description": self.description}
-
-  def from_dict(self, data):
-    for field in self.ATTR_FIELDS:
-      if field in data:
-        setattr(self, field, data[field])

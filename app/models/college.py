@@ -1,27 +1,24 @@
-from datetime import datetime
 from hashlib import md5
 
 from flask import url_for
 
 from app import db, photos
-from app.models.common import PaginatedAPIMixin
+from app.models.common import PaginatedAPIMixin, DateAudit, BaseMixin
 from app.models.consolidated_city import ConsolidatedCity
 from app.models.county import County
 from app.models.major import Major
 from app.models.place import Place
-from app.models.relation_tables import (college_consolidated_city,
-                                        college_county, college_major,
-                                        college_place, college_state)
+from app.models.relationship_tables import (college_consolidated_city,
+                                            college_county, college_major,
+                                            college_place, college_state)
 from app.models.state import State
 
 
-class College(PaginatedAPIMixin, db.Model):
+class College(PaginatedAPIMixin, DateAudit, BaseMixin, db.Model):
   id = db.Column(db.Integer, primary_key=True)
   public_id = db.Column(db.String(50), unique=True)
   name = db.Column(db.String(256))
   room_and_board = db.Column(db.Numeric(8, 2), default=0)
-  created_at = db.Column(db.DateTime, default=datetime.utcnow)
-  updated_at = db.Column(db.DateTime, default=datetime.utcnow)
   type_of_institution = db.Column(db.String(256), nullable=True)
   phone = db.Column(db.String(256), nullable=True)
   website = db.Column(db.Text, nullable=True)
@@ -246,8 +243,7 @@ class College(PaginatedAPIMixin, db.Model):
         "public_id": self.public_id,
         "name": self.name,
         "room_and_board": str(self.room_and_board),
-        "created_at": self.created_at.isoformat() + 'Z',
-        "updated_at": self.updated_at.isoformat() + 'Z',
+        "audit_dates": self.audit_dates(),
         "type_of_institution": self.type_of_institution,
         "phone": self.phone,
         "website": self.website,
@@ -271,9 +267,3 @@ class College(PaginatedAPIMixin, db.Model):
                 self.in_state_requirement()
         }
     }
-
-  def from_dict(self, data):
-    for field in self.ATTR_FIELDS:
-      if field in data:
-        setattr(self, field, data[field])
-    self.updated_at = datetime.utcnow()

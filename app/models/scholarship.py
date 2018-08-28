@@ -1,14 +1,13 @@
-from datetime import datetime
 from flask import url_for
 
 from app import db
-from app.models.common import PaginatedAPIMixin
+from app.models.common import PaginatedAPIMixin, DateAudit, BaseMixin
 from app.models.consolidated_city import ConsolidatedCity
 from app.models.county import County
 from app.models.ethnicity import Ethnicity
 from app.models.place import Place
 from app.models.program import Program
-from app.models.relation_tables import (
+from app.models.relationship_tables import (
     scholarship_consolidated_city, scholarship_county, scholarship_ethnicity,
     scholarship_place, scholarship_program, scholarship_state,
     scholarships_needed)
@@ -16,13 +15,11 @@ from app.models.state import State
 
 
 # TODO: add common interface for add_, remove_, has_... models
-class Scholarship(PaginatedAPIMixin, db.Model):
+class Scholarship(PaginatedAPIMixin, DateAudit, BaseMixin, db.Model):
   id = db.Column(db.Integer, primary_key=True)
   public_id = db.Column(db.String(50), unique=True)
   name = db.Column(db.String(256))
-  created_at = db.Column(db.DateTime, default=datetime.utcnow)
-  updated_at = db.Column(db.DateTime, default=datetime.utcnow)
-  college_id = db.Column(db.Integer, db.ForeignKey('college.id'))
+  college_id = db.Column(db.Integer, db.ForeignKey("college.id"))
   act = db.Column(db.SmallInteger, default=0)
   sat = db.Column(db.SmallInteger, default=0)
   amount = db.Column(db.String(256), nullable=True)
@@ -92,7 +89,7 @@ class Scholarship(PaginatedAPIMixin, db.Model):
   ]
 
   def __repr__(self):
-    return '<Scholarship {}>'.format(self.name)
+    return "<Scholarship {}>".format(self.name)
 
   # relationships methods
   def get_location_entity_query(self, location_obj):
@@ -269,10 +266,8 @@ class Scholarship(PaginatedAPIMixin, db.Model):
             self.public_id,
         "name":
             self.name,
-        "created_at":
-            self.created_at.isoformat() + 'Z',
-        "updated_at":
-            self.updated_at.isoformat() + 'Z',
+        "audit_dates":
+            self.audit_dates(),
         "act":
             self.act,
         "sat":
@@ -320,9 +315,3 @@ class Scholarship(PaginatedAPIMixin, db.Model):
         "scholarships_needed":
             self.get_scholarships_needed()
     }
-
-  def from_dict(self, data):
-    for field in self.ATTR_FIELDS:
-      if field in data:
-        setattr(self, field, data[field])
-    self.updated_at = datetime.utcnow()

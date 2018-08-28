@@ -1,9 +1,9 @@
 from flask import url_for
 from app import db
-from app.models.common import PaginatedAPIMixin
+from app.models.common import PaginatedAPIMixin, BaseMixin
 
 
-class State(db.Model, PaginatedAPIMixin):
+class State(db.Model, PaginatedAPIMixin, BaseMixin):
   id = db.Column(db.Integer, primary_key=True)
   name = db.Column(db.String(256))
   fips_code = db.Column(db.String(10), index=True, unique=True)
@@ -31,8 +31,3 @@ class State(db.Model, PaginatedAPIMixin):
                     "usa_state_consolidated_cities", state_fips=self.fips_code)
         }
     }
-
-  def from_dict(self, data):
-    for field in self.ATTR_FIELDS:
-      if field in data:
-        setattr(self, field, data[field])

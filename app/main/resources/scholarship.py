@@ -8,36 +8,23 @@ from app.models.ethnicity import Ethnicity as EthnicityModel
 from app.common.utils import generate_public_id, get_entity
 
 
-# TODO: use get entity decorator to get scholarships
 class Scholarship(Resource):
 
-  def get(self, scholarship_id):
-    scholarship = ScholarshipModel.query.filter_by(
-        public_id=scholarship_id).first()
-
-    if scholarship is None:
-      return {"message": "no scholarship found"}, 404
+  @get_entity(ScholarshipModel, "scholarship")
+  def get(self, scholarship):
 
     return {"scholarship": scholarship.to_dict()}
 
-  def put(self, scholarship_id):
-    scholarship = ScholarshipModel.query.filter_by(
-        public_id=scholarship_id).first()
-
-    if scholarship is None:
-      return {"message": "no scholarship found"}, 404
+  @get_entity(ScholarshipModel, "scholarship")
+  def put(self, scholarship):
 
     data = request.get_json()
     scholarship.from_dict(data)
     db.session.commit()
     return {"scholarship": scholarship.to_dict()}
 
-  def delete(self, scholarship_id):
-    scholarship = ScholarshipModel.query.filter_by(
-        public_id=scholarship_id).first()
-
-    if scholarship is None:
-      return {"message": "no scholarship found"}, 404
+  @get_entity(ScholarshipModel, "scholarship")
+  def delete(self, scholarship):
 
     db.session.delete(scholarship)
     db.session.commit()
@@ -56,12 +43,8 @@ class Scholarships(Resource):
 
     return data
 
-  def post(self, college_id):
-    college = CollegeModel.query.filter_by(public_id=college_id).first()
-
-    if college is None:
-      return {"message": "college not found"}, 404
-
+  @get_entity(CollegeModel, "college")
+  def post(self, college):
     data = request.get_json()
 
     scholarship = ScholarshipModel(
