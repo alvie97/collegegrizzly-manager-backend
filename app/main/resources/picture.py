@@ -23,7 +23,7 @@ class Picture(Resource):
       return {'message': 'no picture found'}, 404
 
     data = request.get_json()
-    picture.from_dict({data['key']: data['value']})
+    picture.update({data['key']: data['value']})
     db.session.commit()
     return data
 

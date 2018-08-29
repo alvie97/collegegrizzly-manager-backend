@@ -35,7 +35,7 @@ class Picture(PaginatedAPIMixin, DateAudit, db.Model):
     }
 
   # TODO: see if BaseMixin can be used here
-  def from_dict(self, data):
+  def update(self, data):
     for field in self.ATTR_FIELDS:
       if field in data:
         setattr(self, field, data[field].lower()

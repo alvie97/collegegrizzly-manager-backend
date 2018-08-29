@@ -19,7 +19,7 @@ class Scholarship(Resource):
   def put(self, scholarship):
 
     data = request.get_json()
-    scholarship.from_dict(data)
+    scholarship.update(data)
     db.session.commit()
     return {"scholarship": scholarship.to_dict()}
 

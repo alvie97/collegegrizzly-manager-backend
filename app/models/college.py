@@ -1,9 +1,12 @@
 from hashlib import md5
+from typing import Tuple, List, Dict
 
 from flask import url_for
+from sqlalchemy.orm.query import Query
 
 from app import db, photos
-from app.models.common import PaginatedAPIMixin, DateAudit, BaseMixin
+from app.common.utils import LocationObjType
+from app.models.common import BaseMixin, DateAudit, PaginatedAPIMixin
 from app.models.consolidated_city import ConsolidatedCity
 from app.models.county import County
 from app.models.major import Major
@@ -80,19 +83,16 @@ class College(PaginatedAPIMixin, DateAudit, BaseMixin, db.Model):
     return "<College {}>".format(self.name)
 
   # relationship methods
-  def add_major(self, major):
+  def add_major(self, major: Major):
     if not self.has_major(major.name):
       self.majors.append(major)
-      return True
-    return False
 
-  def remove_major(self, major):
+  def remove_major(self, major: Major):
     if self.has_major(major.name):
       self.majors.remove(major)
-      return True
-    return False
 
-  def get_location_entity_query(self, location_obj):
+  def get_location_entity_query(
+      self, location_obj: LocationObjType) -> Tuple[LocationObjType, Query]:
     if isinstance(location_obj, State):
       location_query = self.in_state_states
       location_entity = State
@@ -106,12 +106,14 @@ class College(PaginatedAPIMixin, DateAudit, BaseMixin, db.Model):
       location_query = self.in_state_consolidated_cities
       location_entity = ConsolidatedCity
     else:
+      # TODO: raise LocationEntityError
       return None
 
     return location_entity, location_query
 
-  def add_location(self, location_obj):
+  def add_location(self, location_obj: LocationObjType):
     instance = self.get_location_entity_query(location_obj)
+    # TODO: turn this into a try/except for LocationEntityError
     if instance is None:
       return False
 
@@ -119,11 +121,10 @@ class College(PaginatedAPIMixin, DateAudit, BaseMixin, db.Model):
 
     if not self.has_location(location_entity, location_obj.fips_code):
       location_query.append(location_obj)
-      return True
-    return False
 
-  def remove_location(self, location_obj):
+  def remove_location(self, location_obj: LocationObjType):
     instance = self.get_location_entity_query(location_obj)
+    # TODO: turn this into a try/except for LocationEntityError
     if instance is None:
       return False
 
@@ -131,10 +132,8 @@ class College(PaginatedAPIMixin, DateAudit, BaseMixin, db.Model):
 
     if self.has_location(location_entity, location_obj.fips_code):
       location_query.remove(location_obj)
-      return True
-    return False
 
-  def has_location(self, location_entity, fips_code):
+  def has_location(self, location_entity: LocationObjType, fips_code: str):
     if location_entity is State:
       location_query = self.in_state_states
     elif location_entity is County:
@@ -144,15 +143,17 @@ class College(PaginatedAPIMixin, DateAudit, BaseMixin, db.Model):
     elif location_entity is ConsolidatedCity:
       location_query = self.in_state_consolidated_cities
     else:
+      # TODO: raise LocationEntityError
       return None
 
     return location_query.filter(
         location_entity.fips_code == fips_code).count() > 0
 
-  def has_major(self, major_name):
+  def has_major(self, major_name: str) -> int:
     return self.majors.filter(Major.name == major_name).count() > 0
 
-  def get_location_requirement(self, location_entity, page, per_page):
+  def get_location_requirement(self, location_entity: LocationObjType,
+                               page: int, per_page: int) -> Dict:
 
     if location_entity is State:
       location_name = "states"
@@ -171,6 +172,7 @@ class College(PaginatedAPIMixin, DateAudit, BaseMixin, db.Model):
       location_query = self.in_state_consolidated_cities
       location_url = "college_in_state_requirement_consolidated_cities"
     else:
+      # TODO: raise LocationEntityError
       return {"error": "Entity not a location"}
 
     return {
@@ -183,22 +185,22 @@ class College(PaginatedAPIMixin, DateAudit, BaseMixin, db.Model):
                 college_id=self.public_id)
     }
 
-  def get_majors(self):
+  def get_majors(self) -> List[Dict]:
 
     return [major.to_dict() for major in self.majors.all()]
 
-  def get_avatar(self, size):
+  def get_avatar(self, size: int) -> str:
     digest = md5("test@email.com".encode("utf-8")).hexdigest()
     return "https://www.gravatar.com/avatar/{}?d=identicon&s={}".format(
         digest, size)
 
-  def total_ofs(self):
+  def total_ofs(self) -> float:
     return self.room_and_board + self.out_of_state_tuition
 
-  def total_is(self):
+  def total_is(self) -> float:
     return self.room_and_board + self.in_state_tuition
 
-  def get_logo(self):
+  def get_logo(self) -> str:
     logo = self.pictures.filter_by(type="logo").first()
 
     if logo is None:
@@ -207,10 +209,6 @@ class College(PaginatedAPIMixin, DateAudit, BaseMixin, db.Model):
     return photos.url(logo.name)
 
   def delete(self):
-    """
-            Scholarships don't need to be removed manually
-            because, the cascade option takes care of it
-            """
     pics = self.pictures.all()
 
     for pic in pics:
@@ -218,7 +216,7 @@ class College(PaginatedAPIMixin, DateAudit, BaseMixin, db.Model):
 
     db.session.delete(self)
 
-  def in_state_requirement(self):
+  def in_state_requirement(self) -> Dict:
     return {
         "states":
             url_for(
@@ -238,7 +236,7 @@ class College(PaginatedAPIMixin, DateAudit, BaseMixin, db.Model):
                 college_id=self.public_id)
     }
 
-  def to_dict(self):
+  def to_dict(self) -> Dict:
     return {
         "public_id": self.public_id,
         "name": self.name,

@@ -1,9 +1,16 @@
 from flask_restful import Resource
 from flask import request, current_app, url_for
+from marshmallow import ValidationError
+
 from app import db
 from app.models.college import College as CollegeModel
 from app.models.major import Major as MajorModel
-from app.common.utils import generate_public_id, get_entity
+from app.common.utils import get_entity
+from app.schemas.college_schema import CollegeSchema
+from app.schemas.major_schema import MajorSchema
+
+college_schema = CollegeSchema()
+major_schema = MajorSchema(many=True)
 
 
 class College(Resource):
@@ -19,7 +26,7 @@ class College(Resource):
     if not data:
       return {"message": "No data provided"}, 400
 
-    college.from_dict(data)
+    college.update(data)
     db.session.commit()
     return {"college": college.to_dict()}
 
@@ -55,7 +62,13 @@ class Colleges(Resource):
   def post(self):
     data = request.get_json() or {}
 
-    college = CollegeModel(public_id=generate_public_id(), **data)
+    if not data:
+      return {"message": "No data provided"}, 400
+
+    try:
+      college = college_schema.load(data)
+    except ValidationError as err:
+      return err.messages, 422
 
     db.session.add(college)
     db.session.commit()
@@ -84,32 +97,28 @@ class CollegeMajors(Resource):
     return {"majors": college.get_majors()}
 
   @get_entity(CollegeModel, "college")
-  def post(self, college):
+  def post(self, college: CollegeModel):
     data = request.get_json() or {}
 
     if not data or "majors" not in data:
-      return {"message": "No data recieved"}, 400
+      return {"message": "No data provided"}, 400
 
-    meta = {"to_add": len(data["majors"]), "added": 0, "failed_to_add": 0}
+    try:
+      major_schema.load(data["majors"])
+    except ValidationError as err:
+      return err.messages, 422
 
-    added_to_session = False
     for major in data["majors"]:
       major_to_add = MajorModel.query.filter_by(name=major["name"]).first()
 
       if major_to_add is None:
         major_to_add = MajorModel(name=major["name"])
         db.session.add(major_to_add)
-        added_to_session = True
 
-      if college.add_major(major_to_add):
-        meta["added"] += 1
-      else:
-        meta["failed_to_add"] += 1
+      college.add_major(major_to_add)
 
-    if added_to_session or meta["added"] > 0:
-      db.session.commit()
-
-    return {"_meta": meta}
+    db.session.commit()
+    return {"message": "majors added"}
 
   @get_entity(CollegeModel, "college")
   def delete(self, college):
