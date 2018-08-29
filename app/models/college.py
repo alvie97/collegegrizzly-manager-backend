@@ -1,23 +1,19 @@
 from hashlib import md5
-from typing import Tuple, List, Dict
+from typing import List
 
 from flask import url_for
-from sqlalchemy.orm.query import Query
 
 from app import db, photos
-from app.common.utils import LocationObjType
-from app.models.common import BaseMixin, DateAudit, PaginatedAPIMixin
-from app.models.consolidated_city import ConsolidatedCity
-from app.models.county import County
+from app.models.common import (BaseMixin, DateAudit, PaginatedAPIMixin,
+                               LocationMixin)
 from app.models.major import Major
-from app.models.place import Place
 from app.models.relationship_tables import (college_consolidated_city,
                                             college_county, college_major,
                                             college_place, college_state)
-from app.models.state import State
 
 
-class College(PaginatedAPIMixin, DateAudit, BaseMixin, db.Model):
+class College(PaginatedAPIMixin, LocationMixin, DateAudit, BaseMixin,
+              db.Model):
   id = db.Column(db.Integer, primary_key=True)
   public_id = db.Column(db.String(50), unique=True)
   name = db.Column(db.String(256))
@@ -25,7 +21,7 @@ class College(PaginatedAPIMixin, DateAudit, BaseMixin, db.Model):
   type_of_institution = db.Column(db.String(256), nullable=True)
   phone = db.Column(db.String(256), nullable=True)
   website = db.Column(db.Text, nullable=True)
-  in_state_tuition = db.Column(db.Numeric(8, 2), default=0)
+  location_requirement_tuition = db.Column(db.Numeric(8, 2), default=0)
   out_of_state_tuition = db.Column(db.Numeric(8, 2), default=0)
   location = db.Column(db.String(256), nullable=True)
   religious_affiliation = db.Column(db.String(256), nullable=True)
@@ -51,22 +47,22 @@ class College(PaginatedAPIMixin, DateAudit, BaseMixin, db.Model):
       secondary=college_major,
       backref=db.backref("colleges", lazy="dynamic"),
       lazy="dynamic")
-  in_state_states = db.relationship(
+  location_requirement_states = db.relationship(
       "State",
       secondary=college_state,
       backref=db.backref("colleges", lazy="dynamic"),
       lazy="dynamic")
-  in_state_counties = db.relationship(
+  location_requirement_counties = db.relationship(
       "County",
       secondary=college_county,
       backref=db.backref("colleges", lazy="dynamic"),
       lazy="dynamic")
-  in_state_places = db.relationship(
+  location_requirement_places = db.relationship(
       "Place",
       secondary=college_place,
       backref=db.backref("colleges", lazy="dynamic"),
       lazy="dynamic")
-  in_state_consolidated_cities = db.relationship(
+  location_requirement_consolidated_cities = db.relationship(
       "ConsolidatedCity",
       secondary=college_consolidated_city,
       backref=db.backref("colleges", lazy="dynamic"),
@@ -82,7 +78,6 @@ class College(PaginatedAPIMixin, DateAudit, BaseMixin, db.Model):
   def __repr__(self):
     return "<College {}>".format(self.name)
 
-  # relationship methods
   def add_major(self, major: Major):
     if not self.has_major(major.name):
       self.majors.append(major)
@@ -91,101 +86,10 @@ class College(PaginatedAPIMixin, DateAudit, BaseMixin, db.Model):
     if self.has_major(major.name):
       self.majors.remove(major)
 
-  def get_location_entity_query(
-      self, location_obj: LocationObjType) -> Tuple[LocationObjType, Query]:
-    if isinstance(location_obj, State):
-      location_query = self.in_state_states
-      location_entity = State
-    elif isinstance(location_obj, County):
-      location_query = self.in_state_counties
-      location_entity = County
-    elif isinstance(location_obj, Place):
-      location_query = self.in_state_places
-      location_entity = Place
-    elif isinstance(location_obj, ConsolidatedCity):
-      location_query = self.in_state_consolidated_cities
-      location_entity = ConsolidatedCity
-    else:
-      # TODO: raise LocationEntityError
-      return None
-
-    return location_entity, location_query
-
-  def add_location(self, location_obj: LocationObjType):
-    instance = self.get_location_entity_query(location_obj)
-    # TODO: turn this into a try/except for LocationEntityError
-    if instance is None:
-      return False
-
-    location_entity, location_query = instance
-
-    if not self.has_location(location_entity, location_obj.fips_code):
-      location_query.append(location_obj)
-
-  def remove_location(self, location_obj: LocationObjType):
-    instance = self.get_location_entity_query(location_obj)
-    # TODO: turn this into a try/except for LocationEntityError
-    if instance is None:
-      return False
-
-    location_entity, location_query = instance
-
-    if self.has_location(location_entity, location_obj.fips_code):
-      location_query.remove(location_obj)
-
-  def has_location(self, location_entity: LocationObjType, fips_code: str):
-    if location_entity is State:
-      location_query = self.in_state_states
-    elif location_entity is County:
-      location_query = self.in_state_counties
-    elif location_entity is Place:
-      location_query = self.in_state_places
-    elif location_entity is ConsolidatedCity:
-      location_query = self.in_state_consolidated_cities
-    else:
-      # TODO: raise LocationEntityError
-      return None
-
-    return location_query.filter(
-        location_entity.fips_code == fips_code).count() > 0
-
-  def has_major(self, major_name: str) -> int:
+  def has_major(self, major_name: str) -> bool:
     return self.majors.filter(Major.name == major_name).count() > 0
 
-  def get_location_requirement(self, location_entity: LocationObjType,
-                               page: int, per_page: int) -> Dict:
-
-    if location_entity is State:
-      location_name = "states"
-      location_query = self.in_state_states
-      location_url = "college_in_state_requirement_states"
-    elif location_entity is County:
-      location_name = "counties"
-      location_query = self.in_state_counties
-      location_url = "college_in_state_requirement_counties"
-    elif location_entity is Place:
-      location_name = "places"
-      location_query = self.in_state_places
-      location_url = "college_in_state_requirement_places"
-    elif location_entity is ConsolidatedCity:
-      location_name = "consolidated_cities"
-      location_query = self.in_state_consolidated_cities
-      location_url = "college_in_state_requirement_consolidated_cities"
-    else:
-      # TODO: raise LocationEntityError
-      return {"error": "Entity not a location"}
-
-    return {
-        location_name:
-            self.to_collection_dict(
-                location_query,
-                page,
-                per_page,
-                location_url,
-                college_id=self.public_id)
-    }
-
-  def get_majors(self) -> List[Dict]:
+  def get_majors(self) -> List[dict]:
 
     return [major.to_dict() for major in self.majors.all()]
 
@@ -216,27 +120,7 @@ class College(PaginatedAPIMixin, DateAudit, BaseMixin, db.Model):
 
     db.session.delete(self)
 
-  def in_state_requirement(self) -> Dict:
-    return {
-        "states":
-            url_for(
-                "college_in_state_requirement_states",
-                college_id=self.public_id),
-        "counties":
-            url_for(
-                "college_in_state_requirement_counties",
-                college_id=self.public_id),
-        "places":
-            url_for(
-                "college_in_state_requirement_places",
-                college_id=self.public_id),
-        "consolidated_cities":
-            url_for(
-                "college_in_state_requirement_consolidated_cities",
-                college_id=self.public_id)
-    }
-
-  def to_dict(self) -> Dict:
+  def to_dict(self) -> dict:
     return {
         "public_id": self.public_id,
         "name": self.name,
@@ -262,6 +146,8 @@ class College(PaginatedAPIMixin, DateAudit, BaseMixin, db.Model):
             "pictures":
                 url_for("pictures", college_id=self.public_id),
             "in_state_requirement":
-                self.in_state_requirement()
+                self.get_location_requirement(
+                    "college_in_state_requirement_counties",
+                    college_id=self.public_id)
         }
     }

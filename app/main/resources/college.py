@@ -10,18 +10,18 @@ from app.schemas.college_schema import CollegeSchema
 from app.schemas.major_schema import MajorSchema
 
 college_schema = CollegeSchema()
-major_schema = MajorSchema(many=True)
+major_schema = MajorSchema()
 
 
 class College(Resource):
 
   @get_entity(CollegeModel, "college")
-  def get(self, college):
+  def get(self, college: CollegeModel):
     return {"college": college.to_dict()}
 
   @get_entity(CollegeModel, "college")
-  def put(self, college):
-    data = request.get_json() or {}
+  def put(self, college: CollegeModel):
+    data: dict = request.get_json() or {}
 
     if not data:
       return {"message": "No data provided"}, 400
@@ -31,7 +31,7 @@ class College(Resource):
     return {"college": college.to_dict()}
 
   @get_entity(CollegeModel, "college")
-  def delete(self, college):
+  def delete(self, college: CollegeModel):
     college.delete()
     db.session.commit()
 
@@ -79,7 +79,7 @@ class Colleges(Resource):
 class CollegeScholarships(Resource):
 
   @get_entity(CollegeModel, "college")
-  def get(self, college):
+  def get(self, college: CollegeModel):
 
     return {
         "scholarships": [{
@@ -93,7 +93,7 @@ class CollegeScholarships(Resource):
 class CollegeMajors(Resource):
 
   @get_entity(CollegeModel, "college")
-  def get(self, college):
+  def get(self, college: CollegeModel):
     return {"majors": college.get_majors()}
 
   @get_entity(CollegeModel, "college")
@@ -121,27 +121,25 @@ class CollegeMajors(Resource):
     return {"message": "majors added"}
 
   @get_entity(CollegeModel, "college")
-  def delete(self, college):
+  def delete(self, college: CollegeModel):
     data = request.get_json() or {}
 
     if not data or "majors" not in data:
-      return {"message": "No data recieved"}, 400
+      return {"message": "No data provided"}, 400
 
-    meta = {
-        "to_remove": len(data["majors"]),
-        "removed": 0,
-        "failed_to_remove": 0
-    }
+    try:
+      major_schema.load(data["majors"])
+    except ValidationError as err:
+      return err.messages, 422
 
     for major in data["majors"]:
-      major_to_remove = MajorModel.query.filter_by(name=major).first()
+      major_to_remove = MajorModel.query.filter_by(name=major["name"]).first()
 
-      if major_to_remove is not None and college.remove_major(major_to_remove):
-        meta["removed"] += 1
-      else:
-        meta["failed_to_remove"] += 1
+      if major_to_remove is None:
+        major_to_remove = MajorModel(name=major["name"])
+        db.session.add(major_to_remove)
 
-    if meta["removed"] > 0:
-      db.session.commit()
+      college.remove_major(major_to_remove)
 
-    return {"_meta": meta}
+    db.session.commit()
+    return {"message": "majors removed"}

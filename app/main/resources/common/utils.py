@@ -3,6 +3,7 @@ from flask_restful import Resource
 
 from app import db
 from app.common.utils import get_entity_of_resource
+from app.models.common import LocationMixin, BaseMixin
 
 
 class LocationRequirement(Resource):
@@ -13,7 +14,7 @@ class LocationRequirement(Resource):
     self.location_entity = kwargs["location_entity"]
 
   @get_entity_of_resource
-  def get(self, entity_obj, **kwargs):
+  def get(self, entity_obj: LocationMixin, **kwargs):
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 15, type=int)
 
@@ -21,7 +22,7 @@ class LocationRequirement(Resource):
                                                per_page)
 
   @get_entity_of_resource
-  def post(self, entity_obj, **kwargs):
+  def post(self, entity_obj: LocationMixin, **kwargs):
     data = request.get_json() or {}
 
     if data:
@@ -46,7 +47,7 @@ class LocationRequirement(Resource):
     return {"message": "No data provided"}, 400
 
   @get_entity_of_resource
-  def delete(self, entity_obj, **kwargs):
+  def delete(self, entity_obj: LocationMixin, **kwargs):
     data = request.get_json() or {}
 
     if data:
