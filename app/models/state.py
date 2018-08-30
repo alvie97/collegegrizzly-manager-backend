@@ -1,7 +1,3 @@
-from flask import url_for
-from app import db
-from app.models.common import PaginatedAPIMixin, BaseMixin
-
 
 class State(db.Model, PaginatedAPIMixin, BaseMixin):
   id = db.Column(db.Integer, primary_key=True)

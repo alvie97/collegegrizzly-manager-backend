@@ -1,14 +1,3 @@
-from app import create_app, db, cli
-from app.models.college import College
-from app.models.scholarship import Scholarship
-from app.models.state import State
-from app.models.county import County
-from app.models.place import Place
-from app.models.consolidated_city import ConsolidatedCity
-from app.models.ethnicity import Ethnicity
-from app.models.major import Major
-from app.models.program import Program
-
 app = create_app()
 cli.register(app)
 

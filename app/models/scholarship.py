@@ -1,21 +1,7 @@
-from flask import url_for
-
-from app import db
-from app.models.common import PaginatedAPIMixin, DateAudit, BaseMixin
-from app.models.consolidated_city import ConsolidatedCity
-from app.models.county import County
-from app.models.ethnicity import Ethnicity
-from app.models.place import Place
-from app.models.program import Program
-from app.models.relationship_tables import (
-    scholarship_consolidated_city, scholarship_county, scholarship_ethnicity,
-    scholarship_place, scholarship_program, scholarship_state,
-    scholarships_needed)
-from app.models.state import State
-
 
 # TODO: add common interface for add_, remove_, has_... models
-class Scholarship(PaginatedAPIMixin, DateAudit, BaseMixin, db.Model):
+class Scholarship(PaginatedAPIMixin, LocationMixin, DateAudit, BaseMixin,
+                  db.Model):
   id = db.Column(db.Integer, primary_key=True)
   public_id = db.Column(db.String(50), unique=True)
   name = db.Column(db.String(256))
@@ -57,26 +43,6 @@ class Scholarship(PaginatedAPIMixin, DateAudit, BaseMixin, db.Model):
       secondaryjoin=(scholarships_needed.c.needed_id == id),
       backref=db.backref("needed_by_scholarships", lazy="dynamic"),
       lazy="dynamic")
-  states = db.relationship(
-      "State",
-      secondary=scholarship_state,
-      backref=db.backref("scholarships", lazy="dynamic"),
-      lazy="dynamic")
-  counties = db.relationship(
-      "County",
-      secondary=scholarship_county,
-      backref=db.backref("scholarships", lazy="dynamic"),
-      lazy="dynamic")
-  places = db.relationship(
-      "Place",
-      secondary=scholarship_place,
-      backref=db.backref("scholarships", lazy="dynamic"),
-      lazy="dynamic")
-  consolidated_cities = db.relationship(
-      "ConsolidatedCity",
-      secondary=scholarship_consolidated_city,
-      backref=db.backref("scholarships", lazy="dynamic"),
-      lazy="dynamic")
 
   ATTR_FIELDS = [
       "name", "act", "sat", "amount", "amount_expression", "unweighted_hs_gpa",
@@ -92,86 +58,21 @@ class Scholarship(PaginatedAPIMixin, DateAudit, BaseMixin, db.Model):
     return "<Scholarship {}>".format(self.name)
 
   # relationships methods
-  def get_location_entity_query(self, location_obj):
-    if isinstance(location_obj, State):
-      location_query = self.states
-      location_entity = State
-    elif isinstance(location_obj, County):
-      location_query = self.counties
-      location_entity = County
-    elif isinstance(location_obj, Place):
-      location_query = self.places
-      location_entity = Place
-    elif isinstance(location_obj, ConsolidatedCity):
-      location_query = self.consolidated_cities
-      location_entity = ConsolidatedCity
-    else:
-      return None
-
-    return location_entity, location_query
-
-  def add_location(self, location_obj):
-    instance = self.get_location_entity_query(location_obj)
-    if instance is None:
-      return False
-
-    location_entity, location_query = instance
-
-    if not self.has_location(location_entity, location_obj.fips_code):
-      location_query.append(location_obj)
-      return True
-    return False
-
-  def remove_location(self, location_obj):
-    instance = self.get_location_entity_query(location_obj)
-    if instance is None:
-      return False
-
-    location_entity, location_query = instance
-
-    if self.has_location(location_entity, location_obj.fips_code):
-      location_query.remove(location_obj)
-      return True
-    return False
-
-  def has_location(self, location_entity, fips_code):
-    if location_entity is State:
-      location_query = self.states
-    elif location_entity is County:
-      location_query = self.counties
-    elif location_entity is Place:
-      location_query = self.places
-    elif location_entity is ConsolidatedCity:
-      location_query = self.consolidated_cities
-    else:
-      return None
-
-    return location_query.filter(
-        location_entity.fips_code == fips_code).count() > 0
-
   def add_ethnicity(self, ethnicity):
     if not self.has_ethnicity(ethnicity.name):
       self.ethnicities.append(ethnicity)
-      return True
-    return False
 
   def add_program(self, program):
     if not self.has_program(program.name):
       self.programs.append(program)
-      return True
-    return False
 
   def remove_ethnicity(self, ethnicity):
     if self.has_ethnicity(ethnicity.name):
       self.ethnicities.remove(ethnicity)
-      return True
-    return False
 
   def remove_program(self, program):
     if self.has_program(program.name):
       self.programs.remove(program)
-      return True
-    return False
 
   def has_ethnicity(self, ethnicity_name):
     return self.ethnicities.filter(
@@ -183,14 +84,10 @@ class Scholarship(PaginatedAPIMixin, DateAudit, BaseMixin, db.Model):
   def add_needed_scholarship(self, scholarship):
     if not self.needs_scholarship(scholarship):
       self.scholarships_needed.append(scholarship)
-      return True
-    return False
 
   def remove_needed_scholarship(self, scholarship):
     if self.needs_scholarship(scholarship):
       self.scholarships_needed.remove(scholarship)
-      return True
-    return False
 
   def needs_scholarship(self, scholarship):
     return self.scholarships_needed.filter(
@@ -208,57 +105,6 @@ class Scholarship(PaginatedAPIMixin, DateAudit, BaseMixin, db.Model):
 
   def get_ethnicities(self):
     return [ethnicity.to_dict() for ethnicity in self.ethnicities.all()]
-
-  def get_location_requirement(self, location_entity, page, per_page):
-
-    if location_entity is State:
-      location_name = "states"
-      location_query = self.states
-      location_url = "scholarship_location_requirement_states"
-    elif location_entity is County:
-      location_name = "counties"
-      location_query = self.counties
-      location_url = "scholarship_location_requirement_counties"
-    elif location_entity is Place:
-      location_name = "places"
-      location_query = self.places
-      location_url = "scholarship_location_requirement_places"
-    elif location_entity is ConsolidatedCity:
-      location_name = "consolidated_cities"
-      location_query = self.consolidated_cities
-      location_url = "scholarship_location_requirement_consolidated_cities"
-    else:
-      return {"error": "Entity not a location"}
-
-    return {
-        location_name:
-            self.to_collection_dict(
-                location_query,
-                page,
-                per_page,
-                location_url,
-                scholarship_id=self.public_id)
-    }
-
-  def location_requirements(self):
-    return {
-        "states":
-            url_for(
-                "scholarship_location_requirement_states",
-                scholarship_id=self.public_id),
-        "counties":
-            url_for(
-                "scholarship_location_requirement_counties",
-                scholarship_id=self.public_id),
-        "places":
-            url_for(
-                "scholarship_location_requirement_places",
-                scholarship_id=self.public_id),
-        "consolidated_cities":
-            url_for(
-                "scholarship_location_requirement_consolidated_cities",
-                scholarship_id=self.public_id)
-    }
 
   def to_dict(self):
     return {
@@ -311,7 +157,9 @@ class Scholarship(PaginatedAPIMixin, DateAudit, BaseMixin, db.Model):
         "ethnicities":
             self.get_ethnicities(),
         "location_requirement":
-            self.location_requirements(),
+            self.location_requirement_endpoints(
+                "scholarship_location_requirement",
+                scholarship_id=self.public_id),
         "scholarships_needed":
             self.get_scholarships_needed()
     }

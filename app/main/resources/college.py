@@ -21,7 +21,7 @@ class College(Resource):
 
   @get_entity(CollegeModel, "college")
   def put(self, college: CollegeModel):
-    data: dict = request.get_json() or {}
+    data = request.get_json() or {}
 
     if not data:
       return {"message": "No data provided"}, 400

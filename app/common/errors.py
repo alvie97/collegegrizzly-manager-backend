@@ -1,0 +1,2 @@
+class LocationEntityError(Exception):
+  pass

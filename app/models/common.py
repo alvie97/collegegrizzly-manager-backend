@@ -1,22 +1,19 @@
-from flask import url_for
-from app import db
-from datetime import datetime
 
-from app.common.utils import LocationObjType, SqlalchemyQuery
-from .state import State
-from .county import County
-from .place import Place
-from .consolidated_city import ConsolidatedCity
-
-from typing import Tuple
 
 
 class PaginatedAPIMixin(object):
 
   @staticmethod
-  def to_collection_dict(query, page=0, per_page=0, endpoint='', **kwargs):
+  def to_collection_dict(query: SqlalchemyModel,
+                         page: Optional[int] = 0,
+                         per_page: Optional[int] = 0,
+                         endpoint: Optional[str] = '',
+                         **kwargs: Any) -> dict:
+    """
+    Returns a dictionary of a paginated collection of model instances
+    """
     resources = query.paginate(page, per_page, False)
-    data = {
+    return {
         'items': [item.to_dict() for item in resources.items],
         '_meta': {
             'page': page,
@@ -36,8 +33,6 @@ class PaginatedAPIMixin(object):
         }
     }
 
-    return data
-
 
 class DateAudit(object):
 
@@ -45,7 +40,10 @@ class DateAudit(object):
   updated_at = db.Column(
       db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-  def audit_dates(self):
+  def audit_dates(self) -> dict:
+    """
+    Returns date properties for audit
+    """
     return {
         "created_at": self.created_at.isoformat() + 'Z',
         "updated_at": self.updated_at.isoformat() + 'Z'
@@ -54,8 +52,49 @@ class DateAudit(object):
 
 class LocationMixin(object):
 
+  @declared_attr
+  def location_requirement_states(cls):
+    class_name = cls.__name__.to_lower()
+    return db.relationship(
+        "State",
+        secondary=class_name + "_state",
+        backref=db.backref(class_name + "_list", lazy="dynamic"),
+        lazy="dynamic")
+
+  @declared_attr
+  def location_requirement_counties(cls):
+    class_name = cls.__name__.to_lower()
+    return db.relationship(
+        "County",
+        secondary=class_name + "_county",
+        backref=db.backref(class_name + "_list", lazy="dynamic"),
+        lazy="dynamic")
+
+  @declared_attr
+  def location_requirement_places(cls):
+    class_name = cls.__name__.to_lower()
+    return db.relationship(
+        "Place",
+        secondary=class_name + "_place",
+        backref=db.backref(class_name + "_list", lazy="dynamic"),
+        lazy="dynamic")
+
+  @declared_attr
+  def location_requirement_consolidated_cities(cls):
+    class_name = cls.__name__.to_lower()
+    return db.relationship(
+        "ConsolidatedCity",
+        secondary=class_name + "_consolidated_city",
+        backref=db.backref(class_name + "_list", lazy="dynamic"),
+        lazy="dynamic")
+
   def get_location_entity_query(self, location_obj: LocationObjType
                                ) -> Tuple[LocationObjType, SqlalchemyQuery]:
+    """
+    Returns a tuple of the location entity (Model) and the location requirement
+    query object corresponding to that entity in the Model that inherits the
+    LocationMixin
+    """
     if isinstance(location_obj, State):
       location_query = self.location_requirement_states
       location_entity = State
@@ -69,35 +108,50 @@ class LocationMixin(object):
       location_query = self.location_requirement_consolidated_cities
       location_entity = ConsolidatedCity
     else:
-      # TODO: raise LocationEntityError
-      return None
+      raise LocationEntityError(
+          "location object is not an instance of a location")
 
     return location_entity, location_query
 
   def add_location(self, location_obj: LocationObjType):
-    instance = self.get_location_entity_query(location_obj)
-    # TODO: turn this into a try/except for LocationEntityError
-    if instance is None:
-      return False
+    """
+    Adds location obj to Model relationship
+    """
+    try:
+      instance = self.get_location_entity_query(location_obj)
+    except LocationEntityError as err:
+      raise
 
     location_entity, location_query = instance
 
-    if not self.has_location(location_entity, location_obj.fips_code):
-      location_query.append(location_obj)
+    try:
+      if not self.has_location(location_entity, location_obj.fips_code):
+        location_query.append(location_obj)
+    except LocationEntityError as err:
+      raise
 
   def remove_location(self, location_obj: LocationObjType):
-    instance = self.get_location_entity_query(location_obj)
-    # TODO: turn this into a try/except for LocationEntityError
-    if instance is None:
-      return False
+    """
+    Removes location obj from Model relationship
+    """
+    try:
+      instance = self.get_location_entity_query(location_obj)
+    except LocationEntityError as err:
+      raise
 
     location_entity, location_query = instance
 
-    if self.has_location(location_entity, location_obj.fips_code):
-      location_query.remove(location_obj)
+    try:
+      if self.has_location(location_entity, location_obj.fips_code):
+        location_query.remove(location_obj)
+    except LocationEntityError as err:
+      raise
 
   def has_location(self, location_entity: LocationObjType,
                    fips_code: str) -> bool:
+    """
+    Checks if model has a location with the corresponding fips
+    """
     if location_entity is State:
       location_query = self.location_requirement_states
     elif location_entity is County:
@@ -107,8 +161,7 @@ class LocationMixin(object):
     elif location_entity is ConsolidatedCity:
       location_query = self.location_requirement_consolidated_cities
     else:
-      # TODO: raise LocationEntityError
-      return None
+      raise LocationEntityError("location entity is not a location model")
 
     return location_query.filter(
         location_entity.fips_code == fips_code).count() > 0
@@ -116,6 +169,7 @@ class LocationMixin(object):
   def get_location_requirement(self, location_entity: LocationObjType,
                                base_endpoint: str, page: int, per_page: int,
                                **endpoint_args) -> dict:
+    """Returns paginated list of locations as a dictionary"""
 
     if location_entity is State:
       location_name = "states"
@@ -134,8 +188,7 @@ class LocationMixin(object):
       location_query = self.location_requirement_consolidated_cities
       location_url = base_endpoint + "_cities"
     else:
-      # TODO: raise LocationEntityError
-      return {"error": "Entity not a location"}
+      raise LocationEntityError("location entity is not a location model")
 
     return {
         location_name:
@@ -143,8 +196,9 @@ class LocationMixin(object):
                                     location_url, **endpoint_args)
     }
 
-  def location_requirement_requirement(self, base_endpoint: str,
-                                       **endpoint_args) -> dict:
+  def location_requirement_endpoints(self, base_endpoint: str,
+                                     **endpoint_args) -> dict:
+    """Returns all enpoints to get all location requirements"""
     return {
         "states":
             url_for(base_endpoint + "_states", **endpoint_args),
@@ -168,8 +222,6 @@ class BaseMixin(object):
     """
     Returns list of all model instances, if id list is specified, all instances
     in that list are returned
-
-    :params ids: list of ids
     """
 
     return self.query.all() if not ids else self.query.filter(
@@ -178,7 +230,6 @@ class BaseMixin(object):
   def find(self, **kwargs):
     """
     Returns list of all model instances filtered by specified keys
-    :params **kwargs: filter parameters
     """
 
     return self.query.filter_by(**kwargs)
@@ -186,7 +237,6 @@ class BaseMixin(object):
   def first(self, **kwargs):
     """
     Returns first model instance that meets parameters
-    :params **kwargs: filter parameters
     """
 
     return self.query.filter_by(**kwargs).first()
@@ -194,7 +244,6 @@ class BaseMixin(object):
   def update(self, data):
     """
     updates updatable fields in ATTR_FIELDS with the data provided
-    :params data: data to update
     """
     for field in self.ATTR_FIELDS:
       if field in data:

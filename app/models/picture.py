@@ -1,9 +1,3 @@
-from datetime import datetime
-from app import db, photos
-from app.models.common import PaginatedAPIMixin, DateAudit
-import os
-
-
 class Picture(PaginatedAPIMixin, DateAudit, db.Model):
   id = db.Column(db.Integer, primary_key=True)
   public_id = db.Column(db.String(50), unique=True)

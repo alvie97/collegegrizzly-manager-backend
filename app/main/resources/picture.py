@@ -1,10 +1,3 @@
-from flask_restful import Resource
-from flask import request, current_app
-from app import db, photos
-from app.models.college import College as CollegeModel
-from app.models.picture import Picture as PictureModel
-from app.common.utils import generate_public_id
-
 
 class Picture(Resource):
 

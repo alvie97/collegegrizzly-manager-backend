@@ -1,12 +1,3 @@
-from datetime import datetime
-from hashlib import md5
-
-from werkzeug.security import check_password_hash, generate_password_hash
-
-import jwt
-from app import db
-from app.models.common import BaseMixin, DateAudit, PaginatedAPIMixin
-
 
 class User(PaginatedAPIMixin, BaseMixin, DateAudit, db.Model):
   id = db.Column(db.Integer, primary_key=True)

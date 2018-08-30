@@ -1,7 +1,3 @@
-from app import db
-from app.models.common import PaginatedAPIMixin, BaseMixin
-
-
 class Place(db.Model, BaseMixin, PaginatedAPIMixin):
   id = db.Column(db.Integer, primary_key=True)
   name = db.Column(db.String(256))

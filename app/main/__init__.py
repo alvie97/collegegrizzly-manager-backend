@@ -1,25 +1,5 @@
-from flask import Blueprint
-from app import api
+
 bp = Blueprint("main", __name__)
-
-from app.models.college import College as CollegeModel
-from app.models.scholarship import Scholarship as ScholarshipModel
-from app.models.state import State as StateModel
-from app.models.county import County as CountyModel
-from app.models.place import Place as PlaceModel
-from app.models.consolidated_city import ConsolidatedCity as ConsCityModel
-
-from .resources.college import (College, Colleges, CollegeMajors,
-                                CollegeScholarships)
-from .resources.scholarship import (Scholarship, Scholarships,
-                                    ScholarshipPrograms,
-                                    ScholarshipEthnicities, ScholarshipsNeeded)
-from .resources.picture import Picture, Pictures
-from .resources.file import File
-from .resources.locations.usa.states import (States, State, Counties, Places,
-                                             ConsolidatedCities)
-from .resources.common.utils import LocationRequirement
-
 # Colleges routes
 
 api.add_resource(Colleges, "/colleges", endpoint="colleges")

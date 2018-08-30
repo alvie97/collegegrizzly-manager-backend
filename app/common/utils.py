@@ -1,19 +1,3 @@
-from uuid import uuid4
-from typing import Union, Tuple, Dict, Callable, Any
-from app.models.state import State
-from app.models.county import County
-from app.models.place import Place
-from app.models.consolidated_city import ConsolidatedCity
-from sqlalchemy.orm.query import Query
-from flask_sqlalchemy.model import Model
-from app.models.common import BaseMixin
-from app.main.resources.common.utils import LocationRequirement
-
-LocationObjType = Union[State, County, Place, ConsolidatedCity]
-SqlalchemyQuery = Query
-SqlalchemyModel = Model
-
-
 def generate_public_id() -> str:
   return str(uuid4()).replace('-', '')
 

@@ -1,15 +1,4 @@
-from hashlib import md5
-from typing import List
 
-from flask import url_for
-
-from app import db, photos
-from app.models.common import (BaseMixin, DateAudit, PaginatedAPIMixin,
-                               LocationMixin)
-from app.models.major import Major
-from app.models.relationship_tables import (college_consolidated_city,
-                                            college_county, college_major,
-                                            college_place, college_state)
 
 
 class College(PaginatedAPIMixin, LocationMixin, DateAudit, BaseMixin,
@@ -45,26 +34,6 @@ class College(PaginatedAPIMixin, LocationMixin, DateAudit, BaseMixin,
   majors = db.relationship(
       "Major",
       secondary=college_major,
-      backref=db.backref("colleges", lazy="dynamic"),
-      lazy="dynamic")
-  location_requirement_states = db.relationship(
-      "State",
-      secondary=college_state,
-      backref=db.backref("colleges", lazy="dynamic"),
-      lazy="dynamic")
-  location_requirement_counties = db.relationship(
-      "County",
-      secondary=college_county,
-      backref=db.backref("colleges", lazy="dynamic"),
-      lazy="dynamic")
-  location_requirement_places = db.relationship(
-      "Place",
-      secondary=college_place,
-      backref=db.backref("colleges", lazy="dynamic"),
-      lazy="dynamic")
-  location_requirement_consolidated_cities = db.relationship(
-      "ConsolidatedCity",
-      secondary=college_consolidated_city,
       backref=db.backref("colleges", lazy="dynamic"),
       lazy="dynamic")
 
@@ -146,8 +115,7 @@ class College(PaginatedAPIMixin, LocationMixin, DateAudit, BaseMixin,
             "pictures":
                 url_for("pictures", college_id=self.public_id),
             "in_state_requirement":
-                self.get_location_requirement(
-                    "college_in_state_requirement_counties",
-                    college_id=self.public_id)
+                self.location_requirement_endpoints(
+                    "college_in_state_requirement", college_id=self.public_id)
         }
     }

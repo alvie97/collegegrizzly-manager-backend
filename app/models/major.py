@@ -1,7 +1,3 @@
-from app import db
-from app.models.common import PaginatedAPIMixin, BaseMixin
-
-
 class Major(db.Model, PaginatedAPIMixin, BaseMixin):
   id = db.Column(db.Integer, primary_key=True)
   name = db.Column(db.String(256), unique=True, index=True)

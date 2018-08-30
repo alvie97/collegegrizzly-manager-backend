@@ -1,8 +1,3 @@
-from app import db
-
-from app.models.common import BaseMixin
-
-
 class Program(db.Model, BaseMixin):
   id = db.Column(db.Integer, primary_key=True)
   name = db.Column(db.String(256), index=True, unique=True)

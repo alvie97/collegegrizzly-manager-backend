@@ -1,7 +1,3 @@
-from marshmallow import ValidationError, fields, post_load, schema, validate
-from app.models.major import Major
-
-
 class MajorSchema(schema):
   name = fields.String(required=True)
   description = fields.String()
