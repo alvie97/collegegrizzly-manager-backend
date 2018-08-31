@@ -1,4 +1,9 @@
-
+from .common import PaginatedAPIMixin, LocationMixin, DateAudit, BaseMixin
+from .major import Major
+from .relationship_tables import college_major
+from app import db, url_for, photos
+from hashlib import md5
+from typing import List
 
 
 class College(PaginatedAPIMixin, LocationMixin, DateAudit, BaseMixin,

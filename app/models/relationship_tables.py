@@ -1,3 +1,5 @@
+from app import db
+
 # college relationships
 college_major = db.Table(
     "college_major",

@@ -1,3 +1,11 @@
+from app.models.consolidated_city import ConsolidatedCity as CCModel
+from app.models.county import County as CountyModel
+from app.models.place import Place as PlaceModel
+from app.models.state import State as StateModel
+
+from flask import request
+from flask_restful import Resource
+
 
 class States(Resource):
 

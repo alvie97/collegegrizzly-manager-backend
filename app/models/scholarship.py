@@ -1,3 +1,12 @@
+from .common import PaginatedAPIMixin, LocationMixin, DateAudit, BaseMixin
+from .ethnicity import Ethnicity
+from .program import Program
+from .relationship_tables import (scholarship_ethnicity, scholarship_program,
+                                  scholarships_needed)
+
+from app import db
+from flask import url_for
+
 
 # TODO: add common interface for add_, remove_, has_... models
 class Scholarship(PaginatedAPIMixin, LocationMixin, DateAudit, BaseMixin,

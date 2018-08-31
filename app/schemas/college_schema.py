@@ -1,3 +1,6 @@
+from app.common.utils import generate_public_id
+from app.models.college import College
+from marshmallow import fields, Schema, validates, ValidationError, post_load
 
 class CollegeSchema(Schema):
   name = fields.String(

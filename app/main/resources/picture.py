@@ -1,8 +1,14 @@
+from flask import request, current_app
+from flask_restful import Resource
+from app import db, photos
+from app.models.picture import Picture as PictureModel
+from app.models.college import College as CollegeModel
+from app.common.utils import generate_public_id
 
 class Picture(Resource):
 
   def get(self, picture_id):
-    picture = PictureModel.query.filter_by(public_id=picture_id).first()
+    picture = PictureModel.first(public_id=picture_id)
 
     if picture is None:
       return {'message': 'no picture found'}, 404
@@ -10,7 +16,7 @@ class Picture(Resource):
     return picture.to_dict()
 
   def put(self, picture_id):
-    picture = PictureModel.query.filter_by(public_id=picture_id).first()
+    picture = PictureModel.first(public_id=picture_id)
 
     if picture is None:
       return {'message': 'no picture found'}, 404
