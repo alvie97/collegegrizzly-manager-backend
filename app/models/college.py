@@ -1,7 +1,11 @@
-from .common import PaginatedAPIMixin, LocationMixin, DateAudit, BaseMixin
+from .common.base_mixin import BaseMixin
+from .common.date_audit import DateAudit
+from .common.location_mixin import LocationMixin
+from .common.paginated_api_mixin import PaginatedAPIMixin
 from .major import Major
 from .relationship_tables import college_major
-from app import db, url_for, photos
+from app import db, photos
+from flask import url_for
 from hashlib import md5
 from typing import List
 

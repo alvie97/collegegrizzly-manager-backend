@@ -1,4 +1,6 @@
-from .common import PaginatedAPIMixin, BaseMixin, DateAudit
+from .common.paginated_api_mixin import PaginatedAPIMixin
+from .common.base_mixin import BaseMixin
+from .common.date_audit import DateAudit
 
 from app import db
 from datetime import datetime

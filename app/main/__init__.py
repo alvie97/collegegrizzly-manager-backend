@@ -4,7 +4,7 @@ bp = Blueprint("main", __name__)
 
 from .resources.college import (College, Colleges, CollegeMajors,
                                 CollegeScholarships)
-from .resources.common import LocationRequirement
+from .resources.common.location_requirement import LocationRequirement
 from .resources.file import File
 from .resources.locations.usa.states import (State, States, Counties, Places,
                                              ConsolidatedCities)

@@ -1,4 +1,5 @@
-from .common import PaginatedAPIMixin, BaseMixin
+from .common.base_mixin import BaseMixin
+from .common.paginated_api_mixin import PaginatedAPIMixin
 from app import db
 
 class ConsolidatedCity(PaginatedAPIMixin, BaseMixin, db.Model):

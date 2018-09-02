@@ -1,4 +1,4 @@
-from .common import BaseMixin
+from .common.base_mixin import BaseMixin
 from app import db
 
 class Program(db.Model, BaseMixin):

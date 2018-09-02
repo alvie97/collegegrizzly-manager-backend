@@ -1,4 +1,5 @@
-from .common import PaginatedAPIMixin, BaseMixin
+from .common.paginated_api_mixin import PaginatedAPIMixin
+from .common.base_mixin import BaseMixin
 from app import db
 from flask import url_for
 

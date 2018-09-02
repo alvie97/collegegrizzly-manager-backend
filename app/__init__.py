@@ -6,6 +6,7 @@ from flask_restful import Api
 from flask_cors import CORS
 from flask_uploads import UploadSet, configure_uploads, IMAGES
 
+
 db = SQLAlchemy()
 migrate = Migrate()
 api = Api(prefix='/api')

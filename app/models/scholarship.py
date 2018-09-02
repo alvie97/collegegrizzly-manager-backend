@@ -1,4 +1,7 @@
-from .common import PaginatedAPIMixin, LocationMixin, DateAudit, BaseMixin
+from .common.base_mixin import BaseMixin
+from .common.date_audit import DateAudit
+from .common.location_mixin import LocationMixin
+from .common.paginated_api_mixin import PaginatedAPIMixin
 from .ethnicity import Ethnicity
 from .program import Program
 from .relationship_tables import (scholarship_ethnicity, scholarship_program,
