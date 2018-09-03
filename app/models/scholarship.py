@@ -35,7 +35,7 @@ class Scholarship(PaginatedAPIMixin, LocationMixin, DateAudit, BaseMixin,
   first_choice_national_merit = db.Column(db.String(256), nullable=True)
   exclude_from_match = db.Column(db.Boolean, default=False)
   group_by = db.Column(db.Integer, nullable=True)
-  first_generation_highed_education = db.Column(db.Boolean, default=False)
+  first_generation_higher_education = db.Column(db.Boolean, default=False)
   type = db.Column(db.String(256))
   description = db.Column(db.Text)
   ethnicities = db.relationship(

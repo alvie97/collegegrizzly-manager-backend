@@ -26,6 +26,11 @@ class College(Resource):
     if not data:
       return {"message": "No data provided"}, 400
 
+    try:
+      college_schema.load(data)
+    except ValidationError as err:
+      return err.messages, 422
+
     college.update(data)
     db.session.commit()
     return {"college": college.to_dict()}

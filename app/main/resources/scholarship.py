@@ -7,6 +7,11 @@ from app.models.scholarship import Scholarship as ScholarshipModel
 from app.models.program import Program as ProgramModel
 from app.models.ethnicity import Ethnicity as EthnicityModel
 from app.common.utils import get_entity, generate_public_id
+from app.schemas.scholarship_schema import ScholarshipSchema
+from marshmallow import ValidationError
+
+scholarship_schema = ScholarshipSchema()
+
 
 class Scholarship(Resource):
 
@@ -17,8 +22,16 @@ class Scholarship(Resource):
 
   @get_entity(ScholarshipModel, "scholarship")
   def put(self, scholarship: ScholarshipModel):
-
     data = request.get_json()
+
+    if not data:
+      return {"message": "No data provided"}, 400
+
+    try:
+      scholarship_schema.load(data)
+    except ValidationError as err:
+      return err.messages, 422
+
     scholarship.update(data)
     db.session.commit()
     return {"scholarship": scholarship.to_dict()}
@@ -45,8 +58,17 @@ class Scholarships(Resource):
   def post(self, college: CollegeModel):
     data = request.get_json()
 
+    if not data:
+      return {"message": "No data provided"}, 400
+
+    try:
+      scholarship_schema.load(data)
+    except ValidationError as err:
+      return err.messages, 422
+
     scholarship = ScholarshipModel(
         public_id=generate_public_id(), college=college, **data)
+
     db.session.add(scholarship)
     db.session.commit()
 

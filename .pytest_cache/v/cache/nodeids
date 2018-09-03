@@ -1,0 +1,4 @@
+[
+  "tests/test_colleges.py::test_get_colleges",
+  "tests/test_scholarships.py::test_post_scholarship"
+]
