@@ -6,7 +6,6 @@ from app.models.state import State
 from app.scripts.us_states_prcss import process_fips_codes
 import os
 
-
 def register(app):
 
   @app.cli.group()

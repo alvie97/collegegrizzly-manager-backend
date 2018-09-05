@@ -1,4 +1,11 @@
 [
   "tests/test_colleges.py::test_get_colleges",
-  "tests/test_scholarships.py::test_post_scholarship"
+  "tests/test_colleges.py::test_post_college",
+  "tests/test_colleges.py::test_update_college",
+  "tests/test_colleges.py::test_delete_college",
+  "tests/test_colleges.py::test_college_majors",
+  "tests/test_scholarships.py::test_get_scholarships",
+  "tests/test_scholarships.py::test_post_scholarship",
+  "tests/test_scholarships.py::test_update_scholarship",
+  "tests/test_scholarships.py::test_delete_scholarship"
 ]

@@ -11,6 +11,7 @@ from app.schemas.major_schema import MajorSchema
 
 college_schema = CollegeSchema()
 major_schema = MajorSchema()
+majors_schema = MajorSchema(many=True)
 
 
 class College(Resource):
@@ -24,10 +25,10 @@ class College(Resource):
     data = request.get_json() or {}
 
     if not data:
-      return {"message": "No data provided"}, 400
+      return {"message": "no data provided"}, 400
 
     try:
-      college_schema.load(data)
+      college_schema.load(data, partial=True)
     except ValidationError as err:
       return err.messages, 422
 
@@ -40,7 +41,7 @@ class College(Resource):
     college.delete()
     db.session.commit()
 
-    return {"message": "College deleted"}
+    return {"message": "college deleted"}
 
 
 class Colleges(Resource):
@@ -68,7 +69,7 @@ class Colleges(Resource):
     data = request.get_json() or {}
 
     if not data:
-      return {"message": "No data provided"}, 400
+      return {"message": "no data provided"}, 400
 
     try:
       college = college_schema.load(data)
@@ -106,18 +107,19 @@ class CollegeMajors(Resource):
     data = request.get_json() or {}
 
     if not data or "majors" not in data:
-      return {"message": "No data provided"}, 400
-
-    try:
-      major_schema.load(data["majors"])
-    except ValidationError as err:
-      return err.messages, 422
+      return {"message": "no data provided"}, 400
 
     for major in data["majors"]:
-      major_to_add = MajorModel.query.filter_by(name=major["name"]).first()
+
+      try:
+        major_schema.load(major)
+      except ValidationError as err:
+        return err.messages, 422
+
+      major_to_add = MajorModel.first(name=major["name"])
 
       if major_to_add is None:
-        major_to_add = MajorModel(name=major["name"])
+        major_to_add = MajorModel(**major)
         db.session.add(major_to_add)
 
       college.add_major(major_to_add)
@@ -130,19 +132,13 @@ class CollegeMajors(Resource):
     data = request.get_json() or {}
 
     if not data or "majors" not in data:
-      return {"message": "No data provided"}, 400
-
-    try:
-      major_schema.load(data["majors"])
-    except ValidationError as err:
-      return err.messages, 422
+      return {"message": "no data provided"}, 400
 
     for major in data["majors"]:
-      major_to_remove = MajorModel.query.filter_by(name=major["name"]).first()
+      major_to_remove = college.majors.filter_by(name=major).first()
 
       if major_to_remove is None:
-        major_to_remove = MajorModel(name=major["name"])
-        db.session.add(major_to_remove)
+        return {"message": college.name + "doesn't have major " + major}, 404
 
       college.remove_major(major_to_remove)
 

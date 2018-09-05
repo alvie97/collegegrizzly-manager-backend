@@ -1,10 +1,12 @@
 from app.common.utils import generate_public_id
 from app.models.college import College
-from marshmallow import fields, Schema, validates, ValidationError, post_load
+from marshmallow import (fields, Schema, validates, ValidationError, post_load,
+                         pre_load)
+
 
 class CollegeSchema(Schema):
   name = fields.String(
-      required=True, error_messages={"required": "Name is required"})
+      required=True, error_messages={"required": "name required"})
   room_and_board = fields.Decimal(places=2)
   type_of_institution = fields.String()
   phone = fields.String()

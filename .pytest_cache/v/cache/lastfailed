@@ -1,1 +1,3 @@
-{}
+{
+  "tests/test_colleges.py::test_locations": true
+}

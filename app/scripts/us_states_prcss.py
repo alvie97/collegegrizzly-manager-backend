@@ -10,7 +10,7 @@ def process_fips_codes(filepath):
   CONSOLIDATED_CITY = 5
   NAME = 6
   codes = {}
-  wb = load_workbook(filepath)
+  wb = load_workbook(filepath, read_only=True)
   ws = wb.active
 
   for row in ws.iter_rows(min_row=6):

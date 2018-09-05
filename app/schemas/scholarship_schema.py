@@ -4,8 +4,7 @@ from marshmallow import fields, Schema, validates, ValidationError, post_load
 
 
 class ScholarshipSchema(Schema):
-    name = fields.String(
-        required=True, error_messages={"required": "Name is required"})
+    name = fields.String()
     sat = fields.Integer()
     act = fields.Integer()
     amount = fields.String()

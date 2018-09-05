@@ -63,7 +63,7 @@ class Scholarship(PaginatedAPIMixin, LocationMixin, DateAudit, BaseMixin,
       "paid_full_time_christian_ministry_parent", "parents_higher_education",
       "siblings_currently_in_scholarship", "application_needed",
       "first_choice_national_merit", "exclude_from_match", "group_by",
-      "first_generation_highed_education", "type", "description"
+      "first_generation_higher_education", "type", "description"
   ]
 
   def __repr__(self):
@@ -158,8 +158,8 @@ class Scholarship(PaginatedAPIMixin, LocationMixin, DateAudit, BaseMixin,
             self.exclude_from_match,
         "group_by":
             self.group_by,
-        "first_generation_highed_education":
-            self.first_generation_highed_education,
+        "first_generation_higher_education":
+            self.first_generation_higher_education,
         "type":
             self.type,
         "description":

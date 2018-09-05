@@ -20,6 +20,7 @@ class College(PaginatedAPIMixin, LocationMixin, DateAudit, BaseMixin,
   phone = db.Column(db.String(256), nullable=True)
   website = db.Column(db.Text, nullable=True)
   location_requirement_tuition = db.Column(db.Numeric(8, 2), default=0)
+  in_state_tuition = db.Column(db.Numeric(8, 2), default=0)
   out_of_state_tuition = db.Column(db.Numeric(8, 2), default=0)
   location = db.Column(db.String(256), nullable=True)
   religious_affiliation = db.Column(db.String(256), nullable=True)
