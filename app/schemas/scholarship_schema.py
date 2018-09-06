@@ -1,10 +1,9 @@
-from app.common.utils import generate_public_id
-from app.models.scholarship import Scholarship
-from marshmallow import fields, Schema, validates, ValidationError, post_load
+from marshmallow import fields, Schema, validates, ValidationError
 
 
 class ScholarshipSchema(Schema):
-    name = fields.String()
+    name = fields.String(required=True,
+                         error_messages={"required": "name field is required"})
     sat = fields.Integer()
     act = fields.Integer()
     amount = fields.String()
@@ -55,4 +54,3 @@ class ScholarshipSchema(Schema):
     def validate_class_rank(self, value):
         if 1 < value > 100:
             raise ValidationError("class rank must be between 1 and 100")
-

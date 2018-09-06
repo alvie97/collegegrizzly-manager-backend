@@ -16,7 +16,7 @@ def get_entity(entity: BaseMixin, entity_name: str) -> Model:
       entity_obj = entity.first(public_id=kwargs[entity_name + "_id"])
 
       if entity_obj is None:
-        return {"message": "No " + entity_name + " found"}, 404
+        return {"message": entity_name + " not found"}, 404
 
       kwargs[entity_name] = entity_obj
       del kwargs[entity_name + "_id"]
@@ -34,7 +34,7 @@ def get_entity_of_resource(f: Callable) -> Callable:
     entity_obj = args[0].entity.first(public_id=kwargs[args[0].entity_name +
                                                        "_id"])
     if entity_obj is None:
-      return {"message": "No entity found"}, 404
+      return {"message": "entity not found"}, 404
 
     return f(entity_obj=entity_obj, *args, **kwargs)
 

@@ -28,11 +28,11 @@ def test_college(client):
     assert response.status_code == 200
     assert response_json["message"] == "college deleted"
 
-    response = client.get(url)
+    response = client.get(url + '/' + college_id)
     response_json = response.get_json()
 
-    assert response.status_code == 200
-    assert len(response_json["items"]) == 0
+    assert response.status_code == 404
+    assert response_json["message"] == "college not found"
 
 
 def test_college_majors(college_id, client):

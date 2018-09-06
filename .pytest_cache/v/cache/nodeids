@@ -1,8 +1,8 @@
 [
   "tests/test_colleges.py::test_college",
   "tests/test_colleges.py::test_college_majors",
-  "tests/test_scholarships.py::test_get_scholarships",
-  "tests/test_scholarships.py::test_post_scholarship",
-  "tests/test_scholarships.py::test_update_scholarship",
-  "tests/test_scholarships.py::test_delete_scholarship"
+  "tests/test_scholarships.py::test_scholarships",
+  "tests/test_scholarships.py::test_scholarship_programs",
+  "tests/test_scholarships.py::test_scholarship_ethnicities",
+  "tests/test_scholarships.py::test_scholarships_needed"
 ]
