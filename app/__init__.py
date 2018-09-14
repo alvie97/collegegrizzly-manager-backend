@@ -9,7 +9,7 @@ from flask_uploads import UploadSet, configure_uploads, IMAGES
 
 db = SQLAlchemy()
 migrate = Migrate()
-api = Api(prefix='/api')
+api = Api(prefix="/api")
 cors = CORS(resources={r"/api/*": {"origins": "*"}})
 photos = UploadSet('photos', IMAGES)
 
@@ -25,6 +25,15 @@ def create_app(config_class=Config):
 
   from app.main import bp as main_bp
   app.register_blueprint(main_bp)
+
+  from app.auth import bp as auth_bp
+  app.register_blueprint(auth_bp, url_prefix="/auth")
+
+  from app.token import bp as token_bp
+  app.register_blueprint(token_bp, url_prefix="/token")
+
+  from app.site import bp as site_bp
+  app.register_blueprint(site_bp)
 
   api.init_app(app)
 

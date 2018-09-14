@@ -9,6 +9,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 class User(PaginatedAPIMixin, BaseMixin, DateAudit, db.Model):
   id = db.Column(db.Integer, primary_key=True)
+  username = db.Column(db.String(120), index=True, unique=True)
   email = db.Column(db.String(120), index=True, unique=True)
   password_hash = db.Column(db.String(128))
   last_seen = db.Column(db.DateTime, default=datetime.utcnow)
@@ -19,7 +20,12 @@ class User(PaginatedAPIMixin, BaseMixin, DateAudit, db.Model):
   def __repr__(self):
     return "<User {}>".format(self.username)
 
-  def set_password(self, password):
+  @property
+  def password(self):
+    raise AttributeError("password is not a readable attribute")
+
+  @password.setter
+  def password(self, password):
     self.password_hash = generate_password_hash(password)
 
   def check_password(self, password):
@@ -32,6 +38,7 @@ class User(PaginatedAPIMixin, BaseMixin, DateAudit, db.Model):
 
   def to_dict(self):
     data = {
+        "username": self.username,
         "email": self.email,
         "audit_dates": self.audit_dates(),
         "last_seen": self.last_seen.isoformat() + "Z",

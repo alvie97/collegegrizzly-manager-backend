@@ -1,8 +1,15 @@
 [
+  "tests/test_auth.py::test_login",
+  "tests/test_auth.py::test_logout",
   "tests/test_colleges.py::test_college",
   "tests/test_colleges.py::test_college_majors",
   "tests/test_scholarships.py::test_scholarships",
   "tests/test_scholarships.py::test_scholarship_programs",
   "tests/test_scholarships.py::test_scholarship_ethnicities",
-  "tests/test_scholarships.py::test_scholarships_needed"
+  "tests/test_scholarships.py::test_scholarships_needed",
+  "tests/test_token.py::test_refresh_token",
+  "tests/test_token.py::test_revoked_refresh_token",
+  "tests/test_token.py::test_compromised_refresh_token",
+  "tests/test_token.py::test_invalid_token",
+  "tests/test_token.py::test_expired_access_token"
 ]
