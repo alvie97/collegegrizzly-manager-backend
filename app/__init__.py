@@ -5,6 +5,7 @@ from config import Config
 from flask_restful import Api
 from flask_cors import CORS
 from flask_uploads import UploadSet, configure_uploads, IMAGES
+from .token_schema import TokenSchema
 
 
 db = SQLAlchemy()
@@ -12,6 +13,7 @@ migrate = Migrate()
 api = Api(prefix="/api")
 cors = CORS(resources={r"/api/*": {"origins": "*"}})
 photos = UploadSet('photos', IMAGES)
+tok_schema = TokenSchema()
 
 
 def create_app(config_class=Config):
@@ -21,6 +23,7 @@ def create_app(config_class=Config):
   db.init_app(app)
   migrate.init_app(app, db)
   cors.init_app(app)
+  tok_schema.init_app(app)
   configure_uploads(app, photos)
 
   from app.main import bp as main_bp

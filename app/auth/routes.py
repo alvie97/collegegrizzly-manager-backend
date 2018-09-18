@@ -1,5 +1,5 @@
-from flask import (flash, g, jsonify, get_flashed_messages, make_response, redirect,
-                   render_template, request, url_for)
+from flask import (flash, g, jsonify, get_flashed_messages, make_response,
+                   redirect, render_template, request, url_for, current_app)
 from flask_restful import Resource
 from sqlalchemy import or_
 
@@ -7,10 +7,10 @@ from . import bp
 from app import db
 from app.models.refresh_token import RefreshToken
 from app.models.user import User
-from app.token.common import set_session_tokens
-from app.token.utils import verify_token
+from app.token_schema import (access_token_required, set_token_cookies,
+                              get_current_user)
+from .utils import user_not_logged
 
-from .utils import login_required, user_not_logged
 from .csrf import csrf_token_required
 
 
@@ -42,27 +42,29 @@ def login():
     return redirect(url_for("auth.login")), 401
 
   response = make_response(redirect("/"))
-  set_session_tokens(response, user.username)
+  set_token_cookies(response, user.username)
   return response
 
 
 @bp.route("/logout", methods=["POST"])
 @csrf_token_required
+@access_token_required
 def logout():
-  if "access_token" not in request.cookies:
-    return jsonify({"message": "invalid credentials"}), 401
-
-  access_token = request.cookies["access_token"]
-
-  if not verify_token(access_token):
-    return jsonify({"message": "invalid credentials"}), 401
-
-  RefreshToken.revoke_user_tokens(g.jwt_claims["user_id"])
+  user_id = get_current_user()
+  RefreshToken.revoke_user_tokens(user_id)
   db.session.commit()
   response = make_response(jsonify({"message": "logout successful"}))
 
-  response.set_cookie("access_token", "", httponly=True)
-  response.set_cookie("refresh_token", "", httponly=True)
-  response.set_cookie("x-csrf-token", "", httponly=True)
+  access_cookie_name = current_app.config["ACCESS_COOKIE_NAME"]
+  refresh_cookie_name = current_app.config["REFRESH_COOKIE_NAME"]
+  csrf_cookie_name = current_app.config["CSRF_COOKIE_NAME"]
+  secure_token_cookies = current_app.config["SECURE_TOKEN_COOKIES"]
+
+  response.set_cookie(
+      access_cookie_name, "", secure=secure_token_cookies, httponly=True)
+  response.set_cookie(
+      refresh_cookie_name, "", secure=secure_token_cookies, httponly=True)
+  response.set_cookie(
+      csrf_cookie_name, "", secure=secure_token_cookies, httponly=True)
 
   return response

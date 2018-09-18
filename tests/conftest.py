@@ -15,7 +15,8 @@ def app():
 
   class TestConfig(Config):
     TESTING = True
-    JWT_SECRET_KEY = "super-secret-key"
+    ACCESS_COOKIE_NAME = "access_token"
+    REFFRESH_COOKIE_NAME = "refresh_token"
     SQLALCHEMY_DATABASE_URI = "sqlite:///" + DB_URL
 
   app = create_app(TestConfig)

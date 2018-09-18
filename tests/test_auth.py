@@ -2,7 +2,6 @@ from flask import g
 
 from app.models.user import User
 from helpers import get_cookie
-from app.auth.utils import verify_token, is_token_expired
 from app.models.refresh_token import RefreshToken
 from app.auth.csrf import generate_csrf_token
 from app import db

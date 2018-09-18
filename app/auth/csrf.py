@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from uuid import uuid4
 from functools import wraps
 
-from flask import request, jsonify
+from flask import request, jsonify, current_app
 
 
 def generate_csrf_token():
@@ -10,14 +10,13 @@ def generate_csrf_token():
 
 
 def validate_csrf_token():
-  """validate if x-csrf-token cookie and header are valid and equal"""
+  """validate if CSRF cookie and header are valid and equal"""
 
-  if not ("x-csrf-token" in request.cookies and
-          "x-csrf-token" in request.headers):
+  try:
+    cookie_csrf_token = request.cookies[current_app.config["CSRF_COOKIE_NAME"]]
+    header_csrf_token = request.headers[current_app.config["CSRF_COOKIE_NAME"]]
+  except KeyError:
     return False
-
-  cookie_csrf_token = request.cookies["x-csrf-token"]
-  header_csrf_token = request.headers["x-csrf-token"]
 
   if not (cookie_csrf_token and header_csrf_token):
     return False
@@ -34,10 +33,11 @@ def set_csrf_token_cookie(response, csrf_token):
   :param response: response object
   """
   response.set_cookie(
-      "x-csrf-token",
+      current_app.config["CSRF_COOKIE_NAME"],
       csrf_token,
+      secure=current_app.config["SECURE_TOKEN_COOKIES"],
       httponly=True,
-      expires=datetime.utcnow() + timedelta(days=7))
+      expires=datetime.utcnow() + current_app.config["REFRESH_TOKEN_DURATION"])
 
 
 def csrf_token_required(f):
