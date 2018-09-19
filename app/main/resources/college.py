@@ -1,13 +1,15 @@
+from flask import current_app, request, url_for
 from flask_restful import Resource
-from flask import request, current_app, url_for
 from marshmallow import ValidationError
 
 from app import db
+from app.auth.csrf import csrf_token_required
+from app.common.utils import get_entity
 from app.models.college import College as CollegeModel
 from app.models.major import Major as MajorModel
-from app.common.utils import get_entity
 from app.schemas.college_schema import CollegeSchema
 from app.schemas.major_schema import MajorSchema
+from app.token_schema import access_token_required
 
 college_schema = CollegeSchema()
 major_schema = MajorSchema()
@@ -15,6 +17,8 @@ majors_schema = MajorSchema(many=True)
 
 
 class College(Resource):
+
+  method_decorators = [csrf_token_required, access_token_required]
 
   @get_entity(CollegeModel, "college")
   def get(self, college: CollegeModel):
@@ -45,6 +49,8 @@ class College(Resource):
 
 
 class Colleges(Resource):
+
+  method_decorators = [csrf_token_required, access_token_required]
 
   def get(self):
     page = request.args.get("page", 1, type=int)
@@ -84,6 +90,8 @@ class Colleges(Resource):
 
 class CollegeScholarships(Resource):
 
+  method_decorators = [csrf_token_required, access_token_required]
+
   @get_entity(CollegeModel, "college")
   def get(self, college: CollegeModel):
 
@@ -97,6 +105,8 @@ class CollegeScholarships(Resource):
 
 
 class CollegeMajors(Resource):
+
+  method_decorators = [csrf_token_required, access_token_required]
 
   @get_entity(CollegeModel, "college")
   def get(self, college: CollegeModel):

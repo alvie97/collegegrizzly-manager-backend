@@ -1,16 +1,18 @@
+from flask import current_app, request
 from flask_restful import Resource
-from flask import request, current_app
+from marshmallow import ValidationError
 
 from app import db
+from app.auth.csrf import csrf_token_required
+from app.common.utils import generate_public_id, get_entity
 from app.models.college import College as CollegeModel
-from app.models.scholarship import Scholarship as ScholarshipModel
-from app.models.program import Program as ProgramModel
 from app.models.ethnicity import Ethnicity as EthnicityModel
-from app.common.utils import get_entity, generate_public_id
-from app.schemas.scholarship_schema import ScholarshipSchema
-from app.schemas.program_schema import ProgramSchema
+from app.models.program import Program as ProgramModel
+from app.models.scholarship import Scholarship as ScholarshipModel
 from app.schemas.ethnicity_schema import EthnicitySchema
-from marshmallow import ValidationError
+from app.schemas.program_schema import ProgramSchema
+from app.schemas.scholarship_schema import ScholarshipSchema
+from app.token_schema import access_token_required
 
 scholarship_schema = ScholarshipSchema()
 program_schema = ProgramSchema()
@@ -19,207 +21,220 @@ ethnicity_schema = EthnicitySchema()
 
 class Scholarship(Resource):
 
-    @get_entity(ScholarshipModel, "scholarship")
-    def get(self, scholarship: ScholarshipModel):
+  method_decorators = [csrf_token_required, access_token_required]
 
-        return {"scholarship": scholarship.to_dict()}
+  @get_entity(ScholarshipModel, "scholarship")
+  def get(self, scholarship: ScholarshipModel):
 
-    @get_entity(ScholarshipModel, "scholarship")
-    def put(self, scholarship: ScholarshipModel):
-        data = request.get_json()
+    return {"scholarship": scholarship.to_dict()}
 
-        if not data:
-            return {"message": "no data provided"}, 400
+  @get_entity(ScholarshipModel, "scholarship")
+  def put(self, scholarship: ScholarshipModel):
+    data = request.get_json()
 
-        try:
-            scholarship_schema.load(data, partial=True)
-        except ValidationError as err:
-            return err.messages, 422
+    if not data:
+      return {"message": "no data provided"}, 400
 
-        scholarship.update(data)
-        db.session.commit()
-        return {"scholarship": scholarship.to_dict()}
+    try:
+      scholarship_schema.load(data, partial=True)
+    except ValidationError as err:
+      return err.messages, 422
 
-    @get_entity(ScholarshipModel, "scholarship")
-    def delete(self, scholarship: ScholarshipModel):
+    scholarship.update(data)
+    db.session.commit()
+    return {"scholarship": scholarship.to_dict()}
 
-        db.session.delete(scholarship)
-        db.session.commit()
-        return {"message": "scholarship deleted"}
+  @get_entity(ScholarshipModel, "scholarship")
+  def delete(self, scholarship: ScholarshipModel):
+
+    db.session.delete(scholarship)
+    db.session.commit()
+    return {"message": "scholarship deleted"}
 
 
 class Scholarships(Resource):
 
-    def get(self):
-        page = request.args.get("page", 1, type=int)
-        per_page = request.args.get(
-            "per_page", current_app.config["SCHOLARSHIPS_PER_PAGE"], type=int)
+  method_decorators = [csrf_token_required, access_token_required]
 
-        return ScholarshipModel.to_collection_dict(ScholarshipModel.query, page,
-                                                   per_page, "scholarships")
+  def get(self):
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get(
+        "per_page", current_app.config["SCHOLARSHIPS_PER_PAGE"], type=int)
 
-    @get_entity(CollegeModel, "college")
-    def post(self, college: CollegeModel):
-        data = request.get_json()
+    return ScholarshipModel.to_collection_dict(ScholarshipModel.query, page,
+                                               per_page, "scholarships")
 
-        if not data:
-            return {"message": "no data provided"}, 400
+  @get_entity(CollegeModel, "college")
+  def post(self, college: CollegeModel):
+    data = request.get_json()
 
-        try:
-            scholarship_schema.load(data)
-        except ValidationError as err:
-            return err.messages, 422
+    if not data:
+      return {"message": "no data provided"}, 400
 
-        scholarship = ScholarshipModel(
-            public_id=generate_public_id(), college=college, **data)
+    try:
+      scholarship_schema.load(data)
+    except ValidationError as err:
+      return err.messages, 422
 
-        db.session.add(scholarship)
-        db.session.commit()
+    scholarship = ScholarshipModel(
+        public_id=generate_public_id(), college=college, **data)
 
-        return {"scholarship_id": scholarship.public_id}
+    db.session.add(scholarship)
+    db.session.commit()
+
+    return {"scholarship_id": scholarship.public_id}
 
 
 class ScholarshipPrograms(Resource):
 
-    @get_entity(ScholarshipModel, "scholarship")
-    def get(self, scholarship: ScholarshipModel):
-        return {"programs": scholarship.get_programs()}
+  method_decorators = [csrf_token_required, access_token_required]
 
-    @get_entity(ScholarshipModel, "scholarship")
-    def post(self, scholarship: ScholarshipModel):
-        data = request.get_json() or {}
+  @get_entity(ScholarshipModel, "scholarship")
+  def get(self, scholarship: ScholarshipModel):
+    return {"programs": scholarship.get_programs()}
 
-        if not data or "programs" not in data:
-            return {"message": "no data provided"}, 400
+  @get_entity(ScholarshipModel, "scholarship")
+  def post(self, scholarship: ScholarshipModel):
+    data = request.get_json() or {}
 
-        for program in data["programs"]:
-            try:
-                program_schema.load(program)
-            except ValidationError as err:
-                return err.messages, 422
+    if not data or "programs" not in data:
+      return {"message": "no data provided"}, 400
 
-            program_to_add = ProgramModel.first(name=program["name"])
+    for program in data["programs"]:
+      try:
+        program_schema.load(program)
+      except ValidationError as err:
+        return err.messages, 422
 
-            if program_to_add is None:
-                program_to_add = ProgramModel(**program)
-                db.session.add(program_to_add)
+      program_to_add = ProgramModel.first(name=program["name"])
 
-            scholarship.add_program(program_to_add)
+      if program_to_add is None:
+        program_to_add = ProgramModel(**program)
+        db.session.add(program_to_add)
 
-        db.session.commit()
-        return {"message": "programs added"}
+      scholarship.add_program(program_to_add)
 
-    @get_entity(ScholarshipModel, "scholarship")
-    def delete(self, scholarship: ScholarshipModel):
-        data = request.get_json() or {}
+    db.session.commit()
+    return {"message": "programs added"}
 
-        if not data or "programs" not in data:
-            return {"message": "no data provided"}, 400
+  @get_entity(ScholarshipModel, "scholarship")
+  def delete(self, scholarship: ScholarshipModel):
+    data = request.get_json() or {}
 
-        for program in data["programs"]:
-            program_to_remove = scholarship.programs.filter_by(
-                name=program).first()
+    if not data or "programs" not in data:
+      return {"message": "no data provided"}, 400
 
-            if program_to_remove is None:
-                return {"message": scholarship.name + "doesn't have program " + program}, 404
+    for program in data["programs"]:
+      program_to_remove = scholarship.programs.filter_by(name=program).first()
 
-            scholarship.remove_program(program_to_remove)
+      if program_to_remove is None:
+        return {
+            "message": scholarship.name + "doesn't have program " + program
+        }, 404
 
-        db.session.commit()
-        return {"message": "programs removed"}
+      scholarship.remove_program(program_to_remove)
+
+    db.session.commit()
+    return {"message": "programs removed"}
 
 
 class ScholarshipEthnicities(Resource):
 
-    @get_entity(ScholarshipModel, "scholarship")
-    def get(self, scholarship: ScholarshipModel):
-        return {"ethnicities": scholarship.get_ethnicities()}
+  method_decorators = [csrf_token_required, access_token_required]
 
-    @get_entity(ScholarshipModel, "scholarship")
-    def post(self, scholarship: ScholarshipModel):
-        data = request.get_json() or {}
+  @get_entity(ScholarshipModel, "scholarship")
+  def get(self, scholarship: ScholarshipModel):
+    return {"ethnicities": scholarship.get_ethnicities()}
 
-        if not data or "ethnicities" not in data:
-            return {"message": "no data provided"}, 400
+  @get_entity(ScholarshipModel, "scholarship")
+  def post(self, scholarship: ScholarshipModel):
+    data = request.get_json() or {}
 
-        for ethnicity in data["ethnicities"]:
-            try:
-                ethnicity_schema.load(ethnicity)
-            except ValidationError as err:
-                return err.messages, 422
+    if not data or "ethnicities" not in data:
+      return {"message": "no data provided"}, 400
 
-            ethnicity_to_add = EthnicityModel.first(name=ethnicity["name"])
+    for ethnicity in data["ethnicities"]:
+      try:
+        ethnicity_schema.load(ethnicity)
+      except ValidationError as err:
+        return err.messages, 422
 
-            if ethnicity_to_add is None:
-                ethnicity_to_add = EthnicityModel(**ethnicity)
-                db.session.add(ethnicity_to_add)
+      ethnicity_to_add = EthnicityModel.first(name=ethnicity["name"])
 
-            scholarship.add_ethnicity(ethnicity_to_add)
+      if ethnicity_to_add is None:
+        ethnicity_to_add = EthnicityModel(**ethnicity)
+        db.session.add(ethnicity_to_add)
 
-        db.session.commit()
-        return {"message": "ethnicities added"}
+      scholarship.add_ethnicity(ethnicity_to_add)
 
-    @get_entity(ScholarshipModel, "scholarship")
-    def delete(self, scholarship: ScholarshipModel):
-        data = request.get_json() or {}
+    db.session.commit()
+    return {"message": "ethnicities added"}
 
-        if not data or "ethnicities" not in data:
-            return {"message": "no data provided"}, 400
+  @get_entity(ScholarshipModel, "scholarship")
+  def delete(self, scholarship: ScholarshipModel):
+    data = request.get_json() or {}
 
-        for ethnicity in data["ethnicities"]:
-            ethnicity_to_remove = scholarship.ethnicities.filter_by(
-                name=ethnicity).first()
+    if not data or "ethnicities" not in data:
+      return {"message": "no data provided"}, 400
 
-            if ethnicity_to_remove is None:
-                return {"message": scholarship.name + "doesn't have ethnicity " + ethnicity}, 404
+    for ethnicity in data["ethnicities"]:
+      ethnicity_to_remove = scholarship.ethnicities.filter_by(
+          name=ethnicity).first()
 
-            scholarship.remove_ethnicity(ethnicity_to_remove)
+      if ethnicity_to_remove is None:
+        return {
+            "message": scholarship.name + "doesn't have ethnicity " + ethnicity
+        }, 404
 
-        db.session.commit()
-        return {"message": "ethnicities removed"}
+      scholarship.remove_ethnicity(ethnicity_to_remove)
+
+    db.session.commit()
+    return {"message": "ethnicities removed"}
 
 
 class ScholarshipsNeeded(Resource):
 
-    @get_entity(ScholarshipModel, "scholarship")
-    def get(self, scholarship: ScholarshipModel):
+  method_decorators = [csrf_token_required, access_token_required]
 
-        return {"scholarships_needed": scholarship.get_scholarships_needed()}
+  @get_entity(ScholarshipModel, "scholarship")
+  def get(self, scholarship: ScholarshipModel):
 
-    @get_entity(ScholarshipModel, "scholarship")
-    @get_entity(CollegeModel, "college")
-    def post(self, scholarship: ScholarshipModel, college: CollegeModel):
-        data = request.get_json() or {}
+    return {"scholarships_needed": scholarship.get_scholarships_needed()}
 
-        if not data or "scholarships_needed" not in data:
-            return {"message": "no data provided"}, 400
+  @get_entity(ScholarshipModel, "scholarship")
+  @get_entity(CollegeModel, "college")
+  def post(self, scholarship: ScholarshipModel, college: CollegeModel):
+    data = request.get_json() or {}
 
-        for scholarship_needed in data["scholarships_needed"]:
-            if scholarship_needed == scholarship.public_id:
-                continue
+    if not data or "scholarships_needed" not in data:
+      return {"message": "no data provided"}, 400
 
-            scholarship_to_add = college.scholarships.filter_by(
-                public_id=scholarship_needed).first()
+    for scholarship_needed in data["scholarships_needed"]:
+      if scholarship_needed == scholarship.public_id:
+        continue
 
-            if scholarship_to_add is not None:
-                scholarship.add_needed_scholarship(scholarship_to_add)
+      scholarship_to_add = college.scholarships.filter_by(
+          public_id=scholarship_needed).first()
 
-        db.session.commit()
-        return {"message": "needed scholarships added"}
+      if scholarship_to_add is not None:
+        scholarship.add_needed_scholarship(scholarship_to_add)
 
-    @get_entity(ScholarshipModel, "scholarship")
-    def delete(self, scholarship: ScholarshipModel):
-        data = request.get_json() or {}
+    db.session.commit()
+    return {"message": "needed scholarships added"}
 
-        if not data or "scholarships_needed" not in data:
-            return {"message": "no data provided"}, 400
+  @get_entity(ScholarshipModel, "scholarship")
+  def delete(self, scholarship: ScholarshipModel):
+    data = request.get_json() or {}
 
-        for scholarship_needed in data["scholarships_needed"]:
-            scholarship_to_remove = scholarship.scholarships_needed.filter_by(
-                public_id=scholarship_needed).first()
+    if not data or "scholarships_needed" not in data:
+      return {"message": "no data provided"}, 400
 
-            if scholarship_to_remove is not None:
-                scholarship.remove_needed_scholarship(scholarship_to_remove)
+    for scholarship_needed in data["scholarships_needed"]:
+      scholarship_to_remove = scholarship.scholarships_needed.filter_by(
+          public_id=scholarship_needed).first()
 
-        db.session.commit()
-        return {"message": "needed scholarships removed"}
+      if scholarship_to_remove is not None:
+        scholarship.remove_needed_scholarship(scholarship_to_remove)
+
+    db.session.commit()
+    return {"message": "needed scholarships removed"}

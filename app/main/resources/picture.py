@@ -1,11 +1,17 @@
-from flask import request, current_app
+from flask import current_app, request
 from flask_restful import Resource
+
 from app import db, photos
-from app.models.picture import Picture as PictureModel
-from app.models.college import College as CollegeModel
+from app.auth.csrf import csrf_token_required
 from app.common.utils import generate_public_id
+from app.models.college import College as CollegeModel
+from app.models.picture import Picture as PictureModel
+from app.token_schema import access_token_required
+
 
 class Picture(Resource):
+
+  method_decorators = [csrf_token_required, access_token_required]
 
   def get(self, picture_id):
     picture = PictureModel.first(public_id=picture_id)
@@ -38,6 +44,8 @@ class Picture(Resource):
 
 
 class Pictures(Resource):
+
+  method_decorators = [csrf_token_required, access_token_required]
 
   def get(self, college_id=None):
     if college_id is not None:
@@ -76,10 +84,7 @@ class Pictures(Resource):
       data['type'] = 'campus'
 
     picture = PictureModel(
-        public_id=generate_public_id(),
-        name=filename,
-        college=college,
-        **data)
+        public_id=generate_public_id(), name=filename, college=college, **data)
     db.session.add(picture)
     db.session.commit()
 

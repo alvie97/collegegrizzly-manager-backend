@@ -19,12 +19,10 @@ from app.models.county import County as CountyModel
 from app.models.place import Place as PlaceModel
 from app.models.scholarship import Scholarship as ScholarshipModel
 from app.models.state import State as StateModel
-# Colleges routes
+from app.token_schema import access_token_required, get_current_user
+from app.auth.csrf import csrf_token_required
 
-api.add_resource(Colleges, "/colleges", endpoint="colleges")
-api.add_resource(College, "/colleges/<string:college_id>", endpoint="college")
-# TODO: add majors routes
-api.add_resource(CollegeMajors, "/colleges/<string:college_id>/majors")
+# Colleges routes
 api.add_resource(
     LocationRequirement,
     "/colleges/<string:college_id>/in_state_requirement/states",
@@ -63,16 +61,11 @@ api.add_resource(
         "entity_name": "college",
         "location_entity": ConsCityModel
     })
-api.add_resource(
-    CollegeScholarships,
-    "/colleges/<string:college_id>/scholarships",
-    endpoint="college_scholarships")
-
 # Scholarships routes
 
 api.add_resource(
     Scholarships,
-    "/colleges/<string:college_id>/scholarships",
+    # "/colleges/<string:college_id>/scholarships",
     "/scholarships",
     endpoint="scholarships")
 api.add_resource(
@@ -133,7 +126,7 @@ api.add_resource(Picture, "/pictures/<string:picture_id>", endpoint="picture")
 api.add_resource(
     Pictures,
     "/pictures",
-    "/colleges/<string:college_id>/pictures",
+    # "/colleges/<string:college_id>/pictures",
     endpoint="pictures")
 api.add_resource(File, "/file/<path:folder>/<path:filename>", endpoint="file")
 

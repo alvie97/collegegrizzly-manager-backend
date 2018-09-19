@@ -2,12 +2,15 @@ from app import db
 from app.common.errors import LocationEntityError
 from app.common.utils import get_entity_of_resource
 from app.models.common.location_mixin import LocationMixin
+from app.token_schema import access_token_required
+from app.auth.csrf import csrf_token_required
 
 from flask import request
 from flask_restful import Resource
 
 class LocationRequirement(Resource):
 
+  method_decorators = [csrf_token_required, access_token_required]
   def __init__(self, **kwargs):
     self.entity = kwargs["entity"]
     self.entity_name = kwargs["entity_name"]

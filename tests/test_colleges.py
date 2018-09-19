@@ -1,5 +1,5 @@
 def test_college(client):
-  url = "/api/colleges"
+  url = "/colleges/"
   response = client.post(url, json={"name": "college test"})
   response_json = response.get_json()
 

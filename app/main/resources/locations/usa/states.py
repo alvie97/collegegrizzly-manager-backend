@@ -1,13 +1,18 @@
+from flask import request
+from flask_restful import Resource
+
 from app.models.consolidated_city import ConsolidatedCity as CCModel
 from app.models.county import County as CountyModel
 from app.models.place import Place as PlaceModel
 from app.models.state import State as StateModel
-
-from flask import request
-from flask_restful import Resource
+from app.schemas.major_schema import MajorSchema
+from app.token_schema import access_token_required
+from app.auth.csrf import csrf_token_required
 
 
 class States(Resource):
+
+  method_decorators = [csrf_token_required, access_token_required]
 
   def get(self):
     states = StateModel.query.all()
@@ -19,6 +24,8 @@ class States(Resource):
 
 
 class State(Resource):
+
+  method_decorators = [csrf_token_required, access_token_required]
 
   def get(self, fips_code=None):
     if fips_code is None:
@@ -37,6 +44,8 @@ class State(Resource):
 
 
 class Counties(Resource):
+
+  method_decorators = [csrf_token_required, access_token_required]
 
   def get(self, state_fips=None):
     per_page = request.args.get("per_page", 15, type=int)
@@ -67,6 +76,8 @@ class Counties(Resource):
 
 class Places(Resource):
 
+  method_decorators = [csrf_token_required, access_token_required]
+
   def get(self, state_fips=None):
     per_page = request.args.get("per_page", 15, type=int)
     page = request.args.get("page", 1, type=int)
@@ -95,6 +106,8 @@ class Places(Resource):
 
 
 class ConsolidatedCities(Resource):
+
+  method_decorators = [csrf_token_required, access_token_required]
 
   def get(self, state_fips=None):
     per_page = request.args.get("per_page", 15, type=int)
