@@ -23,11 +23,11 @@ class State(db.Model, PaginatedAPIMixin, BaseMixin):
         "fips_code": self.fips_code,
         "_links": {
             "counties":
-                url_for("usa_state_counties", state_fips=self.fips_code),
+                url_for("locations.get_state_counties", state_fips=self.fips_code),
             "places":
-                url_for("usa_state_places", state_fips=self.fips_code),
+                url_for("locations.get_state_places", state_fips=self.fips_code),
             "consolidated_cities":
                 url_for(
-                    "usa_state_consolidated_cities", state_fips=self.fips_code)
+                    "locations.get_state_consolidated_cities", state_fips=self.fips_code)
         }
     }

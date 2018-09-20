@@ -1,6 +1,6 @@
 import os
 
-from flask import current_app, request, send_from_directory
+from flask import current_app, request, send_from_directory, jsonify
 from flask_restful import Resource
 from marshmallow import ValidationError
 
@@ -15,8 +15,8 @@ from . import bp
 @bp.route("/file/<path:folder>/<path:filename>")
 def get_file(self, folder, filename):
   root_dir = os.path.dirname(os.getcwd())
-  return send_from_directory(
-      os.path.join(root_dir, 'backend', 'static', folder), filename)
+  return jsonify(send_from_directory(
+      os.path.join(root_dir, 'backend', 'static', folder), filename))
 
 
 @bp.route("/pictures/<string:picture_id>")
@@ -24,9 +24,9 @@ def get_picture(self, picture_id):
   picture = PictureModel.first(public_id=picture_id)
 
   if picture is None:
-    return {'message': 'no picture found'}, 404
+    return jsonify({'message': 'no picture found'}), 404
 
-  return picture.to_dict()
+  return jsonify(picture.to_dict())
 
 
 @bp.route("/pictures/<string:picture_id>", methods=["PATCH"])
@@ -34,12 +34,12 @@ def patch_picture(self, picture_id):
   picture = PictureModel.first(public_id=picture_id)
 
   if picture is None:
-    return {'message': 'no picture found'}, 404
+    return jsonify({'message': 'no picture found'}), 404
 
   data = request.get_json()
   picture.update({data['key']: data['value']})
   db.session.commit()
-  return data
+  return jsonify(data)
 
 
 @bp.route("/pictures/<string:picture_id>", methods=["DELETE"])
@@ -47,11 +47,11 @@ def delete_picture(self, picture_id):
   picture = PictureModel.query.filter_by(public_id=picture_id).first()
 
   if picture is None:
-    return {'message': 'no picture found'}, 404
+    return jsonify({'message': 'no picture found'}), 404
 
   db.session.delete(picture)
   db.session.commit()
-  return {'message': 'picture deleted'}
+  return jsonify({'message': 'picture deleted'})
 
 
 @bp.route("/colleges/<string:college_id>/pictures")
@@ -60,13 +60,13 @@ def get_pictures(self, college_id=None):
   if college_id is not None:
     college = CollegeModel.query.filter_by(public_id=college_id).first()
     if college is None:
-      return {'message': 'College not found'}, 404
+      return jsonify({'message': 'College not found'}), 404
 
     resources = college.pictures.all()
 
     data = {'items': [item.to_dict() for item in resources]}
 
-    return data
+    return jsonify(data)
 
   page = request.args.get('page', 1, type=int)
   per_page = request.args.get(
@@ -75,19 +75,19 @@ def get_pictures(self, college_id=None):
   data = PictureModel.to_collection_dict(PictureModel.query, page, per_page,
                                          'pictures')
 
-  return data
+  return jsonify(data)
 
 
 @bp.route("/colleges/<string:college_id>/pictures", methods=["POST"])
 def post_picture(self, college_id):
 
   if 'picture' not in request.files:
-    return {'message': 'file missing'}, 404
+    return jsonify({'message': 'file missing'}), 404
 
   college = CollegeModel.query.filter_by(public_id=college_id).first()
 
   if college is None:
-    return {'message': 'college not found'}, 404
+    return jsonify({'message': 'college not found'}), 404
 
   filename = photos.save(request.files['picture'])
   data = request.get_json() or {}
@@ -99,7 +99,7 @@ def post_picture(self, college_id):
   db.session.add(picture)
   db.session.commit()
 
-  return picture.public_id
+  return jsonify(picture.public_id)
 
 
 @bp.route("/pictures", methods=["DELETE"])
@@ -113,4 +113,4 @@ def delete_pictures(self):
     picture.delete()
   db.session.commit()
 
-  return {'message': 'Pictures deleted'}
+  return jsonify({'message': 'Pictures deleted'})

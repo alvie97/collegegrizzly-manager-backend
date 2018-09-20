@@ -3,14 +3,21 @@ from flask_restful import Resource
 from marshmallow import ValidationError
 
 from app import db
-from app.common.utils import generate_public_id, get_entity
-from app.models.college import College as CollegeModel
-from app.models.ethnicity import Ethnicity as EthnicityModel
-from app.models.program import Program as ProgramModel
-from app.models.scholarship import Scholarship as ScholarshipModel
+from app.models.college import College
+from app.models.ethnicity import Ethnicity
+from app.models.program import Program
+from app.models.scholarship import Scholarship
+from app.models.state import State
+from app.models.county import County
+from app.models.place import Place
+from app.models.consolidated_city import ConsolidatedCity
 from app.schemas.ethnicity_schema import EthnicitySchema
 from app.schemas.program_schema import ProgramSchema
 from app.schemas.scholarship_schema import ScholarshipSchema
+from app.common.utils import (generate_public_id, get_entity,
+                              get_entity_of_resource, get_location_requirement,
+                              post_location_requirement,
+                              delete_location_requirement)
 
 from . import bp
 
@@ -20,194 +27,175 @@ ethnicity_schema = EthnicitySchema()
 
 
 @bp.route("/<string:scholarship_id>")
-@get_entity(ScholarshipModel, "scholarship")
+@get_entity(Scholarship, "scholarship")
 def get_scholarship(self, scholarship):
 
-  return {"scholarship": scholarship.to_dict()}
+  return jsonify({"scholarship": scholarship.to_dict()})
 
 
 @bp.route("/<string:scholarship_id>", methods=["PATCH"])
-@get_entity(ScholarshipModel, "scholarship")
+@get_entity(Scholarship, "scholarship")
 def patch_scholarship(self, scholarship):
   data = request.get_json()
 
   if not data:
-    return {"message": "no data provided"}, 400
+    return jsonify({"message": "no data provided"}), 400
 
   try:
     scholarship_schema.load(data, partial=True)
   except ValidationError as err:
-    return err.messages, 422
+    return jsonify(err.messages), 422
 
   scholarship.update(data)
   db.session.commit()
-  return {"scholarship": scholarship.to_dict()}
+  return jsonify({"scholarship": scholarship.to_dict()})
 
 
 @bp.route("/<string:scholarship_id>", methods=["DELETE"])
-@get_entity(ScholarshipModel, "scholarship")
+@get_entity(Scholarship, "scholarship")
 def delete_scholarship(self, scholarship):
 
   db.session.delete(scholarship)
   db.session.commit()
-  return {"message": "scholarship deleted"}
+  return jsonify({"message": "scholarship deleted"})
 
 
-@bp.route("/", methods=["GET"])
+@bp.route("/", methods=["GET"], strict_slashes=False)
 def get_scholarships(self):
   page = request.args.get("page", 1, type=int)
   per_page = request.args.get(
       "per_page", current_app.config["SCHOLARSHIPS_PER_PAGE"], type=int)
 
-  return ScholarshipModel.to_collection_dict(ScholarshipModel.query, page,
-                                             per_page, "scholarships")
-
-
-@bp.route("/<string:college_id>", methods=["POST"])
-@get_entity(CollegeModel, "college")
-def post_scholarship(self, college):
-  data = request.get_json()
-
-  if not data:
-    return {"message": "no data provided"}, 400
-
-  try:
-    scholarship_schema.load(data)
-  except ValidationError as err:
-    return err.messages, 422
-
-  scholarship = ScholarshipModel(
-      public_id=generate_public_id(), college=college, **data)
-
-  db.session.add(scholarship)
-  db.session.commit()
-
-  return {"scholarship_id": scholarship.public_id}
+  return jsonify(
+      ScholarshipModel.to_collection_dict(Scholarship.query, page, per_page,
+                                          "scholarships.get_scholarships"))
 
 
 @bp.route("/<string:scholarship_id>/programs")
-@get_entity(ScholarshipModel, "scholarship")
+@get_entity(Scholarship, "scholarship")
 def get_scholarship_majors(self, scholarship):
-  return {"programs": scholarship.get_programs()}
+  return jsonify({"programs": scholarship.get_programs()})
 
 
 @bp.route("/<string:scholarship_id>/programs", methods=["POST"])
-@get_entity(ScholarshipModel, "scholarship")
+@get_entity(Scholarship, "scholarship")
 def post_scholarship_majors(self, scholarship):
   data = request.get_json() or {}
 
   if not data or "programs" not in data:
-    return {"message": "no data provided"}, 400
+    return jsonify({"message": "no data provided"}), 400
 
   for program in data["programs"]:
     try:
       program_schema.load(program)
     except ValidationError as err:
-      return err.messages, 422
+      return jsonify(err.messages), 422
 
-    program_to_add = ProgramModel.first(name=program["name"])
+    program_to_add = Program.first(name=program["name"])
 
     if program_to_add is None:
-      program_to_add = ProgramModel(**program)
+      program_to_add = Program(**program)
       db.session.add(program_to_add)
 
     scholarship.add_program(program_to_add)
 
   db.session.commit()
-  return {"message": "programs added"}
+  return jsonify({"message": "programs added"})
 
 
 @bp.route("/<string:scholarship_id>/programs", methods=["DELETE"])
-@get_entity(ScholarshipModel, "scholarship")
+@get_entity(Scholarship, "scholarship")
 def delete_scholarship_majors(self, scholarship):
   data = request.get_json() or {}
 
   if not data or "programs" not in data:
-    return {"message": "no data provided"}, 400
+    return jsonify({"message": "no data provided"}), 400
 
   for program in data["programs"]:
     program_to_remove = scholarship.programs.filter_by(name=program).first()
 
     if program_to_remove is None:
-      return {
+      return jsonify({
           "message": scholarship.name + "doesn't have program " + program
-      }, 404
+      }), 404
 
     scholarship.remove_program(program_to_remove)
 
   db.session.commit()
-  return {"message": "programs removed"}
+  return jsonify({"message": "programs removed"})
 
 
 @bp.route("/<string:scholarship_id>/ethnicities")
-@get_entity(ScholarshipModel, "scholarship")
+@get_entity(Scholarship, "scholarship")
 def get_scholarship_ethnicities(self, scholarship):
-  return {"ethnicities": scholarship.get_ethnicities()}
+  return jsonify({"ethnicities": scholarship.get_ethnicities()})
 
 
 @bp.route("/<string:scholarship_id>/ethnicities", methods=["POST"])
-@get_entity(ScholarshipModel, "scholarship")
+@get_entity(Scholarship, "scholarship")
 def post_scholarship_ethnicities(self, scholarship):
   data = request.get_json() or {}
 
   if not data or "ethnicities" not in data:
-    return {"message": "no data provided"}, 400
+    return jsonify({"message": "no data provided"}), 400
 
   for ethnicity in data["ethnicities"]:
     try:
       ethnicity_schema.load(ethnicity)
     except ValidationError as err:
-      return err.messages, 422
+      return jsonify(err.messages), 422
 
-    ethnicity_to_add = EthnicityModel.first(name=ethnicity["name"])
+    ethnicity_to_add = Ethnicity.first(name=ethnicity["name"])
 
     if ethnicity_to_add is None:
-      ethnicity_to_add = EthnicityModel(**ethnicity)
+      ethnicity_to_add = Ethnicity(**ethnicity)
       db.session.add(ethnicity_to_add)
 
     scholarship.add_ethnicity(ethnicity_to_add)
 
   db.session.commit()
-  return {"message": "ethnicities added"}
+  return jsonify({"message": "ethnicities added"})
 
 
 @bp.route("/<string:scholarship_id>/ethnicities", methods=["DELETE"])
-@get_entity(ScholarshipModel, "scholarship")
+@get_entity(Scholarship, "scholarship")
 def delete_scholarship_ethnicities(self, scholarship):
   data = request.get_json() or {}
 
   if not data or "ethnicities" not in data:
-    return {"message": "no data provided"}, 400
+    return jsonify({"message": "no data provided"}), 400
 
   for ethnicity in data["ethnicities"]:
     ethnicity_to_remove = scholarship.ethnicities.filter_by(
         name=ethnicity).first()
 
     if ethnicity_to_remove is None:
-      return {
+      return jsonify({
           "message": scholarship.name + "doesn't have ethnicity " + ethnicity
-      }, 404
+      }), 404
 
     scholarship.remove_ethnicity(ethnicity_to_remove)
 
   db.session.commit()
-  return {"message": "ethnicities removed"}
+  return jsonify({"message": "ethnicities removed"})
 
 
 @bp.route("/<string:scholarship_id>/scholarships_needed")
-@get_entity(ScholarshipModel, "scholarship")
+@get_entity(Scholarship, "scholarship")
 def get(self, scholarship):
 
-  return {"scholarships_needed": scholarship.get_scholarships_needed()}
+  return jsonify({
+      "scholarships_needed": scholarship.get_scholarships_needed()
+  })
 
 
 @bp.route("/<string:scholarship_id>/scholarships_needed", methods=["POST"])
-@get_entity(ScholarshipModel, "scholarship")
+@get_entity(Scholarship, "scholarship")
 def post(self, scholarship):
   data = request.get_json() or {}
 
   if not data or "scholarships_needed" not in data:
-    return {"message": "no data provided"}, 400
+    return jsonify({"message": "no data provided"}), 400
 
   college = scholarship.college
 
@@ -222,16 +210,16 @@ def post(self, scholarship):
       scholarship.add_needed_scholarship(scholarship_to_add)
 
   db.session.commit()
-  return {"message": "needed scholarships added"}
+  return jsonify({"message": "needed scholarships added"})
 
 
 @bp.route("/<string:scholarship_id>/scholarships_needed", methods=["DELETE"])
-@get_entity(ScholarshipModel, "scholarship")
+@get_entity(Scholarship, "scholarship")
 def delete(self, scholarship):
   data = request.get_json() or {}
 
   if not data or "scholarships_needed" not in data:
-    return {"message": "no data provided"}, 400
+    return jsonify({"message": "no data provided"}), 400
 
   for scholarship_needed in data["scholarships_needed"]:
     scholarship_to_remove = scholarship.scholarships_needed.filter_by(
@@ -241,4 +229,84 @@ def delete(self, scholarship):
       scholarship.remove_needed_scholarship(scholarship_to_remove)
 
   db.session.commit()
-  return {"message": "needed scholarships removed"}
+  return jsonify({"message": "needed scholarships removed"})
+
+
+@bp.route(
+    "/<string:scholarship_id>/states",
+    methods=["GET", "POST", "PATCH", "DELETE"])
+@get_entity_of_resource(Scholarship, "scholarship")
+def scholarship_states(entity_obj):
+
+  if request.method == "GET":
+    return get_location_requirement(State, scholarship, "scholarship")
+
+  if request.method == "POST":
+    return post_location_requirement(State, scholarship, "scholarship")
+
+  if request.method == "PATCH":
+    return patch_location_requirement(State, scholarship, "scholarship")
+
+  if request.method == "DELETE":
+    return delete_location_requirement(State, scholarship, "scholarship")
+
+
+@bp.route(
+    "/<string:scholarship_id>/counties",
+    methods=["GET", "POST", "PATCH", "DELETE"])
+@get_entity_of_resource(Scholarship, "scholarship")
+def scholarship_counties(entity_obj):
+
+  if request.method == "GET":
+    return get_location_requirement(County, scholarship, "scholarship")
+
+  if request.method == "POST":
+    return post_location_requirement(County, scholarship, "scholarship")
+
+  if request.method == "PATCH":
+    return patch_location_requirement(County, scholarship, "scholarship")
+
+  if request.method == "DELETE":
+    return delete_location_requirement(County, scholarship, "scholarship")
+
+
+@bp.route(
+    "/<string:scholarship_id>/places",
+    methods=["GET", "POST", "PATCH", "DELETE"])
+@get_entity_of_resource(Scholarship, "scholarship")
+def scholarship_places(entity_obj):
+
+  if request.method == "GET":
+    return get_location_requirement(Place, scholarship, "scholarship")
+
+  if request.method == "POST":
+    return post_location_requirement(Place, scholarship, "scholarship")
+
+  if request.method == "PATCH":
+    return patch_location_requirement(Place, scholarship, "scholarship")
+
+  if request.method == "DELETE":
+    return delete_location_requirement(Place, scholarship, "scholarship")
+
+
+@bp.route(
+    "/<string:scholarship_id>/consolidated_cities",
+    methods=["GET", "POST", "PATCH", "DELETE"])
+@get_entity_of_resource(Scholarship, "scholarship")
+def scholarship_consolidated_cities(entity_obj):
+
+  if request.method == "GET":
+    return get_location_requirement(ConsolidatedCity, scholarship,
+                                    "scholarship")
+
+  if request.method == "POST":
+    return post_location_requirement(ConsolidatedCity, scholarship,
+                                     "scholarship")
+
+  if request.method == "PATCH":
+    return patch_location_requirement(ConsolidatedCity, scholarship,
+                                      "scholarship")
+
+  if request.method == "DELETE":
+    return delete_location_requirement(ConsolidatedCity, scholarship,
+                                       "scholarship")

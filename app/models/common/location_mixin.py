@@ -6,7 +6,6 @@ from ..consolidated_city import ConsolidatedCity
 from ..county import County
 from ..place import Place
 from ..state import State
-from app.common.types import LocationObjType
 from sqlalchemy.ext.declarative import declared_attr
 from app.common.errors import LocationEntityError
 
@@ -49,8 +48,7 @@ class LocationMixin(object):
         backref=db.backref(class_name + "_list", lazy="dynamic"),
         lazy="dynamic")
 
-  def get_location_entity_query(self, location_obj: LocationObjType
-                               ) -> Tuple[LocationObjType, SqlalchemyQuery]:
+  def get_location_entity_query(self, location_obj):
     """
     Returns a tuple of the location entity (Model) and the location requirement
     query object corresponding to that entity in the Model that inherits the
@@ -74,7 +72,7 @@ class LocationMixin(object):
 
     return location_entity, location_query
 
-  def add_location(self, location_obj: LocationObjType):
+  def add_location(self, location_obj):
     """
     Adds location obj to Model relationship
     """
@@ -91,7 +89,7 @@ class LocationMixin(object):
     except LocationEntityError as err:
       raise
 
-  def remove_location(self, location_obj: LocationObjType):
+  def remove_location(self, location_obj):
     """
     Removes location obj from Model relationship
     """
@@ -108,8 +106,7 @@ class LocationMixin(object):
     except LocationEntityError as err:
       raise
 
-  def has_location(self, location_entity: LocationObjType,
-                   fips_code: str) -> bool:
+  def has_location(self, location_entity, fips_code):
     """
     Checks if model has a location with the corresponding fips
     """
@@ -127,9 +124,8 @@ class LocationMixin(object):
     return location_query.filter(
         location_entity.fips_code == fips_code).count() > 0
 
-  def get_location_requirement(self, location_entity: LocationObjType,
-                               base_endpoint: str, page: int, per_page: int,
-                               **endpoint_args) -> dict:
+  def get_location_requirement(self, location_entity, base_endpoint, page,
+                               per_page, **endpoint_args):
     """Returns paginated list of locations as a dictionary"""
 
     if location_entity is State:
@@ -157,8 +153,7 @@ class LocationMixin(object):
                                     location_url, **endpoint_args)
     }
 
-  def location_requirement_endpoints(self, base_endpoint: str,
-                                     **endpoint_args) -> dict:
+  def location_requirement_endpoints(self, base_endpoint, **endpoint_args):
     """Returns all enpoints to get all location requirements"""
     return {
         "states":

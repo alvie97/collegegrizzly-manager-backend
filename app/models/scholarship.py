@@ -109,7 +109,7 @@ class Scholarship(PaginatedAPIMixin, LocationMixin, DateAudit, BaseMixin,
     return [{
         "public_id": scholarship.public_id,
         "name": scholarship.name,
-        "url": url_for("scholarship", scholarship_id=scholarship.public_id)
+        "url": url_for("scholarships.get_scholarship", scholarship_id=scholarship.public_id)
     } for scholarship in self.scholarships_needed.all()]
 
   def get_programs(self):
@@ -170,7 +170,7 @@ class Scholarship(PaginatedAPIMixin, LocationMixin, DateAudit, BaseMixin,
             self.get_ethnicities(),
         "location_requirement":
             self.location_requirement_endpoints(
-                "scholarship_location_requirement",
+                "scholarships.scholarship",
                 scholarship_id=self.public_id),
         "scholarships_needed":
             self.get_scholarships_needed()

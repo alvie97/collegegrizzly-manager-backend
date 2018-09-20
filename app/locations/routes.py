@@ -1,4 +1,4 @@
-from flask import request
+from flask import request, jsonify
 from flask_restful import Resource
 
 from app.models.consolidated_city import ConsolidatedCity as CCModel
@@ -10,6 +10,7 @@ from app.schemas.major_schema import MajorSchema
 from . import bp
 
 
+# TODO: change lazy to dynamic for pagination
 @bp.route("/states")
 def get_states(self):
   states = StateModel.query.all()
@@ -17,113 +18,122 @@ def get_states(self):
   for state in states:
     states_list.append(state.to_dict())
 
-  return {"states": states_list}
+  return jsonify({"states": states_list})
 
+
+@bp.route("/states/search/<string:name>")
+def get_state_by_name(name):
+
+  state = StateModel.query.filter(
+      StateModel.name.like("%{}%".format(name))).first()
+
+  if state is not None:
+    return jsonify({"state": state.to_dict()})
+
+  return jsonify({"message": "Not state found"}), 404
 
 @bp.route("/states/<string:fips_code>")
-def get_state(self, fips_code=None):
-  if fips_code is None:
-    name = request.args.get("name", "", type=str)
-    if not name:
-      return {"message": "no name or fips_code provided"}, 404
-    state = StateModel.query.filter(
-        StateModel.name.like("%{}%".format(name))).first()
-  else:
+def get_state(fips_code):
+
     state = StateModel.query.filter_by(fips_code=fips_code).first()
 
   if state is not None:
-    return {"state": state.to_dict()}
+    return jsonify({"state": state.to_dict()})
 
-  return {"state": {}}
+  return jsonify({"message": "state not found"}), 404
 
+@bp.route("/states/<string:state_fips>/counties")
+def get_counties(state_fips):
+  per_page = request.args.get("per_page", 15, type=int)
+  page = request.args.get("page", 1, type=int)
 
-class Counties(Resource):
+  state = StateModel.query.filter_by(fips_code=state_fips).first()
 
-  method_decorators = [csrf_token_required, access_token_required]
+  if state is None:
+    return jsonify({"message": "state not found"}), 404
+  counties = state.counties
 
-  def get(self, state_fips=None):
-    per_page = request.args.get("per_page", 15, type=int)
-    page = request.args.get("page", 1, type=int)
-
-    if state_fips is None:
-      counties = CountyModel.query
-      return {
-          "counties":
-              CountyModel.to_collection_dict(counties, page, per_page,
-                                             "usa_state_counties")
-      }
-    else:
-      state = StateModel.query.filter_by(fips_code=state_fips).first()
-      if state is None:
-        return {"message": "state not found"}, 404
-      counties = state.counties
-      return {
-          "counties":
-              CountyModel.to_collection_dict(
-                  counties,
-                  page,
-                  per_page,
-                  "usa_state_counties",
-                  state_fips=state_fips)
-      }
+  return jsonify({
+      "counties":
+          CountyModel.to_collection_dict(
+              counties,
+              page,
+              per_page,
+              "get_state_counties",
+              state_fips=state_fips)
+  })
 
 
-class Places(Resource):
+@bp.route("/states/<string:state_fips/places")
+def get_state_places(self, state_fips=None):
+  per_page = request.args.get("per_page", 15, type=int)
+  page = request.args.get("page", 1, type=int)
 
-  method_decorators = [csrf_token_required, access_token_required]
-
-  def get(self, state_fips=None):
-    per_page = request.args.get("per_page", 15, type=int)
-    page = request.args.get("page", 1, type=int)
-
-    if state_fips is None:
-      places = PlaceModel.query
-      return {
-          "places":
-              PlaceModel.to_collection_dict(places, page, per_page,
-                                            "usa_state_places")
-      }
-    else:
-      state = StateModel.query.filter_by(fips_code=state_fips).first()
-      if state is None:
-        return {"message": "state not found"}, 404
-      places = state.places
-      return {
-          "places":
-              PlaceModel.to_collection_dict(
-                  places,
-                  page,
-                  per_page,
-                  "usa_state_places",
-                  state_fips=state_fips)
-      }
+  state = StateModel.query.filter_by(fips_code=state_fips).first()
+  if state is None:
+    return jsonify({"message": "state not found"}), 404
+  places = state.places
+  return jsonify({
+      "places":
+          PlaceModel.to_collection_dict(
+              places,
+              page,
+              per_page,
+              "get_state_places",
+              state_fips=state_fips)
+  })
 
 
-class ConsolidatedCities(Resource):
+@bp.route("/states/<string:state_fips/consolidated_cities")
+def get_state_consolidated_cities(self, state_fips):
+  per_page = request.args.get("per_page", 15, type=int)
+  page = request.args.get("page", 1, type=int)
 
-  method_decorators = [csrf_token_required, access_token_required]
+  state = StateModel.query.filter_by(fips_code=state_fips).first()
 
-  def get(self, state_fips=None):
-    per_page = request.args.get("per_page", 15, type=int)
-    page = request.args.get("page", 1, type=int)
+  if state is None:
+    return jsonify({"message": "state not found"}), 404
+  consolidated_cities = state.consolidated_cities
 
-    if state_fips is None:
-      return {
-          "consolidated_cities":
-              CCModel.to_collection_dict(CCModel.query, page, per_page,
-                                         "usa_state_consolidated_cities")
-      }
-    else:
-      state = StateModel.query.filter_by(fips_code=state_fips).first()
-      if state is None:
-        return {"message": "state not found"}, 404
-      consolidated_cities = state.consolidated_cities
-      return {
-          "consolidated_cities":
-              CCModel.to_collection_dict(
-                  consolidated_cities,
-                  page,
-                  per_page,
-                  "usa_state_consolidated_cities",
-                  state_fips=state_fips)
-      }
+  return jsonify({
+      "consolidated_cities":
+          CCModel.to_collection_dict(
+              consolidated_cities,
+              page,
+              per_page,
+              "get_state_consolidated_cities",
+              state_fips=state_fips)
+  })
+
+@bp.route("/counties")
+def get_counties():
+  per_page = request.args.get("per_page", 15, type=int)
+  page = request.args.get("page", 1, type=int)
+
+  return jsonify({
+      "counties":
+          CountyModel.to_collection_dict(CountyModel.query, page, per_page,
+                                      "get_counties")
+  })
+
+@bp.route("/places")
+def get_places():
+  per_page = request.args.get("per_page", 15, type=int)
+  page = request.args.get("page", 1, type=int)
+
+  return jsonify({
+      "places":
+          PlaceModel.to_collection_dict(PlaceModel.query, page, per_page,
+                                      "get_places")
+  })
+
+@bp.route("/consolidated_cities")
+def get_consolidated_cities():
+  per_page = request.args.get("per_page", 15, type=int)
+  page = request.args.get("page", 1, type=int)
+
+  return jsonify({
+      "consolidated_cities":
+          CCModel.to_collection_dict(CCModel.query, page, per_page,
+                                      "get_consolidated_cities")
+  })

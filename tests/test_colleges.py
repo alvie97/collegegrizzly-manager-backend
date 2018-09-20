@@ -1,5 +1,5 @@
 def test_college(client):
-  url = "/colleges/"
+  url = "/colleges"
   response = client.post(url, json={"name": "college test"})
   response_json = response.get_json()
 
@@ -8,7 +8,7 @@ def test_college(client):
 
   college_id = response_json["college_id"]
 
-  response = client.put(
+  response = client.patch(
       url + '/' + college_id, json={"location": "testing location"})
   response_json = response.get_json()
 

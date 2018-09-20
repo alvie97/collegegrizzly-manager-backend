@@ -121,11 +121,11 @@ class College(PaginatedAPIMixin, LocationMixin, DateAudit, BaseMixin,
         "majors": self.get_majors(),
         "_links": {
             "scholarships":
-                url_for("college_scholarships", college_id=self.public_id),
+                url_for("colleges.get_college_scholarships", college_id=self.public_id),
             "pictures":
-                url_for("pictures", college_id=self.public_id),
+                url_for("files.get_pictures", college_id=self.public_id),
             "in_state_requirement":
                 self.location_requirement_endpoints(
-                    "college_in_state_requirement", college_id=self.public_id)
+                    "colleges.college", college_id=self.public_id)
         }
     }
