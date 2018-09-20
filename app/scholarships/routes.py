@@ -28,14 +28,14 @@ ethnicity_schema = EthnicitySchema()
 
 @bp.route("/<string:scholarship_id>")
 @get_entity(Scholarship, "scholarship")
-def get_scholarship(self, scholarship):
+def get_scholarship(scholarship):
 
   return jsonify({"scholarship": scholarship.to_dict()})
 
 
 @bp.route("/<string:scholarship_id>", methods=["PATCH"])
 @get_entity(Scholarship, "scholarship")
-def patch_scholarship(self, scholarship):
+def patch_scholarship(scholarship):
   data = request.get_json()
 
   if not data:
@@ -53,7 +53,7 @@ def patch_scholarship(self, scholarship):
 
 @bp.route("/<string:scholarship_id>", methods=["DELETE"])
 @get_entity(Scholarship, "scholarship")
-def delete_scholarship(self, scholarship):
+def delete_scholarship(scholarship):
 
   db.session.delete(scholarship)
   db.session.commit()
@@ -73,13 +73,13 @@ def get_scholarships(self):
 
 @bp.route("/<string:scholarship_id>/programs")
 @get_entity(Scholarship, "scholarship")
-def get_scholarship_majors(self, scholarship):
+def get_scholarship_majors(scholarship):
   return jsonify({"programs": scholarship.get_programs()})
 
 
 @bp.route("/<string:scholarship_id>/programs", methods=["POST"])
 @get_entity(Scholarship, "scholarship")
-def post_scholarship_majors(self, scholarship):
+def post_scholarship_majors(scholarship):
   data = request.get_json() or {}
 
   if not data or "programs" not in data:
@@ -105,7 +105,7 @@ def post_scholarship_majors(self, scholarship):
 
 @bp.route("/<string:scholarship_id>/programs", methods=["DELETE"])
 @get_entity(Scholarship, "scholarship")
-def delete_scholarship_majors(self, scholarship):
+def delete_scholarship_majors(scholarship):
   data = request.get_json() or {}
 
   if not data or "programs" not in data:
@@ -127,13 +127,13 @@ def delete_scholarship_majors(self, scholarship):
 
 @bp.route("/<string:scholarship_id>/ethnicities")
 @get_entity(Scholarship, "scholarship")
-def get_scholarship_ethnicities(self, scholarship):
+def get_scholarship_ethnicities(scholarship):
   return jsonify({"ethnicities": scholarship.get_ethnicities()})
 
 
 @bp.route("/<string:scholarship_id>/ethnicities", methods=["POST"])
 @get_entity(Scholarship, "scholarship")
-def post_scholarship_ethnicities(self, scholarship):
+def post_scholarship_ethnicities(scholarship):
   data = request.get_json() or {}
 
   if not data or "ethnicities" not in data:
@@ -159,7 +159,7 @@ def post_scholarship_ethnicities(self, scholarship):
 
 @bp.route("/<string:scholarship_id>/ethnicities", methods=["DELETE"])
 @get_entity(Scholarship, "scholarship")
-def delete_scholarship_ethnicities(self, scholarship):
+def delete_scholarship_ethnicities(scholarship):
   data = request.get_json() or {}
 
   if not data or "ethnicities" not in data:
@@ -182,7 +182,7 @@ def delete_scholarship_ethnicities(self, scholarship):
 
 @bp.route("/<string:scholarship_id>/scholarships_needed")
 @get_entity(Scholarship, "scholarship")
-def get(self, scholarship):
+def get(scholarship):
 
   return jsonify({
       "scholarships_needed": scholarship.get_scholarships_needed()
@@ -191,7 +191,7 @@ def get(self, scholarship):
 
 @bp.route("/<string:scholarship_id>/scholarships_needed", methods=["POST"])
 @get_entity(Scholarship, "scholarship")
-def post(self, scholarship):
+def post(scholarship):
   data = request.get_json() or {}
 
   if not data or "scholarships_needed" not in data:
@@ -215,7 +215,7 @@ def post(self, scholarship):
 
 @bp.route("/<string:scholarship_id>/scholarships_needed", methods=["DELETE"])
 @get_entity(Scholarship, "scholarship")
-def delete(self, scholarship):
+def delete(scholarship):
   data = request.get_json() or {}
 
   if not data or "scholarships_needed" not in data:

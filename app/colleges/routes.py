@@ -111,7 +111,7 @@ def get_college_scholarships(college):
 
 @bp.route("/<string:college_id>/scholarships", methods=["POST"])
 @get_entity(College, "college")
-def post_scholarship(self, college):
+def post_scholarship(college):
   data = request.get_json()
 
   if not data:

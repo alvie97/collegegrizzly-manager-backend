@@ -47,7 +47,7 @@ def test_college_majors(college_id, client):
       if k in major_2:
         assert major_1[k] == major_2[k]
 
-  url = "/api/colleges/" + college_id + "/majors"
+  url = "/colleges/" + college_id + "/majors"
 
   majors_test = [{
       "name": "major test 1"

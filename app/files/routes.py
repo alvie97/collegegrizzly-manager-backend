@@ -13,14 +13,14 @@ from . import bp
 
 
 @bp.route("/file/<path:folder>/<path:filename>")
-def get_file(self, folder, filename):
+def get_file(folder, filename):
   root_dir = os.path.dirname(os.getcwd())
   return jsonify(send_from_directory(
       os.path.join(root_dir, 'backend', 'static', folder), filename))
 
 
 @bp.route("/pictures/<string:picture_id>")
-def get_picture(self, picture_id):
+def get_picture(picture_id):
   picture = PictureModel.first(public_id=picture_id)
 
   if picture is None:
@@ -30,7 +30,7 @@ def get_picture(self, picture_id):
 
 
 @bp.route("/pictures/<string:picture_id>", methods=["PATCH"])
-def patch_picture(self, picture_id):
+def patch_picture(picture_id):
   picture = PictureModel.first(public_id=picture_id)
 
   if picture is None:
@@ -43,7 +43,7 @@ def patch_picture(self, picture_id):
 
 
 @bp.route("/pictures/<string:picture_id>", methods=["DELETE"])
-def delete_picture(self, picture_id):
+def delete_picture( picture_id):
   picture = PictureModel.query.filter_by(public_id=picture_id).first()
 
   if picture is None:
@@ -56,7 +56,7 @@ def delete_picture(self, picture_id):
 
 @bp.route("/colleges/<string:college_id>/pictures")
 @bp.route("/pictures")
-def get_pictures(self, college_id=None):
+def get_pictures(college_id=None):
   if college_id is not None:
     college = CollegeModel.query.filter_by(public_id=college_id).first()
     if college is None:
@@ -79,7 +79,7 @@ def get_pictures(self, college_id=None):
 
 
 @bp.route("/colleges/<string:college_id>/pictures", methods=["POST"])
-def post_picture(self, college_id):
+def post_picture(college_id):
 
   if 'picture' not in request.files:
     return jsonify({'message': 'file missing'}), 404

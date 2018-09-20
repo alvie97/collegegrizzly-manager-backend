@@ -65,7 +65,7 @@ def get_counties(state_fips):
 
 
 @bp.route("/states/<string:state_fips/places")
-def get_state_places(self, state_fips=None):
+def get_state_places(state_fips=None):
   per_page = request.args.get("per_page", 15, type=int)
   page = request.args.get("page", 1, type=int)
 
@@ -85,7 +85,7 @@ def get_state_places(self, state_fips=None):
 
 
 @bp.route("/states/<string:state_fips/consolidated_cities")
-def get_state_consolidated_cities(self, state_fips):
+def get_state_consolidated_cities(state_fips):
   per_page = request.args.get("per_page", 15, type=int)
   page = request.args.get("page", 1, type=int)
 
