@@ -23,7 +23,7 @@ def test_scholarships(client, college_id):
   assert len(response_json["items"]) == 1
   assert response_json["items"][0]["public_id"] == scholarship_id
 
-  response = client.put(
+  response = client.patch(
       scholarships_url + '/' + scholarship_id, json={
           "sat": 100,
           "act": 32
@@ -198,8 +198,7 @@ def test_scholarships_needed(client, scholarship_id, college_id):
   scholarship_test_2 = response_json["scholarship_id"]
 
   response = client.post(
-      "colleges/" + college_id + "/scholarships/" + scholarship_id +
-      "/scholarships_needed",
+      "/scholarships/" + scholarship_id + "/scholarships_needed",
       json={"scholarships_needed": [scholarship_test_1, scholarship_test_2]})
   response_json = response.get_json()
 
