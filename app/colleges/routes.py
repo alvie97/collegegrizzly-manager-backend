@@ -3,12 +3,14 @@ from marshmallow import ValidationError
 
 from app import db
 from app.models.college import College
+from app.models.scholarship import Scholarship
 from app.models.major import Major
 from app.models.state import State
 from app.models.county import County
 from app.models.place import Place
 from app.models.consolidated_city import ConsolidatedCity
 from app.schemas.college_schema import CollegeSchema
+from app.schemas.scholarship_schema import ScholarshipSchema
 from app.schemas.major_schema import MajorSchema
 from app.common.utils import (generate_public_id, get_entity,
                               get_entity_of_resource, get_location_requirement,
@@ -20,6 +22,7 @@ from . import bp
 college_schema = CollegeSchema()
 major_schema = MajorSchema()
 majors_schema = MajorSchema(many=True)
+scholarship_schema = ScholarshipSchema()
 
 
 @bp.route("/", methods=["GET"], strict_slashes=False)

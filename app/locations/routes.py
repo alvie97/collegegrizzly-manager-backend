@@ -1,10 +1,10 @@
 from flask import request, jsonify
 from flask_restful import Resource
 
-from app.models.consolidated_city import ConsolidatedCity as CCModel
-from app.models.county import County as CountyModel
-from app.models.place import Place as PlaceModel
-from app.models.state import State as StateModel
+from app.models.consolidated_city import ConsolidatedCity as CC
+from app.models.county import County
+from app.models.place import Place
+from app.models.state import State
 from app.schemas.major_schema import MajorSchema
 
 from . import bp
@@ -12,8 +12,8 @@ from . import bp
 
 # TODO: change lazy to dynamic for pagination
 @bp.route("/states")
-def get_states(self):
-  states = StateModel.query.all()
+def get_states():
+  states = State.query.all()
   states_list = []
   for state in states:
     states_list.append(state.to_dict())
@@ -24,8 +24,8 @@ def get_states(self):
 @bp.route("/states/search/<string:name>")
 def get_state_by_name(name):
 
-  state = StateModel.query.filter(
-      StateModel.name.like("%{}%".format(name))).first()
+  state = State.query.filter(
+      State.name.like("%{}%".format(name))).first()
 
   if state is not None:
     return jsonify({"state": state.to_dict()})
@@ -35,7 +35,7 @@ def get_state_by_name(name):
 @bp.route("/states/<string:fips_code>")
 def get_state(fips_code):
 
-    state = StateModel.query.filter_by(fips_code=fips_code).first()
+    state = State.query.filter_by(fips_code=fips_code).first()
 
   if state is not None:
     return jsonify({"state": state.to_dict()})
@@ -47,7 +47,7 @@ def get_counties(state_fips):
   per_page = request.args.get("per_page", 15, type=int)
   page = request.args.get("page", 1, type=int)
 
-  state = StateModel.query.filter_by(fips_code=state_fips).first()
+  state = State.query.filter_by(fips_code=state_fips).first()
 
   if state is None:
     return jsonify({"message": "state not found"}), 404
@@ -55,7 +55,7 @@ def get_counties(state_fips):
 
   return jsonify({
       "counties":
-          CountyModel.to_collection_dict(
+          County.to_collection_dict(
               counties,
               page,
               per_page,
@@ -69,13 +69,13 @@ def get_state_places(state_fips=None):
   per_page = request.args.get("per_page", 15, type=int)
   page = request.args.get("page", 1, type=int)
 
-  state = StateModel.query.filter_by(fips_code=state_fips).first()
+  state = State.query.filter_by(fips_code=state_fips).first()
   if state is None:
     return jsonify({"message": "state not found"}), 404
   places = state.places
   return jsonify({
       "places":
-          PlaceModel.to_collection_dict(
+          Place.to_collection_dict(
               places,
               page,
               per_page,
@@ -89,7 +89,7 @@ def get_state_consolidated_cities(state_fips):
   per_page = request.args.get("per_page", 15, type=int)
   page = request.args.get("page", 1, type=int)
 
-  state = StateModel.query.filter_by(fips_code=state_fips).first()
+  state = State.query.filter_by(fips_code=state_fips).first()
 
   if state is None:
     return jsonify({"message": "state not found"}), 404
@@ -97,7 +97,7 @@ def get_state_consolidated_cities(state_fips):
 
   return jsonify({
       "consolidated_cities":
-          CCModel.to_collection_dict(
+          CC.to_collection_dict(
               consolidated_cities,
               page,
               per_page,
@@ -112,7 +112,7 @@ def get_counties():
 
   return jsonify({
       "counties":
-          CountyModel.to_collection_dict(CountyModel.query, page, per_page,
+          County.to_collection_dict(County.query, page, per_page,
                                       "get_counties")
   })
 
@@ -123,7 +123,7 @@ def get_places():
 
   return jsonify({
       "places":
-          PlaceModel.to_collection_dict(PlaceModel.query, page, per_page,
+          Place.to_collection_dict(Place.query, page, per_page,
                                       "get_places")
   })
 
@@ -134,6 +134,6 @@ def get_consolidated_cities():
 
   return jsonify({
       "consolidated_cities":
-          CCModel.to_collection_dict(CCModel.query, page, per_page,
+          CC.to_collection_dict(CC.query, page, per_page,
                                       "get_consolidated_cities")
   })

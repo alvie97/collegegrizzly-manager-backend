@@ -1,4 +1,4 @@
-from flask import current_app, request
+from flask import current_app, request, jsonify
 from flask_restful import Resource
 from marshmallow import ValidationError
 
@@ -61,13 +61,13 @@ def delete_scholarship(scholarship):
 
 
 @bp.route("/", methods=["GET"], strict_slashes=False)
-def get_scholarships(self):
+def get_scholarships():
   page = request.args.get("page", 1, type=int)
   per_page = request.args.get(
       "per_page", current_app.config["SCHOLARSHIPS_PER_PAGE"], type=int)
 
   return jsonify(
-      ScholarshipModel.to_collection_dict(Scholarship.query, page, per_page,
+      Scholarship.to_collection_dict(Scholarship.query, page, per_page,
                                           "scholarships.get_scholarships"))
 
 
