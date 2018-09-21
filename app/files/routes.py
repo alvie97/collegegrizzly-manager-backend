@@ -73,7 +73,7 @@ def get_pictures(college_id=None):
       'per_page', current_app.config['COLLEGES_PER_PAGE'], type=int)
 
   data = Picture.to_collection_dict(Picture.query, page, per_page,
-                                         'pictures')
+                                         'files.pictures')
 
   return jsonify(data)
 

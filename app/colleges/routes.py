@@ -194,7 +194,8 @@ def delete_college_majors(college):
 def college_states(college):
 
   if request.method == "GET":
-    return get_location_requirement(State, college)
+    return get_location_requirement(
+        State, "colleges.college", college, college_id=college.public_id)
 
   if request.method == "POST":
     return post_location_requirement(State, college)
@@ -208,7 +209,8 @@ def college_states(college):
 def college_counties(college):
 
   if request.method == "GET":
-    return get_location_requirement(County, college)
+    return get_location_requirement(
+        County, "colleges.college", college, college_id=college.public_id)
 
   if request.method == "POST":
     return post_location_requirement(County, college)
@@ -222,7 +224,8 @@ def college_counties(college):
 def college_places(college):
 
   if request.method == "GET":
-    return get_location_requirement(Place, college)
+    return get_location_requirement(
+        Place, "colleges.college", college, college_id=college.public_id)
 
   if request.method == "POST":
     return post_location_requirement(Place, college)
@@ -238,7 +241,11 @@ def college_places(college):
 def college_consolidated_cities(college):
 
   if request.method == "GET":
-    return get_location_requirement(ConsolidatedCity, college)
+    return get_location_requirement(
+        ConsolidatedCity,
+        "colleges.college",
+        college,
+        college_id=college.public_id)
 
   if request.method == "POST":
     return post_location_requirement(ConsolidatedCity, college)

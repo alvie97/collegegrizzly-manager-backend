@@ -32,12 +32,13 @@ def get_entity(entity, entity_name):
   return get_entity_decorator
 
 
-def get_location_requirement(location, entity):
+def get_location_requirement(location, base_endpoint, entity, **endpoint_args):
   page = request.args.get("page", 1, type=int)
   per_page = request.args.get("per_page", 15, type=int)
 
   try:
-    locations = entity.get_location_requirement(location, page, per_page)
+    locations = entity.get_location_requirement(location, base_endpoint, page,
+                                                per_page, **endpoint_args)
 
   except LocationEntityError as err:
     print("LocationEntityError:", err)

@@ -236,7 +236,11 @@ def delete(scholarship):
 def scholarship_states(scholarship):
 
   if request.method == "GET":
-    return get_location_requirement(State, scholarship)
+    return get_location_requirement(
+        State,
+        "scholarships.scholarship",
+        scholarship,
+        scholarship_id=scholarship.public_id)
 
   if request.method == "POST":
     return post_location_requirement(State, scholarship)
@@ -251,7 +255,11 @@ def scholarship_states(scholarship):
 def scholarship_counties(scholarship):
 
   if request.method == "GET":
-    return get_location_requirement(County, scholarship)
+    return get_location_requirement(
+        County,
+        "scholarships.scholarship",
+        scholarship,
+        scholarship_id=scholarship.public_id)
 
   if request.method == "POST":
     return post_location_requirement(County, scholarship)
@@ -265,7 +273,11 @@ def scholarship_counties(scholarship):
 def scholarship_places(scholarship):
 
   if request.method == "GET":
-    return get_location_requirement(Place, scholarship)
+    return get_location_requirement(
+        Place,
+        "scholarships.scholarship",
+        scholarship,
+        scholarship_id=scholarship.public_id)
 
   if request.method == "POST":
     return post_location_requirement(Place, scholarship)
@@ -281,7 +293,11 @@ def scholarship_places(scholarship):
 def scholarship_consolidated_cities(scholarship):
 
   if request.method == "GET":
-    return get_location_requirement(ConsolidatedCity, scholarship)
+    return get_location_requirement(
+        ConsolidatedCity,
+        "scholarships.scholarship",
+        scholarship,
+        scholarship_id=scholarship.public_id)
 
   if request.method == "POST":
     return post_location_requirement(ConsolidatedCity, scholarship)

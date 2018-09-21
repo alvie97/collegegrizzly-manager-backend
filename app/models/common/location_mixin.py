@@ -143,7 +143,7 @@ class LocationMixin(object):
     elif location_entity is ConsolidatedCity:
       location_name = "consolidated_cities"
       location_query = self.location_requirement_consolidated_cities
-      location_url = base_endpoint + "_cities"
+      location_url = base_endpoint + "_consolidated_cities"
     else:
       raise LocationEntityError("location entity is not a location model")
 

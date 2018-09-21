@@ -22,13 +22,13 @@ def get_states():
 @bp.route("/states/search/<string:name>")
 def get_state_by_name(name):
 
-  state = State.query.filter(
-      State.name.like("%{}%".format(name))).first()
+  state = State.query.filter(State.name.like("%{}%".format(name))).first()
 
   if state is not None:
     return jsonify({"state": state.to_dict()})
 
   return jsonify({"message": "Not state found"}), 404
+
 
 @bp.route("/states/<string:fips_code>")
 def get_state(fips_code):
@@ -39,6 +39,7 @@ def get_state(fips_code):
     return jsonify({"state": state.to_dict()})
 
   return jsonify({"message": "state not found"}), 404
+
 
 @bp.route("/states/<string:state_fips>/counties")
 def get_state_counties(state_fips):
@@ -57,7 +58,7 @@ def get_state_counties(state_fips):
               counties,
               page,
               per_page,
-              "get_state_counties",
+              "locations.get_state_counties",
               state_fips=state_fips)
   })
 
@@ -77,7 +78,7 @@ def get_state_places(state_fips=None):
               places,
               page,
               per_page,
-              "get_state_places",
+              "locations.get_state_places",
               state_fips=state_fips)
   })
 
@@ -99,9 +100,10 @@ def get_state_consolidated_cities(state_fips):
               consolidated_cities,
               page,
               per_page,
-              "get_state_consolidated_cities",
+              "locations.get_state_consolidated_cities",
               state_fips=state_fips)
   })
+
 
 @bp.route("/counties")
 def get_counties():
@@ -111,8 +113,9 @@ def get_counties():
   return jsonify({
       "counties":
           County.to_collection_dict(County.query, page, per_page,
-                                      "get_counties")
+                                    "locations.get_counties")
   })
+
 
 @bp.route("/places")
 def get_places():
@@ -122,8 +125,9 @@ def get_places():
   return jsonify({
       "places":
           Place.to_collection_dict(Place.query, page, per_page,
-                                      "get_places")
+                                   "locations.get_places")
   })
+
 
 @bp.route("/consolidated_cities")
 def get_consolidated_cities():
@@ -133,5 +137,5 @@ def get_consolidated_cities():
   return jsonify({
       "consolidated_cities":
           CC.to_collection_dict(CC.query, page, per_page,
-                                      "get_consolidated_cities")
+                                "locations.get_consolidated_cities")
   })
