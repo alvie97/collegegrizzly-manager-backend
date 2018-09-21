@@ -11,13 +11,14 @@ class Config(object):
   SQLALCHEMY_DATABASE_URI = os.environ.get(
       'DATABASE_URL') or 'sqlite:///' + os.path.join(basedir, 'app.db')
   SQLALCHEMY_TRACK_MODIFICATIONS = False
+  SECURE_TOKEN_COOKIES = False
   JWT_SECRET = os.environ.get('SECRET_KEY') or 'my-secret-never-guess'
   JWT_ALGORITHM = "HS256"
   ACCESS_COOKIE_NAME = "actk"
-  REFFRESH_COOKIE_NAME = "rftk"
+  REFRESH_COOKIE_NAME = "rftk"
+  REFRESH_TOKEN_DURATION = timedelta(days=30)
+  REFRESH_COOKIE_EXPIRATION = timedelta(days=31)
   CSRF_COOKIE_NAME = "x-csrf-token"
-  ACCESS_TOKEN_DURATION = timedelta(seconds=60)
-  REFRESH_TOKEN_DURATION = timedelta(days=7)
   MAIL_SERVER = os.environ.get('MAIL_SERVER')
   MAIL_PORT = int(os.environ.get('MAIL_PORT') or 25)
   MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS') is not None

@@ -3,6 +3,7 @@ from app import create_app
 app = create_app()
 
 from app import cli, db
+from app.models.user import User
 from app.models.college import College
 from app.models.scholarship import Scholarship
 from app.models.major import Major
@@ -28,5 +29,6 @@ def make_shell_context():
       "Consolidated_city": ConsolidatedCity,
       "Major": Major,
       "Ethnicity": Ethnicity,
-      "Program": Program
+      "Program": Program,
+      "User": User
   }
