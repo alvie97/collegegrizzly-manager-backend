@@ -2,6 +2,7 @@ from .common.base_mixin import BaseMixin
 from .common.paginated_api_mixin import PaginatedAPIMixin
 from app import db
 
+
 class County(db.Model, PaginatedAPIMixin, BaseMixin):
   id = db.Column(db.Integer, primary_key=True)
   name = db.Column(db.String(256))
@@ -14,4 +15,8 @@ class County(db.Model, PaginatedAPIMixin, BaseMixin):
     return "<County {}>".format(self.name)
 
   def to_dict(self):
-    return {"name": self.name, "fips_code": self.fips_code}
+    return {
+        "name": self.name,
+        "fips_code": self.fips_code,
+        "state": self.state.name
+    }

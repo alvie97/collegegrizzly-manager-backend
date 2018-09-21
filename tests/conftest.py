@@ -3,7 +3,6 @@ from app.common.utils import generate_public_id
 from app.models.college import College
 from app.models.scholarship import Scholarship
 from config import Config
-from subprocess import run
 import os
 import pytest
 import tempfile
@@ -80,12 +79,3 @@ class AuthActions(object):
 @pytest.fixture
 def auth(client):
   return AuthActions(client)
-
-
-# @pytest.fixture(scope="session")
-# def locations(app):
-#   with app.app_context():
-#     run(["flask", "geocodes", "save_in_database"])
-
-#     result = db.engine.execute("SELECT COUNT(*) FROM state")
-#     assert result.scalar() > 1

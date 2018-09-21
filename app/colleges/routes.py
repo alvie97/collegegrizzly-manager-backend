@@ -12,10 +12,9 @@ from app.models.consolidated_city import ConsolidatedCity
 from app.schemas.college_schema import CollegeSchema
 from app.schemas.scholarship_schema import ScholarshipSchema
 from app.schemas.major_schema import MajorSchema
-from app.common.utils import (generate_public_id, get_entity,
-                              get_entity_of_resource, get_location_requirement,
-                              post_location_requirement,
-                              delete_location_requirement)
+from app.common.utils import (
+    generate_public_id, get_entity, get_location_requirement,
+    post_location_requirement, delete_location_requirement)
 
 from . import bp
 
@@ -40,7 +39,8 @@ def get_colleges():
         query, page, per_page, "colleges.get_colleges", search=search)
   else:
     query = College.query
-    data = College.to_collection_dict(query, page, per_page, "colleges.get_colleges")
+    data = College.to_collection_dict(query, page, per_page,
+                                      "colleges.get_colleges")
 
   return jsonify(data)
 
@@ -189,75 +189,59 @@ def delete_college_majors(college):
   return jsonify({"message": "majors removed"})
 
 
-@bp.route(
-    "/<string:college_id>/states", methods=["GET", "POST", "PATCH", "DELETE"])
-@get_entity_of_resource(College, "college")
-def college_states(entity_obj):
+@bp.route("/<string:college_id>/states", methods=["GET", "POST", "DELETE"])
+@get_entity(College, "college")
+def college_states(college):
 
   if request.method == "GET":
-    return get_location_requirement(State, college, "college")
+    return get_location_requirement(State, college)
 
   if request.method == "POST":
-    return post_location_requirement(State, college, "college")
-
-  if request.method == "PATCH":
-    return patch_location_requirement(State, college, "college")
+    return post_location_requirement(State, college)
 
   if request.method == "DELETE":
-    return delete_location_requirement(State, college, "college")
+    return delete_location_requirement(State, college)
 
 
-@bp.route(
-    "/<string:college_id>/counties",
-    methods=["GET", "POST", "PATCH", "DELETE"])
-@get_entity_of_resource(College, "college")
-def college_counties(entity_obj):
+@bp.route("/<string:college_id>/counties", methods=["GET", "POST", "DELETE"])
+@get_entity(College, "college")
+def college_counties(college):
 
   if request.method == "GET":
-    return get_location_requirement(County, college, "college")
+    return get_location_requirement(County, college)
 
   if request.method == "POST":
-    return post_location_requirement(County, college, "college")
-
-  if request.method == "PATCH":
-    return patch_location_requirement(County, college, "college")
+    return post_location_requirement(County, college)
 
   if request.method == "DELETE":
-    return delete_location_requirement(County, college, "college")
+    return delete_location_requirement(County, college)
 
 
-@bp.route(
-    "/<string:college_id>/places", methods=["GET", "POST", "PATCH", "DELETE"])
-@get_entity_of_resource(College, "college")
-def college_places(entity_obj):
+@bp.route("/<string:college_id>/places", methods=["GET", "POST", "DELETE"])
+@get_entity(College, "college")
+def college_places(college):
 
   if request.method == "GET":
-    return get_location_requirement(Place, college, "college")
+    return get_location_requirement(Place, college)
 
   if request.method == "POST":
-    return post_location_requirement(Place, college, "college")
-
-  if request.method == "PATCH":
-    return patch_location_requirement(Place, college, "college")
+    return post_location_requirement(Place, college)
 
   if request.method == "DELETE":
-    return delete_location_requirement(Place, college, "college")
+    return delete_location_requirement(Place, college)
 
 
 @bp.route(
     "/<string:college_id>/consolidated_cities",
-    methods=["GET", "POST", "PATCH", "DELETE"])
-@get_entity_of_resource(College, "college")
-def college_consolidated_cities(entity_obj):
+    methods=["GET", "POST", "DELETE"])
+@get_entity(College, "college")
+def college_consolidated_cities(college):
 
   if request.method == "GET":
-    return get_location_requirement(ConsolidatedCity, college, "college")
+    return get_location_requirement(ConsolidatedCity, college)
 
   if request.method == "POST":
-    return post_location_requirement(ConsolidatedCity, college, "college")
-
-  if request.method == "PATCH":
-    return patch_location_requirement(ConsolidatedCity, college, "college")
+    return post_location_requirement(ConsolidatedCity, college)
 
   if request.method == "DELETE":
-    return delete_location_requirement(ConsolidatedCity, college, "college")
+    return delete_location_requirement(ConsolidatedCity, college)

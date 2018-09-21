@@ -32,6 +32,9 @@ def create_app(config_class=Config):
   from app.scholarships import bp as scholarship_bp
   app.register_blueprint(scholarship_bp, url_prefix="/scholarships")
 
+  from app.locations import bp as locations_bp
+  app.register_blueprint(locations_bp, url_prefix="/locations")
+
   from app.files import bp as file_bp
   app.register_blueprint(file_bp)
 

@@ -14,10 +14,9 @@ from app.models.consolidated_city import ConsolidatedCity
 from app.schemas.ethnicity_schema import EthnicitySchema
 from app.schemas.program_schema import ProgramSchema
 from app.schemas.scholarship_schema import ScholarshipSchema
-from app.common.utils import (generate_public_id, get_entity,
-                              get_entity_of_resource, get_location_requirement,
-                              post_location_requirement,
-                              delete_location_requirement)
+from app.common.utils import (
+    generate_public_id, get_entity, get_location_requirement,
+    post_location_requirement, delete_location_requirement)
 
 from . import bp
 
@@ -68,7 +67,7 @@ def get_scholarships():
 
   return jsonify(
       Scholarship.to_collection_dict(Scholarship.query, page, per_page,
-                                          "scholarships.get_scholarships"))
+                                     "scholarships.get_scholarships"))
 
 
 @bp.route("/<string:scholarship_id>/programs")
@@ -232,81 +231,60 @@ def delete(scholarship):
   return jsonify({"message": "needed scholarships removed"})
 
 
-@bp.route(
-    "/<string:scholarship_id>/states",
-    methods=["GET", "POST", "PATCH", "DELETE"])
-@get_entity_of_resource(Scholarship, "scholarship")
-def scholarship_states(entity_obj):
+@bp.route("/<string:scholarship_id>/states", methods=["GET", "POST", "DELETE"])
+@get_entity(Scholarship, "scholarship")
+def scholarship_states(scholarship):
 
   if request.method == "GET":
-    return get_location_requirement(State, scholarship, "scholarship")
+    return get_location_requirement(State, scholarship)
 
   if request.method == "POST":
-    return post_location_requirement(State, scholarship, "scholarship")
-
-  if request.method == "PATCH":
-    return patch_location_requirement(State, scholarship, "scholarship")
+    return post_location_requirement(State, scholarship)
 
   if request.method == "DELETE":
-    return delete_location_requirement(State, scholarship, "scholarship")
+    return delete_location_requirement(State, scholarship)
 
 
 @bp.route(
-    "/<string:scholarship_id>/counties",
-    methods=["GET", "POST", "PATCH", "DELETE"])
-@get_entity_of_resource(Scholarship, "scholarship")
-def scholarship_counties(entity_obj):
+    "/<string:scholarship_id>/counties", methods=["GET", "POST", "DELETE"])
+@get_entity(Scholarship, "scholarship")
+def scholarship_counties(scholarship):
 
   if request.method == "GET":
-    return get_location_requirement(County, scholarship, "scholarship")
+    return get_location_requirement(County, scholarship)
 
   if request.method == "POST":
-    return post_location_requirement(County, scholarship, "scholarship")
-
-  if request.method == "PATCH":
-    return patch_location_requirement(County, scholarship, "scholarship")
+    return post_location_requirement(County, scholarship)
 
   if request.method == "DELETE":
-    return delete_location_requirement(County, scholarship, "scholarship")
+    return delete_location_requirement(County, scholarship)
 
 
-@bp.route(
-    "/<string:scholarship_id>/places",
-    methods=["GET", "POST", "PATCH", "DELETE"])
-@get_entity_of_resource(Scholarship, "scholarship")
-def scholarship_places(entity_obj):
+@bp.route("/<string:scholarship_id>/places", methods=["GET", "POST", "DELETE"])
+@get_entity(Scholarship, "scholarship")
+def scholarship_places(scholarship):
 
   if request.method == "GET":
-    return get_location_requirement(Place, scholarship, "scholarship")
+    return get_location_requirement(Place, scholarship)
 
   if request.method == "POST":
-    return post_location_requirement(Place, scholarship, "scholarship")
-
-  if request.method == "PATCH":
-    return patch_location_requirement(Place, scholarship, "scholarship")
+    return post_location_requirement(Place, scholarship)
 
   if request.method == "DELETE":
-    return delete_location_requirement(Place, scholarship, "scholarship")
+    return delete_location_requirement(Place, scholarship)
 
 
 @bp.route(
     "/<string:scholarship_id>/consolidated_cities",
-    methods=["GET", "POST", "PATCH", "DELETE"])
-@get_entity_of_resource(Scholarship, "scholarship")
-def scholarship_consolidated_cities(entity_obj):
+    methods=["GET", "POST", "DELETE"])
+@get_entity(Scholarship, "scholarship")
+def scholarship_consolidated_cities(scholarship):
 
   if request.method == "GET":
-    return get_location_requirement(ConsolidatedCity, scholarship,
-                                    "scholarship")
+    return get_location_requirement(ConsolidatedCity, scholarship)
 
   if request.method == "POST":
-    return post_location_requirement(ConsolidatedCity, scholarship,
-                                     "scholarship")
-
-  if request.method == "PATCH":
-    return patch_location_requirement(ConsolidatedCity, scholarship,
-                                      "scholarship")
+    return post_location_requirement(ConsolidatedCity, scholarship)
 
   if request.method == "DELETE":
-    return delete_location_requirement(ConsolidatedCity, scholarship,
-                                       "scholarship")
+    return delete_location_requirement(ConsolidatedCity, scholarship)

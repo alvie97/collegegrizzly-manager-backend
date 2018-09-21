@@ -78,7 +78,7 @@ class LocationMixin(object):
     """
     try:
       instance = self.get_location_entity_query(location_obj)
-    except LocationEntityError as err:
+    except LocationEntityError:
       raise
 
     location_entity, location_query = instance
@@ -86,7 +86,7 @@ class LocationMixin(object):
     try:
       if not self.has_location(location_entity, location_obj.fips_code):
         location_query.append(location_obj)
-    except LocationEntityError as err:
+    except LocationEntityError:
       raise
 
   def remove_location(self, location_obj):
@@ -95,7 +95,7 @@ class LocationMixin(object):
     """
     try:
       instance = self.get_location_entity_query(location_obj)
-    except LocationEntityError as err:
+    except LocationEntityError:
       raise
 
     location_entity, location_query = instance
@@ -103,7 +103,7 @@ class LocationMixin(object):
     try:
       if self.has_location(location_entity, location_obj.fips_code):
         location_query.remove(location_obj)
-    except LocationEntityError as err:
+    except LocationEntityError:
       raise
 
   def has_location(self, location_entity, fips_code):

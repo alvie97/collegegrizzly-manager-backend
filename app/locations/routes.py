@@ -1,11 +1,9 @@
 from flask import request, jsonify
-from flask_restful import Resource
 
 from app.models.consolidated_city import ConsolidatedCity as CC
 from app.models.county import County
 from app.models.place import Place
 from app.models.state import State
-from app.schemas.major_schema import MajorSchema
 
 from . import bp
 
@@ -35,7 +33,7 @@ def get_state_by_name(name):
 @bp.route("/states/<string:fips_code>")
 def get_state(fips_code):
 
-    state = State.query.filter_by(fips_code=fips_code).first()
+  state = State.query.filter_by(fips_code=fips_code).first()
 
   if state is not None:
     return jsonify({"state": state.to_dict()})
@@ -43,7 +41,7 @@ def get_state(fips_code):
   return jsonify({"message": "state not found"}), 404
 
 @bp.route("/states/<string:state_fips>/counties")
-def get_counties(state_fips):
+def get_state_counties(state_fips):
   per_page = request.args.get("per_page", 15, type=int)
   page = request.args.get("page", 1, type=int)
 
@@ -64,7 +62,7 @@ def get_counties(state_fips):
   })
 
 
-@bp.route("/states/<string:state_fips/places")
+@bp.route("/states/<string:state_fips>/places")
 def get_state_places(state_fips=None):
   per_page = request.args.get("per_page", 15, type=int)
   page = request.args.get("page", 1, type=int)
@@ -84,7 +82,7 @@ def get_state_places(state_fips=None):
   })
 
 
-@bp.route("/states/<string:state_fips/consolidated_cities")
+@bp.route("/states/<string:state_fips>/consolidated_cities")
 def get_state_consolidated_cities(state_fips):
   per_page = request.args.get("per_page", 15, type=int)
   page = request.args.get("page", 1, type=int)
