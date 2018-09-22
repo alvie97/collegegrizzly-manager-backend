@@ -15,6 +15,8 @@ from app.schemas.major_schema import MajorSchema
 from app.common.utils import (
     generate_public_id, get_entity, get_location_requirement,
     post_location_requirement, delete_location_requirement)
+from app.token_schema import access_token_required
+from app.auth.csrf import csrf_token_required
 
 from . import bp
 
@@ -22,6 +24,13 @@ college_schema = CollegeSchema()
 major_schema = MajorSchema()
 majors_schema = MajorSchema(many=True)
 scholarship_schema = ScholarshipSchema()
+
+
+@bp.before_request
+@csrf_token_required
+@access_token_required
+def before_request():
+  pass
 
 
 @bp.route("/", methods=["GET"], strict_slashes=False)

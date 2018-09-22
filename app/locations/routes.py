@@ -4,8 +4,17 @@ from app.models.consolidated_city import ConsolidatedCity as CC
 from app.models.county import County
 from app.models.place import Place
 from app.models.state import State
+from app.token_schema import access_token_required
+from app.auth.csrf import csrf_token_required
 
 from . import bp
+
+
+@bp.before_request
+@csrf_token_required
+@access_token_required
+def before_request():
+  pass
 
 
 # TODO: change lazy to dynamic for pagination
