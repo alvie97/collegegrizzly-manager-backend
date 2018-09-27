@@ -26,11 +26,11 @@ majors_schema = MajorSchema(many=True)
 scholarship_schema = ScholarshipSchema()
 
 
-@bp.before_request
-@csrf_token_required
-@access_token_required
-def before_request():
-  pass
+# @bp.before_request
+# @csrf_token_required
+# @access_token_required
+# def before_request():
+#   pass
 
 
 @bp.route("/", methods=["GET"], strict_slashes=False)
@@ -261,3 +261,8 @@ def college_consolidated_cities(college):
 
   if request.method == "DELETE":
     return delete_location_requirement(ConsolidatedCity, college)
+
+
+@bp.route("/colleges/get_fields")
+def college_get_fields():
+  return jsonify({"fields": College.get_fields()})

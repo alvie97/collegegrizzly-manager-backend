@@ -10,11 +10,11 @@ from app.auth.csrf import csrf_token_required
 from . import bp
 
 
-@bp.before_request
-@csrf_token_required
-@access_token_required
-def before_request():
-  pass
+# @bp.before_request
+# @csrf_token_required
+# @access_token_required
+# def before_request():
+#   pass
 
 
 # TODO: change lazy to dynamic for pagination

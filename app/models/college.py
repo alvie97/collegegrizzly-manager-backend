@@ -19,7 +19,6 @@ class College(PaginatedAPIMixin, LocationMixin, DateAudit, BaseMixin,
   type_of_institution = db.Column(db.String(256), nullable=True)
   phone = db.Column(db.String(256), nullable=True)
   website = db.Column(db.Text, nullable=True)
-  location_requirement_tuition = db.Column(db.Numeric(8, 2), default=0)
   in_state_tuition = db.Column(db.Numeric(8, 2), default=0)
   out_of_state_tuition = db.Column(db.Numeric(8, 2), default=0)
   location = db.Column(db.String(256), nullable=True)
@@ -99,7 +98,69 @@ class College(PaginatedAPIMixin, LocationMixin, DateAudit, BaseMixin,
 
     db.session.delete(self)
 
-  def to_dict(self) -> dict:
+  @staticmethod
+  def get_fields(self):
+    return {
+        "public_id": {
+            "label": "UUID"
+        },
+        "name": {
+            "label": "name"
+        },
+        "room_and_board": {
+            "label": "room and board"
+        },
+        "type_of_institution": {
+            "label": "type of institution"
+        },
+        "phone": {
+            "label": "phone"
+        },
+        "website": {
+            "label": "website"
+        },
+        "in_state_tuition": {
+            "label": "in-state tuition"
+        },
+        "out_of_state_tuition": {
+            "label": "out of state tuition"
+        },
+        "location": {
+            "label": "location"
+        },
+        "religious_affiliation": {
+            "label": "religious affiliation"
+        },
+        "setting": {
+            "label": "setting"
+        },
+        "number_of_students": {
+            "label": "number of students"
+        },
+        "unweighted_hs_gpa": {
+            "label": "unweighted highschool GPA"
+        },
+        "sat": {
+            "label": "SAT"
+        },
+        "act": {
+            "label": "ACT"
+        }
+    }
+
+  def for_pagination(self):
+    return {
+        "name": self.name,
+        "public_id": self.public_id,
+        "audit_dates": self.audit_dates(),
+        "logo": self.get_logo(),
+        "_links": {
+            "get_college":
+                url_for("colleges.get_college", college_id=self.public_id)
+        }
+    }
+
+  def to_dict(self):
     return {
         "public_id": self.public_id,
         "name": self.name,
@@ -121,7 +182,9 @@ class College(PaginatedAPIMixin, LocationMixin, DateAudit, BaseMixin,
         "majors": self.get_majors(),
         "_links": {
             "scholarships":
-                url_for("colleges.get_college_scholarships", college_id=self.public_id),
+                url_for(
+                    "colleges.get_college_scholarships",
+                    college_id=self.public_id),
             "pictures":
                 url_for("files.get_pictures", college_id=self.public_id),
             "in_state_requirement":

@@ -16,7 +16,7 @@ class PaginatedAPIMixin(object):
     """
     resources = query.paginate(page, per_page, False)
     return {
-        'items': [item.to_dict() for item in resources.items],
+        'items': [item.for_pagination() for item in resources.items],
         '_meta': {
             'page': page,
             'per_page': per_page,
