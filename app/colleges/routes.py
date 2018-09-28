@@ -93,7 +93,7 @@ def patch_college(college):
 
   college.update(data)
   db.session.commit()
-  return jsonify({"college": college.to_dict()})
+  return jsonify("college saved successfully")
 
 
 @bp.route("/<string:college_id>", methods=["DELETE"])

@@ -47,10 +47,10 @@ class College(PaginatedAPIMixin, LocationMixin, DateAudit, BaseMixin,
       lazy="dynamic")
 
   ATTR_FIELDS = [
-      "public_id", "name", "room_and_board", "created_at", "updated_at",
-      "type_of_institution", "phone", "website", "in_state_tuition",
-      "out_of_state_tuition", "location", "religious_affiliation", "setting",
-      "number_of_students", "unweighted_hs_gpa", "sat", "act"
+      "name", "room_and_board", "type_of_institution", "phone", "website",
+      "in_state_tuition", "out_of_state_tuition", "location",
+      "religious_affiliation", "setting", "number_of_students",
+      "unweighted_hs_gpa", "sat", "act"
   ]
 
   def __repr__(self):
@@ -163,21 +163,23 @@ class College(PaginatedAPIMixin, LocationMixin, DateAudit, BaseMixin,
   def to_dict(self):
     return {
         "public_id": self.public_id,
-        "name": self.name,
-        "room_and_board": str(self.room_and_board),
+        "editable_fields": {
+            "name": self.name,
+            "room_and_board": str(self.room_and_board),
+            "type_of_institution": self.type_of_institution,
+            "phone": self.phone,
+            "website": self.website,
+            "in_state_tuition": str(self.in_state_tuition),
+            "out_of_state_tuition": str(self.out_of_state_tuition),
+            "location": self.location,
+            "religious_affiliation": self.religious_affiliation,
+            "setting": self.setting,
+            "number_of_students": self.number_of_students,
+            "unweighted_hs_gpa": str(self.unweighted_hs_gpa),
+            "sat": self.sat,
+            "act": self.act
+        },
         "audit_dates": self.audit_dates(),
-        "type_of_institution": self.type_of_institution,
-        "phone": self.phone,
-        "website": self.website,
-        "in_state_tuition": str(self.in_state_tuition),
-        "out_of_state_tuition": str(self.out_of_state_tuition),
-        "location": self.location,
-        "religious_affiliation": self.religious_affiliation,
-        "setting": self.setting,
-        "number_of_students": self.number_of_students,
-        "unweighted_hs_gpa": str(self.unweighted_hs_gpa),
-        "sat": self.sat,
-        "act": self.act,
         "logo": self.get_logo(),
         "majors": self.get_majors(),
         "_links": {
