@@ -1,7 +1,7 @@
 from functools import wraps
 from uuid import uuid4
 
-from flask import jsonify, request
+from flask import jsonify, request, current_app
 
 from app import db
 from .errors import LocationEntityError
@@ -34,7 +34,8 @@ def get_entity(entity, entity_name):
 
 def get_location_requirement(location, base_endpoint, entity, **endpoint_args):
   page = request.args.get("page", 1, type=int)
-  per_page = request.args.get("per_page", 15, type=int)
+  per_page = request.args.get(
+      "per_page", current_app.config["PER_PAGE"], type=int)
 
   try:
     locations = entity.get_location_requirement(location, base_endpoint, page,

@@ -118,6 +118,9 @@ class Scholarship(PaginatedAPIMixin, LocationMixin, DateAudit, BaseMixin,
   def get_ethnicities(self):
     return [ethnicity.to_dict() for ethnicity in self.ethnicities.all()]
 
+  def for_pagination(self):
+    return self.to_dict()
+
   def to_dict(self):
     return {
         "public_id":

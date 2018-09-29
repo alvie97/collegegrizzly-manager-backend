@@ -25,7 +25,8 @@ class Config(object):
   MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
   MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
   ADMINS = ['alvie97m@gmail.com']
-  COLLEGES_PER_PAGE = 10
-  SCHOLARSHIPS_PER_PAGE = 1
+  COLLEGES_PER_PAGE = 5
+  SCHOLARSHIPS_PER_PAGE = 5
+  PER_PAGE = 5
   UPLOADED_PHOTOS_DEST = 'static/photos/'
   UPLOADED_PHOTOS_URL = 'http://localhost:5000/api/file/photos/'

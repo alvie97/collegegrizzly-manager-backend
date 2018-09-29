@@ -35,3 +35,6 @@ class State(db.Model, PaginatedAPIMixin, BaseMixin):
                     state_fips=self.fips_code)
         }
     }
+
+  def for_pagination(self):
+    return self.to_dict()

@@ -12,5 +12,8 @@ class Major(db.Model, PaginatedAPIMixin, BaseMixin):
   def __repr__(self):
     return "<Major {}>".format(self.name)
 
+  def for_pagination(self):
+    return self.to_dict()
+
   def to_dict(self):
     return {"name": self.name, "description": self.description}

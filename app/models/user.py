@@ -36,6 +36,9 @@ class User(PaginatedAPIMixin, BaseMixin, DateAudit, db.Model):
     return "https://www.gravatar.com/avatar/{}?d=identicon&s={}".format(
         digest, size)
 
+  def for_pagination(self):
+    return self.to_dict()
+
   def to_dict(self):
     data = {
         "username": self.username,

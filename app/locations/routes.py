@@ -1,4 +1,4 @@
-from flask import request, jsonify
+from flask import request, jsonify, current_app
 
 from app.models.consolidated_city import ConsolidatedCity as CC
 from app.models.county import County
@@ -8,7 +8,6 @@ from app.token_schema import access_token_required
 from app.auth.csrf import csrf_token_required
 
 from . import bp
-
 
 # @bp.before_request
 # @csrf_token_required
@@ -20,12 +19,15 @@ from . import bp
 # TODO: change lazy to dynamic for pagination
 @bp.route("/states")
 def get_states():
-  states = State.query.all()
-  states_list = []
-  for state in states:
-    states_list.append(state.to_dict())
+  per_page = request.args.get(
+      "per_page", current_app.config["PER_PAGE"], type=int)
+  page = request.args.get("page", 1, type=int)
 
-  return jsonify({"states": states_list})
+  return jsonify({
+      "states":
+          State.to_collection_dict(State.query, page, per_page,
+                                   "locations.get_states")
+  })
 
 
 @bp.route("/states/search/<string:name>")
@@ -52,7 +54,8 @@ def get_state(fips_code):
 
 @bp.route("/states/<string:state_fips>/counties")
 def get_state_counties(state_fips):
-  per_page = request.args.get("per_page", 15, type=int)
+  per_page = request.args.get(
+      "per_page", current_app.config["PER_PAGE"], type=int)
   page = request.args.get("page", 1, type=int)
 
   state = State.query.filter_by(fips_code=state_fips).first()
@@ -74,7 +77,8 @@ def get_state_counties(state_fips):
 
 @bp.route("/states/<string:state_fips>/places")
 def get_state_places(state_fips=None):
-  per_page = request.args.get("per_page", 15, type=int)
+  per_page = request.args.get(
+      "per_page", current_app.config["PER_PAGE"], type=int)
   page = request.args.get("page", 1, type=int)
 
   state = State.query.filter_by(fips_code=state_fips).first()
@@ -94,7 +98,8 @@ def get_state_places(state_fips=None):
 
 @bp.route("/states/<string:state_fips>/consolidated_cities")
 def get_state_consolidated_cities(state_fips):
-  per_page = request.args.get("per_page", 15, type=int)
+  per_page = request.args.get(
+      "per_page", current_app.config["PER_PAGE"], type=int)
   page = request.args.get("page", 1, type=int)
 
   state = State.query.filter_by(fips_code=state_fips).first()
@@ -116,7 +121,8 @@ def get_state_consolidated_cities(state_fips):
 
 @bp.route("/counties")
 def get_counties():
-  per_page = request.args.get("per_page", 15, type=int)
+  per_page = request.args.get(
+      "per_page", current_app.config["PER_PAGE"], type=int)
   page = request.args.get("page", 1, type=int)
 
   return jsonify({
@@ -128,7 +134,8 @@ def get_counties():
 
 @bp.route("/places")
 def get_places():
-  per_page = request.args.get("per_page", 15, type=int)
+  per_page = request.args.get(
+      "per_page", current_app.config["PER_PAGE"], type=int)
   page = request.args.get("page", 1, type=int)
 
   return jsonify({
@@ -140,7 +147,8 @@ def get_places():
 
 @bp.route("/consolidated_cities")
 def get_consolidated_cities():
-  per_page = request.args.get("per_page", 15, type=int)
+  per_page = request.args.get(
+      "per_page", current_app.config["PER_PAGE"], type=int)
   page = request.args.get("page", 1, type=int)
 
   return jsonify({

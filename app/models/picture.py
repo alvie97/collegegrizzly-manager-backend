@@ -25,6 +25,9 @@ class Picture(PaginatedAPIMixin, DateAudit, db.Model):
     except OSError:
       pass
 
+  def for_pagination(self):
+    return self.to_dict()
+
   def to_dict(self):
     return {
         "public_id": self.public_id,

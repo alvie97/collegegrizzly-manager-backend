@@ -14,6 +14,9 @@ class ConsolidatedCity(PaginatedAPIMixin, BaseMixin, db.Model):
   def __repr__(self):
     return "<Consolidated City {}>".format(self.name)
 
+  def for_pagination(self):
+    return self.to_dict()
+
   def to_dict(self):
     return {
         "name": self.name,

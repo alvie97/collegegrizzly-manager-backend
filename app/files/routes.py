@@ -15,8 +15,9 @@ from . import bp
 @bp.route("/file/<path:folder>/<path:filename>")
 def get_file(folder, filename):
   root_dir = os.path.dirname(os.getcwd())
-  return jsonify(send_from_directory(
-      os.path.join(root_dir, 'backend', 'static', folder), filename))
+  return jsonify(
+      send_from_directory(
+          os.path.join(root_dir, 'backend', 'static', folder), filename))
 
 
 @bp.route("/pictures/<string:picture_id>")
@@ -43,7 +44,7 @@ def patch_picture(picture_id):
 
 
 @bp.route("/pictures/<string:picture_id>", methods=["DELETE"])
-def delete_picture( picture_id):
+def delete_picture(picture_id):
   picture = Picture.query.filter_by(public_id=picture_id).first()
 
   if picture is None:
@@ -73,7 +74,7 @@ def get_pictures(college_id=None):
       'per_page', current_app.config['COLLEGES_PER_PAGE'], type=int)
 
   data = Picture.to_collection_dict(Picture.query, page, per_page,
-                                         'files.pictures')
+                                    'files.pictures')
 
   return jsonify(data)
 
@@ -106,8 +107,7 @@ def post_picture(college_id):
 def delete_pictures():
   data = request.get_json() or {}
 
-  pictures = Picture.query.filter(
-      Picture.public_id.in_(data['ids'])).all()
+  pictures = Picture.query.filter(Picture.public_id.in_(data['ids'])).all()
 
   for picture in pictures:
     picture.delete()
