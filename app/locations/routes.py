@@ -134,16 +134,16 @@ def get_counties():
 
   search = request.args.get("search", "", type=str)
 
-  entity = County
-
   if search:
-    entity = County.query.filter(County.name.like("%{}%".format(search)))
+    query = County.query.filter(County.name.like("%{}%".format(search)))
+    data = County.to_collection_dict(
+        query, page, per_page, "locations.get_counties", search=search)
+  else:
+    query = County.query
+    data = County.to_collection_dict(query, page, per_page,
+                                     "locations.get_counties")
 
-  return jsonify({
-      "counties":
-          entity.to_collection_dict(entity.query, page, per_page,
-                                    "locations.get_counties")
-  })
+  return jsonify({"counties": data})
 
 
 @bp.route("/places")
@@ -154,16 +154,16 @@ def get_places():
 
   search = request.args.get("search", "", type=str)
 
-  entity = Place
-
   if search:
-    entity = Place.query.filter(Place.name.like("%{}%".format(search)))
-
-  return jsonify({
-      "places":
-          entity.to_collection_dict(entity.query, page, per_page,
+    query = Place.query.filter(Place.name.like("%{}%".format(search)))
+    data = Place.to_collection_dict(
+        query, page, per_page, "locations.get_places", search=search)
+  else:
+    query = Place.query
+    data = Place.to_collection_dict(query, page, per_page,
                                     "locations.get_places")
-  })
+
+  return jsonify({"places": data})
 
 
 @bp.route("/consolidated_cities")
@@ -174,12 +174,17 @@ def get_consolidated_cities():
 
   search = request.args.get("search", "", type=str)
 
-  entity = CC
   if search:
-    entity = CC.query.filter(CC.name.like("%{}%".format(search)))
+    query = CC.query.filter(CC.name.like("%{}%".format(search)))
+    data = CC.to_collection_dict(
+        query,
+        page,
+        per_page,
+        "locations.get_consolidated_cities",
+        search=search)
+  else:
+    query = CC.query
+    data = CC.to_collection_dict(query, page, per_page,
+                                 "locations.get_consolidated_cities")
 
-  return jsonify({
-      "consolidated_cities":
-          entity.to_collection_dict(entity.query, page, per_page,
-                                    "locations.get_consolidated_cities")
-  })
+  return jsonify({"consolidated_cities": data})
