@@ -153,6 +153,38 @@ class LocationMixin(object):
                                     location_url, **endpoint_args)
     }
 
+  def search_location_requirement(self, search, location_entity, base_endpoint,
+                                  page, per_page, **endpoint_args):
+    """Returns paginated list of locations as a dictionary"""
+
+    if location_entity is State:
+      location_name = "states"
+      location_query = self.location_requirement_states
+      location_url = base_endpoint + "_states"
+    elif location_entity is County:
+      location_name = "counties"
+      location_query = self.location_requirement_counties
+      location_url = base_endpoint + "_counties"
+    elif location_entity is Place:
+      location_name = "places"
+      location_query = self.location_requirement_places
+      location_url = base_endpoint + "_places"
+    elif location_entity is ConsolidatedCity:
+      location_name = "consolidated_cities"
+      location_query = self.location_requirement_consolidated_cities
+      location_url = base_endpoint + "_consolidated_cities"
+    else:
+      raise LocationEntityError("location entity is not a location model")
+
+    query = location_query.filter(
+        location_entity.name.like("%{}%".format(search)))
+
+    return {
+        location_name:
+            self.to_collection_dict(query, page, per_page, location_url,
+                                    **endpoint_args)
+    }
+
   def location_requirement_endpoints(self, base_endpoint, **endpoint_args):
     """Returns all enpoints to get all location requirements"""
     return {

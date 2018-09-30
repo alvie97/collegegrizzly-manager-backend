@@ -37,9 +37,15 @@ def get_location_requirement(location, base_endpoint, entity, **endpoint_args):
   per_page = request.args.get(
       "per_page", current_app.config["PER_PAGE"], type=int)
 
+  search = request.args.get("search", "", type=str)
+
   try:
-    locations = entity.get_location_requirement(location, base_endpoint, page,
-                                                per_page, **endpoint_args)
+    if search:
+      locations = entity.search_location_requirement(
+          search, location, base_endpoint, page, per_page, **endpoint_args)
+    else:
+      locations = entity.get_location_requirement(
+          location, base_endpoint, page, per_page, **endpoint_args)
 
   except LocationEntityError as err:
     print("LocationEntityError:", err)
