@@ -181,8 +181,13 @@ class LocationMixin(object):
 
     return {
         location_name:
-            self.to_collection_dict(query, page, per_page, location_url,
-                                    **endpoint_args)
+            self.to_collection_dict(
+                query,
+                page,
+                per_page,
+                location_url,
+                search=search,
+                **endpoint_args)
     }
 
   def location_requirement_endpoints(self, base_endpoint, **endpoint_args):
