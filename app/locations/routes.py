@@ -23,11 +23,18 @@ def get_states():
       "per_page", current_app.config["PER_PAGE"], type=int)
   page = request.args.get("page", 1, type=int)
 
-  return jsonify({
-      "states":
-          State.to_collection_dict(State.query, page, per_page,
-                                   "locations.get_states")
-  })
+  search = request.args.get("search", "", type=str)
+
+  if search:
+    query = State.query.filter(State.name.like("%{}%".format(search)))
+    data = State.to_collection_dict(
+        query, page, per_page, "locations.get_states", search=search)
+  else:
+    query = State.query
+    data = State.to_collection_dict(query, page, per_page,
+                                    "locations.get_states")
+
+  return jsonify({"states": data})
 
 
 @bp.route("/states/search/<string:name>")
@@ -125,9 +132,16 @@ def get_counties():
       "per_page", current_app.config["PER_PAGE"], type=int)
   page = request.args.get("page", 1, type=int)
 
+  search = request.args.get("search", "", type=str)
+
+  entity = County
+
+  if search:
+    entity = County.query.filter(County.name.like("%{}%".format(search)))
+
   return jsonify({
       "counties":
-          County.to_collection_dict(County.query, page, per_page,
+          entity.to_collection_dict(entity.query, page, per_page,
                                     "locations.get_counties")
   })
 
@@ -138,10 +152,17 @@ def get_places():
       "per_page", current_app.config["PER_PAGE"], type=int)
   page = request.args.get("page", 1, type=int)
 
+  search = request.args.get("search", "", type=str)
+
+  entity = Place
+
+  if search:
+    entity = Place.query.filter(Place.name.like("%{}%".format(search)))
+
   return jsonify({
       "places":
-          Place.to_collection_dict(Place.query, page, per_page,
-                                   "locations.get_places")
+          entity.to_collection_dict(entity.query, page, per_page,
+                                    "locations.get_places")
   })
 
 
@@ -151,8 +172,14 @@ def get_consolidated_cities():
       "per_page", current_app.config["PER_PAGE"], type=int)
   page = request.args.get("page", 1, type=int)
 
+  search = request.args.get("search", "", type=str)
+
+  entity = CC
+  if search:
+    entity = CC.query.filter(CC.name.like("%{}%".format(search)))
+
   return jsonify({
       "consolidated_cities":
-          CC.to_collection_dict(CC.query, page, per_page,
-                                "locations.get_consolidated_cities")
+          entity.to_collection_dict(entity.query, page, per_page,
+                                    "locations.get_consolidated_cities")
   })
