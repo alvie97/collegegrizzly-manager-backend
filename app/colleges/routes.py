@@ -25,7 +25,6 @@ major_schema = MajorSchema()
 majors_schema = MajorSchema(many=True)
 scholarship_schema = ScholarshipSchema()
 
-
 # @bp.before_request
 # @csrf_token_required
 # @access_token_required
@@ -263,6 +262,16 @@ def college_consolidated_cities(college):
     return delete_location_requirement(ConsolidatedCity, college)
 
 
-@bp.route("/colleges/get_fields")
+@bp.route("/get_fields")
 def college_get_fields():
   return jsonify({"fields": College.get_fields()})
+
+
+@bp.route("/majors_suggestions/<string:query>")
+def majors_suggestions(query):
+  suggestions = Major.query.filter(
+      Major.name.like(f"%{query}%")).limit(5).all()
+
+  return jsonify({
+      "suggestions": [suggestion.name for suggestion in suggestions]
+  })
