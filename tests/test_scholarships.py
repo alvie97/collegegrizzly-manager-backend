@@ -3,8 +3,8 @@ from app.models.scholarship import Scholarship
 
 #TODO: add failure tests
 def test_scholarships(client, college_id):
-  college_scholarships_url = "/colleges/" + college_id + "/scholarships"
-  scholarships_url = "/scholarships"
+  college_scholarships_url = "/api/colleges/" + college_id + "/scholarships"
+  scholarships_url = "/api/scholarships"
 
   response = client.post(
       college_scholarships_url, json={"name": "test scholarship"})
@@ -179,8 +179,8 @@ def test_scholarship_ethnicities(client, scholarship_id):
 
 
 def test_scholarships_needed(client, scholarship_id, college_id):
-  url = "scholarships/" + scholarship_id + "/scholarships_needed"
-  create_scholarship_url = "colleges/" + college_id + "/scholarships"
+  url = "scholarships/" + scholarship_id + "/api/scholarships_needed"
+  create_scholarship_url = "colleges/" + college_id + "/api/scholarships"
   response = client.post(
       create_scholarship_url, json={"name": "scholarship test _1"})
   response_json = response.get_json()
@@ -198,7 +198,7 @@ def test_scholarships_needed(client, scholarship_id, college_id):
   scholarship_test_2 = response_json["scholarship_id"]
 
   response = client.post(
-      "/scholarships/" + scholarship_id + "/scholarships_needed",
+      "/api/scholarships/" + scholarship_id + "/api/scholarships_needed",
       json={"scholarships_needed": [scholarship_test_1, scholarship_test_2]})
   response_json = response.get_json()
 

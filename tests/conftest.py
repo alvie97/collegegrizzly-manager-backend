@@ -15,7 +15,7 @@ def app():
   class TestConfig(Config):
     TESTING = True
     ACCESS_COOKIE_NAME = "access_token"
-    REFFRESH_COOKIE_NAME = "refresh_token"
+    REFRESH_COOKIE_NAME = "refresh_token"
     SQLALCHEMY_DATABASE_URI = "sqlite:///" + DB_URL
 
   app = create_app(TestConfig)

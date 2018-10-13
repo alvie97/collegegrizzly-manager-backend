@@ -16,7 +16,9 @@ from app.schemas.program_schema import ProgramSchema
 from app.schemas.scholarship_schema import ScholarshipSchema
 from app.common.utils import (
     generate_public_id, get_entity, get_location_requirement,
-    post_location_requirement, delete_location_requirement)
+    post_location_requirement, delete_location_requirement,
+    get_locations_blacklist, post_locations_blacklist,
+    delete_locations_blacklist)
 from app.token_schema import access_token_required
 from app.auth.csrf import csrf_token_required
 
@@ -313,3 +315,83 @@ def scholarship_consolidated_cities(scholarship):
 
   if request.method == "DELETE":
     return delete_location_requirement(ConsolidatedCity, scholarship)
+
+
+@bp.route(
+    "/<string:scholarship_id>/blacklist/states",
+    methods=["GET", "POST", "DELETE"])
+@get_entity(Scholarship, "scholarship")
+def scholarship_states_blacklist(scholarship):
+
+  if request.method == "GET":
+    return get_locations_blacklist(
+        State,
+        "scholarships.scholarship",
+        scholarship,
+        scholarship_id=scholarship.public_id)
+
+  if request.method == "POST":
+    return post_locations_blacklist(State, scholarship)
+
+  if request.method == "DELETE":
+    return delete_locations_blacklist(State, scholarship)
+
+
+@bp.route(
+    "/<string:scholarship_id>/blacklist/counties",
+    methods=["GET", "POST", "DELETE"])
+@get_entity(Scholarship, "scholarship")
+def scholarship_counties_blacklist(scholarship):
+
+  if request.method == "GET":
+    return get_locations_blacklist(
+        County,
+        "scholarships.scholarship",
+        scholarship,
+        scholarship_id=scholarship.public_id)
+
+  if request.method == "POST":
+    return post_locations_blacklist(County, scholarship)
+
+  if request.method == "DELETE":
+    return delete_locations_blacklist(County, scholarship)
+
+
+@bp.route(
+    "/<string:scholarship_id>/blacklist/places",
+    methods=["GET", "POST", "DELETE"])
+@get_entity(Scholarship, "scholarship")
+def scholarship_places_blacklist(scholarship):
+
+  if request.method == "GET":
+    return get_locations_blacklist(
+        Place,
+        "scholarships.scholarship",
+        scholarship,
+        scholarship_id=scholarship.public_id)
+
+  if request.method == "POST":
+    return post_locations_blacklist(Place, scholarship)
+
+  if request.method == "DELETE":
+    return delete_locations_blacklist(Place, scholarship)
+
+
+@bp.route(
+    "/<string:scholarship_id>/blacklist/consolidated_cities",
+    methods=["GET", "POST", "DELETE"])
+@get_entity(Scholarship, "scholarship")
+def scholarship_consolidated_cities_blacklist(scholarship):
+
+  if request.method == "GET":
+    return get_locations_blacklist(
+        ConsolidatedCity,
+        "scholarships.scholarship",
+        scholarship,
+        scholarship_id=scholarship.public_id)
+
+  if request.method == "POST":
+    return post_locations_blacklist(ConsolidatedCity, scholarship)
+
+  if request.method == "DELETE":
+    return delete_locations_blacklist(ConsolidatedCity, scholarship)

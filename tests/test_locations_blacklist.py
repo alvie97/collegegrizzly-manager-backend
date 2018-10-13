@@ -7,7 +7,7 @@ from app.models.state import State
 from app.cli import _save_states
 
 
-def test_location_requirements(app, client, scholarship_id):
+def test_locations_blacklist(app, client, scholarship_id):
   with app.app_context():
     _save_states(2)
     scholarship = Scholarship.first(public_id=scholarship_id)
@@ -26,13 +26,13 @@ def test_location_requirements(app, client, scholarship_id):
   assert alaska["name"] == "Alaska"
 
   response = client.post(
-      f"/api/colleges/{college_id}/states",
+      f"/api/colleges/{college_id}/blacklist/states",
       json={"location_fips": [alabama["fips_code"], alaska["fips_code"]]})
 
   assert response.status_code == 200
   assert response.get_json()["message"] == "Locations added"
 
-  response = client.get(f"/api/colleges/{college_id}/states")
+  response = client.get(f"/api/colleges/{college_id}/blacklist/states")
 
   assert response.status_code == 200
   states = response.get_json()["states"]["items"]
@@ -42,13 +42,13 @@ def test_location_requirements(app, client, scholarship_id):
   ]
 
   response = client.post(
-      f"/api/scholarships/{scholarship_id}/states",
+      f"/api/scholarships/{scholarship_id}/blacklist/states",
       json={"location_fips": [alabama["fips_code"], alaska["fips_code"]]})
 
   assert response.status_code == 200
   assert response.get_json()["message"] == "Locations added"
 
-  response = client.get(f"/api/scholarships/{scholarship_id}/states")
+  response = client.get(f"/api/scholarships/{scholarship_id}/blacklist/states")
 
   assert response.status_code == 200
   states = response.get_json()["states"]["items"]
@@ -77,7 +77,7 @@ def test_counties_requirement(app, client, scholarship_id):
   counties = response.get_json()["counties"]["items"]
 
   response = client.post(
-      f"/api/colleges/{college_id}/counties",
+      f"/api/colleges/{college_id}/blacklist/counties",
       json={
           "location_fips": [
               counties[0]["fips_code"], counties[1]["fips_code"]
@@ -87,7 +87,7 @@ def test_counties_requirement(app, client, scholarship_id):
   assert response.status_code == 200
   assert response.get_json()["message"] == "Locations added"
 
-  response = client.get(f"/api/colleges/{college_id}/counties")
+  response = client.get(f"/api/colleges/{college_id}/blacklist/counties")
 
   assert response.status_code == 200
   counties_response = response.get_json()["counties"]["items"]
@@ -97,7 +97,7 @@ def test_counties_requirement(app, client, scholarship_id):
   ] == [counties[0]["fips_code"], counties[1]["fips_code"]]
 
   response = client.post(
-      f"/api/scholarships/{scholarship_id}/counties",
+      f"/api/scholarships/{scholarship_id}/blacklist/counties",
       json={
           "location_fips": [
               counties[0]["fips_code"], counties[1]["fips_code"]
@@ -107,7 +107,7 @@ def test_counties_requirement(app, client, scholarship_id):
   assert response.status_code == 200
   assert response.get_json()["message"] == "Locations added"
 
-  response = client.get(f"/api/scholarships/{scholarship_id}/counties")
+  response = client.get(f"/api/scholarships/{scholarship_id}/blacklist/counties")
 
   assert response.status_code == 200
   counties_response = response.get_json()["counties"]["items"]
@@ -136,13 +136,13 @@ def test_location_places(app, client, scholarship_id):
   places = response.get_json()["places"]["items"]
 
   response = client.post(
-      f"/api/colleges/{college_id}/places",
+      f"/api/colleges/{college_id}/blacklist/places",
       json={"location_fips": [places[0]["fips_code"], places[1]["fips_code"]]})
 
   assert response.status_code == 200
   assert response.get_json()["message"] == "Locations added"
 
-  response = client.get(f"/api/colleges/{college_id}/places")
+  response = client.get(f"/api/colleges/{college_id}/blacklist/places")
 
   assert response.status_code == 200
   places_response = response.get_json()["places"]["items"]
@@ -151,13 +151,13 @@ def test_location_places(app, client, scholarship_id):
          ] == [places[0]["fips_code"], places[1]["fips_code"]]
 
   response = client.post(
-      f"/api/scholarships/{scholarship_id}/places",
+      f"/api/scholarships/{scholarship_id}/blacklist/places",
       json={"location_fips": [places[0]["fips_code"], places[1]["fips_code"]]})
 
   assert response.status_code == 200
   assert response.get_json()["message"] == "Locations added"
 
-  response = client.get(f"/api/scholarships/{scholarship_id}/places")
+  response = client.get(f"/api/scholarships/{scholarship_id}/blacklist/places")
 
   assert response.status_code == 200
   places_response = response.get_json()["places"]["items"]
@@ -183,7 +183,7 @@ def test_location_consolidated_cities(app, client, scholarship_id):
   consolidated_cities = response.get_json()["consolidated_cities"]["items"]
 
   response = client.post(
-      f"/api/colleges/{college_id}/consolidated_cities",
+      f"/api/colleges/{college_id}/blacklist/consolidated_cities",
       json={
           "location_fips": [
               consolidated_cities[0]["fips_code"],
@@ -194,7 +194,8 @@ def test_location_consolidated_cities(app, client, scholarship_id):
   assert response.status_code == 200
   assert response.get_json()["message"] == "Locations added"
 
-  response = client.get(f"/api/colleges/{college_id}/consolidated_cities")
+  response = client.get(
+      f"/api/colleges/{college_id}/blacklist/consolidated_cities")
 
   assert response.status_code == 200
   consolidated_cities_response = response.get_json()["consolidated_cities"][
@@ -208,7 +209,7 @@ def test_location_consolidated_cities(app, client, scholarship_id):
   ]
 
   response = client.post(
-      f"/api/scholarships/{scholarship_id}/consolidated_cities",
+      f"/api/scholarships/{scholarship_id}/blacklist/consolidated_cities",
       json={
           "location_fips": [
               consolidated_cities[0]["fips_code"],
@@ -220,7 +221,7 @@ def test_location_consolidated_cities(app, client, scholarship_id):
   assert response.get_json()["message"] == "Locations added"
 
   response = client.get(
-      f"/api/scholarships/{scholarship_id}/consolidated_cities")
+      f"/api/scholarships/{scholarship_id}/blacklist/consolidated_cities")
 
   assert response.status_code == 200
   consolidated_cities_response = response.get_json()["consolidated_cities"][

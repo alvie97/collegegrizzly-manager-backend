@@ -1,6 +1,7 @@
 from .common.base_mixin import BaseMixin
 from .common.date_audit import DateAudit
 from .common.location_mixin import LocationMixin
+from .common.location_blacklist_mixin import LocationBlacklistMixin
 from .common.paginated_api_mixin import PaginatedAPIMixin
 from .major import Major
 from .relationship_tables import college_major
@@ -10,8 +11,8 @@ from hashlib import md5
 from typing import List
 
 
-class College(PaginatedAPIMixin, LocationMixin, DateAudit, BaseMixin,
-              db.Model):
+class College(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
+              DateAudit, BaseMixin, db.Model):
   id = db.Column(db.Integer, primary_key=True)
   public_id = db.Column(db.String(50), unique=True)
   name = db.Column(db.String(256))

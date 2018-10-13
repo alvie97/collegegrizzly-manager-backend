@@ -14,7 +14,10 @@ from app.schemas.scholarship_schema import ScholarshipSchema
 from app.schemas.major_schema import MajorSchema
 from app.common.utils import (
     generate_public_id, get_entity, get_location_requirement,
-    post_location_requirement, delete_location_requirement)
+    post_location_requirement, delete_location_requirement,
+    get_locations_blacklist, post_locations_blacklist,
+    delete_locations_blacklist)
+
 from app.token_schema import access_token_required
 from app.auth.csrf import csrf_token_required
 
@@ -260,6 +263,75 @@ def college_consolidated_cities(college):
 
   if request.method == "DELETE":
     return delete_location_requirement(ConsolidatedCity, college)
+
+
+@bp.route(
+    "/<string:college_id>/blacklist/states", methods=["GET", "POST", "DELETE"])
+@get_entity(College, "college")
+def college_states_blacklist(college):
+
+  if request.method == "GET":
+    return get_locations_blacklist(
+        State, "colleges.college", college, college_id=college.public_id)
+
+  if request.method == "POST":
+    return post_locations_blacklist(State, college)
+
+  if request.method == "DELETE":
+    return delete_locations_blacklist(State, college)
+
+
+@bp.route(
+    "/<string:college_id>/blacklist/counties",
+    methods=["GET", "POST", "DELETE"])
+@get_entity(College, "college")
+def college_counties_blacklist(college):
+
+  if request.method == "GET":
+    return get_locations_blacklist(
+        County, "colleges.college", college, college_id=college.public_id)
+
+  if request.method == "POST":
+    return post_locations_blacklist(County, college)
+
+  if request.method == "DELETE":
+    return delete_locations_blacklist(County, college)
+
+
+@bp.route(
+    "/<string:college_id>/blacklist/places", methods=["GET", "POST", "DELETE"])
+@get_entity(College, "college")
+def college_places_blacklist(college):
+
+  if request.method == "GET":
+    return get_locations_blacklist(
+        Place, "colleges.college", college, college_id=college.public_id)
+
+  if request.method == "POST":
+    return post_locations_blacklist(Place, college)
+
+  if request.method == "DELETE":
+    return delete_locations_blacklist(Place, college)
+
+
+@bp.route(
+    "/<string:college_id>/blacklist/consolidated_cities",
+    methods=["GET", "POST", "DELETE"])
+@get_entity(College, "college")
+def college_consolidated_cities_blacklist(college):
+
+  if request.method == "GET":
+    return get_locations_blacklist(
+        ConsolidatedCity,
+        "colleges.college",
+        college,
+        college_id=college.public_id)
+
+  if request.method == "POST":
+    return post_locations_blacklist(ConsolidatedCity, college)
+
+  if request.method == "DELETE":
+    return delete_locations_blacklist(ConsolidatedCity, college)
 
 
 @bp.route("/get_fields")

@@ -1,5 +1,5 @@
 def test_college(client):
-  url = "/colleges"
+  url = "/api/colleges"
   response = client.post(url, json={"name": "college test"})
   response_json = response.get_json()
 
@@ -13,7 +13,8 @@ def test_college(client):
   response_json = response.get_json()
 
   assert response.status_code == 200
-  assert response_json["college"]["location"] == "testing location"
+  assert response_json["college"]["editable_fields"][
+      "location"] == "testing location"
 
   response = client.get(url)
   response_json = response.get_json()
@@ -47,7 +48,7 @@ def test_college_majors(college_id, client):
       if k in major_2:
         assert major_1[k] == major_2[k]
 
-  url = "/colleges/" + college_id + "/majors"
+  url = "/api/colleges/" + college_id + "/majors"
 
   majors_test = [{
       "name": "major test 1"

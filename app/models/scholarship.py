@@ -1,6 +1,7 @@
 from .common.base_mixin import BaseMixin
 from .common.date_audit import DateAudit
 from .common.location_mixin import LocationMixin
+from .common.location_blacklist_mixin import LocationBlacklistMixin
 from .common.paginated_api_mixin import PaginatedAPIMixin
 from .ethnicity import Ethnicity
 from .program import Program
@@ -12,8 +13,8 @@ from flask import url_for
 
 
 # TODO: add common interface for add_, remove_, has_... models
-class Scholarship(PaginatedAPIMixin, LocationMixin, DateAudit, BaseMixin,
-                  db.Model):
+class Scholarship(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
+                  DateAudit, BaseMixin, db.Model):
   id = db.Column(db.Integer, primary_key=True)
   public_id = db.Column(db.String(50), unique=True)
   name = db.Column(db.String(256))
@@ -107,9 +108,14 @@ class Scholarship(PaginatedAPIMixin, LocationMixin, DateAudit, BaseMixin,
 
   def get_scholarships_needed(self):
     return [{
-        "public_id": scholarship.public_id,
-        "name": scholarship.name,
-        "url": url_for("scholarships.get_scholarship", scholarship_id=scholarship.public_id)
+        "public_id":
+            scholarship.public_id,
+        "name":
+            scholarship.name,
+        "url":
+            url_for(
+                "scholarships.get_scholarship",
+                scholarship_id=scholarship.public_id)
     } for scholarship in self.scholarships_needed.all()]
 
   def get_programs(self):
@@ -173,8 +179,7 @@ class Scholarship(PaginatedAPIMixin, LocationMixin, DateAudit, BaseMixin,
             self.get_ethnicities(),
         "location_requirement":
             self.location_requirement_endpoints(
-                "scholarships.scholarship",
-                scholarship_id=self.public_id),
+                "scholarships.scholarship", scholarship_id=self.public_id),
         "scholarships_needed":
             self.get_scholarships_needed()
     }
