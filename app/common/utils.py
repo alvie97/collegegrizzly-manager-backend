@@ -128,7 +128,7 @@ def post_locations_blacklist(location, entity):
 
     if location_to_add is not None:
       try:
-        entity.add_location(location_to_add)
+        entity.add_location_to_blacklist(location_to_add)
       except LocationEntityError as err:
         print("LocationEntityError:", err)
         return jsonify({"message": "Error ocurred"}), 500
@@ -149,7 +149,7 @@ def delete_locations_blacklist(location, entity):
 
     if location is not None:
       try:
-        entity.remove_location(location_to_delete)
+        entity.remove_location_from_blacklist(location_to_delete)
       except LocationEntityError as err:
         print("LocationEntityError:", err)
         return jsonify({"message": "Error ocurred"}), 500

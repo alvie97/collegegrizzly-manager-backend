@@ -13,6 +13,12 @@ def test_college(client):
   response_json = response.get_json()
 
   assert response.status_code == 200
+  assert response_json == "college saved successfully"
+
+  response = client.get(url + '/' + college_id)
+  response_json = response.get_json()
+
+  assert response.status_code == 200
   assert response_json["college"]["editable_fields"][
       "location"] == "testing location"
 
