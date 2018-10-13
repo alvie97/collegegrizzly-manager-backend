@@ -13,14 +13,14 @@ def test_location_requirements(app, client, scholarship_id):
     scholarship = Scholarship.first(public_id=scholarship_id)
     college_id = scholarship.college.public_id
 
-  response = client.get("/locations/states/search/alabama")
+  response = client.get("/api/locations/states/search/alabama")
 
   assert response.status_code == 200
   alabama = response.get_json()["state"]
   assert alabama["name"] == "Alabama"
   assert "fips_code" in alabama
 
-  response = client.get("/locations/states/02")
+  response = client.get("/api/locations/states/02")
   alaska = response.get_json()["state"]
 
   assert alaska["name"] == "Alaska"
@@ -64,7 +64,7 @@ def test_counties_requirement(app, client, scholarship_id):
     scholarship = Scholarship.first(public_id=scholarship_id)
     college_id = scholarship.college.public_id
 
-  response = client.get("/locations/states/search/alabama")
+  response = client.get("/api/locations/states/search/alabama")
 
   assert response.status_code == 200
   alabama = response.get_json()["state"]
@@ -123,7 +123,7 @@ def test_location_places(app, client, scholarship_id):
     scholarship = Scholarship.first(public_id=scholarship_id)
     college_id = scholarship.college.public_id
 
-  response = client.get("/locations/states/search/alabama")
+  response = client.get("/api/locations/states/search/alabama")
 
   assert response.status_code == 200
   alabama = response.get_json()["state"]
@@ -172,7 +172,7 @@ def test_location_consolidated_cities(app, client, scholarship_id):
     scholarship = Scholarship.first(public_id=scholarship_id)
     college_id = scholarship.college.public_id
 
-  response = client.get("/locations/states/13")
+  response = client.get("/api/locations/states/13")
 
   assert response.status_code == 200
   state = response.get_json()["state"]
