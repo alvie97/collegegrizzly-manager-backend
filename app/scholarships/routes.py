@@ -29,11 +29,11 @@ program_schema = ProgramSchema()
 ethnicity_schema = EthnicitySchema()
 
 
-@bp.before_request
-@csrf_token_required
-@access_token_required
-def before_request():
-  pass
+# @bp.before_request
+# @csrf_token_required
+# @access_token_required
+# def before_request():
+#   pass
 
 
 @bp.route("/<string:scholarship_id>")
