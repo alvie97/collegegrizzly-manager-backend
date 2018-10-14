@@ -1,8 +1,8 @@
-"""intial migration
+"""intial
 
-Revision ID: eac8c3232f9d
+Revision ID: 345a96e8f1ba
 Revises: 
-Create Date: 2018-09-13 22:13:29.276470
+Create Date: 2018-10-13 20:08:31.325705
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'eac8c3232f9d'
+revision = '345a96e8f1ba'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -28,7 +28,6 @@ def upgrade():
     sa.Column('type_of_institution', sa.String(length=256), nullable=True),
     sa.Column('phone', sa.String(length=256), nullable=True),
     sa.Column('website', sa.Text(), nullable=True),
-    sa.Column('location_requirement_tuition', sa.Numeric(precision=8, scale=2), nullable=True),
     sa.Column('in_state_tuition', sa.Numeric(precision=8, scale=2), nullable=True),
     sa.Column('out_of_state_tuition', sa.Numeric(precision=8, scale=2), nullable=True),
     sa.Column('location', sa.String(length=256), nullable=True),
@@ -97,6 +96,12 @@ def upgrade():
     sa.ForeignKeyConstraint(['major_id'], ['major.id'], )
     )
     op.create_table('college_state',
+    sa.Column('college_id', sa.Integer(), nullable=True),
+    sa.Column('state_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['college_id'], ['college.id'], ),
+    sa.ForeignKeyConstraint(['state_id'], ['state.id'], )
+    )
+    op.create_table('college_state_blacklist',
     sa.Column('college_id', sa.Integer(), nullable=True),
     sa.Column('state_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['college_id'], ['college.id'], ),
@@ -177,7 +182,19 @@ def upgrade():
     sa.ForeignKeyConstraint(['college_id'], ['college.id'], ),
     sa.ForeignKeyConstraint(['consolidated_city_id'], ['consolidated_city.id'], )
     )
+    op.create_table('college_consolidated_city_blacklist',
+    sa.Column('college_id', sa.Integer(), nullable=True),
+    sa.Column('consolidated_city_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['college_id'], ['college.id'], ),
+    sa.ForeignKeyConstraint(['consolidated_city_id'], ['consolidated_city.id'], )
+    )
     op.create_table('college_county',
+    sa.Column('college_id', sa.Integer(), nullable=True),
+    sa.Column('county_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['college_id'], ['college.id'], ),
+    sa.ForeignKeyConstraint(['county_id'], ['county.id'], )
+    )
+    op.create_table('college_county_blacklist',
     sa.Column('college_id', sa.Integer(), nullable=True),
     sa.Column('county_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['college_id'], ['college.id'], ),
@@ -189,13 +206,31 @@ def upgrade():
     sa.ForeignKeyConstraint(['college_id'], ['college.id'], ),
     sa.ForeignKeyConstraint(['place_id'], ['place.id'], )
     )
+    op.create_table('college_place_blacklist',
+    sa.Column('college_id', sa.Integer(), nullable=True),
+    sa.Column('place_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['college_id'], ['college.id'], ),
+    sa.ForeignKeyConstraint(['place_id'], ['place.id'], )
+    )
     op.create_table('scholarship_consolidated_city',
     sa.Column('scholarship_id', sa.Integer(), nullable=True),
     sa.Column('consolidated_city_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['consolidated_city_id'], ['consolidated_city.id'], ),
     sa.ForeignKeyConstraint(['scholarship_id'], ['scholarship.id'], )
     )
+    op.create_table('scholarship_consolidated_city_blacklist',
+    sa.Column('scholarship_id', sa.Integer(), nullable=True),
+    sa.Column('consolidated_city_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['consolidated_city_id'], ['consolidated_city.id'], ),
+    sa.ForeignKeyConstraint(['scholarship_id'], ['scholarship.id'], )
+    )
     op.create_table('scholarship_county',
+    sa.Column('scholarship_id', sa.Integer(), nullable=True),
+    sa.Column('county_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['county_id'], ['county.id'], ),
+    sa.ForeignKeyConstraint(['scholarship_id'], ['scholarship.id'], )
+    )
+    op.create_table('scholarship_county_blacklist',
     sa.Column('scholarship_id', sa.Integer(), nullable=True),
     sa.Column('county_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['county_id'], ['county.id'], ),
@@ -213,6 +248,12 @@ def upgrade():
     sa.ForeignKeyConstraint(['place_id'], ['place.id'], ),
     sa.ForeignKeyConstraint(['scholarship_id'], ['scholarship.id'], )
     )
+    op.create_table('scholarship_place_blacklist',
+    sa.Column('scholarship_id', sa.Integer(), nullable=True),
+    sa.Column('place_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['place_id'], ['place.id'], ),
+    sa.ForeignKeyConstraint(['scholarship_id'], ['scholarship.id'], )
+    )
     op.create_table('scholarship_program',
     sa.Column('scholarship_id', sa.Integer(), nullable=True),
     sa.Column('program_id', sa.Integer(), nullable=True),
@@ -220,6 +261,12 @@ def upgrade():
     sa.ForeignKeyConstraint(['scholarship_id'], ['scholarship.id'], )
     )
     op.create_table('scholarship_state',
+    sa.Column('scholarship_id', sa.Integer(), nullable=True),
+    sa.Column('state_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['scholarship_id'], ['scholarship.id'], ),
+    sa.ForeignKeyConstraint(['state_id'], ['state.id'], )
+    )
+    op.create_table('scholarship_state_blacklist',
     sa.Column('scholarship_id', sa.Integer(), nullable=True),
     sa.Column('state_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['scholarship_id'], ['scholarship.id'], ),
@@ -237,14 +284,21 @@ def upgrade():
 def downgrade():
     # ### commands auto generated by Alembic - please adjust! ###
     op.drop_table('scholarships_needed')
+    op.drop_table('scholarship_state_blacklist')
     op.drop_table('scholarship_state')
     op.drop_table('scholarship_program')
+    op.drop_table('scholarship_place_blacklist')
     op.drop_table('scholarship_place')
     op.drop_table('scholarship_ethnicity')
+    op.drop_table('scholarship_county_blacklist')
     op.drop_table('scholarship_county')
+    op.drop_table('scholarship_consolidated_city_blacklist')
     op.drop_table('scholarship_consolidated_city')
+    op.drop_table('college_place_blacklist')
     op.drop_table('college_place')
+    op.drop_table('college_county_blacklist')
     op.drop_table('college_county')
+    op.drop_table('college_consolidated_city_blacklist')
     op.drop_table('college_consolidated_city')
     op.drop_table('scholarship')
     op.drop_index(op.f('ix_place_fips_code'), table_name='place')
@@ -254,6 +308,7 @@ def downgrade():
     op.drop_table('county')
     op.drop_index(op.f('ix_consolidated_city_fips_code'), table_name='consolidated_city')
     op.drop_table('consolidated_city')
+    op.drop_table('college_state_blacklist')
     op.drop_table('college_state')
     op.drop_table('college_major')
     op.drop_index(op.f('ix_user_username'), table_name='user')
