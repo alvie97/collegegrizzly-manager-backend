@@ -1,10 +1,11 @@
 from .common.paginated_api_mixin import PaginatedAPIMixin
 from .common.date_audit import DateAudit
+from .common.base_mixin import BaseMixin
 from app import db, photos
 from datetime import datetime
 import os
 
-class Picture(PaginatedAPIMixin, DateAudit, db.Model):
+class Picture(PaginatedAPIMixin, BaseMixin, DateAudit, db.Model):
   id = db.Column(db.Integer, primary_key=True)
   public_id = db.Column(db.String(50), unique=True)
   name = db.Column(db.Text)

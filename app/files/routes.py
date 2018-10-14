@@ -12,12 +12,11 @@ from app.models.picture import Picture
 from . import bp
 
 
-@bp.route("/file/<path:folder>/<path:filename>")
+@bp.route("/<path:folder>/<path:filename>")
 def get_file(folder, filename):
   root_dir = os.path.dirname(os.getcwd())
-  return jsonify(
-      send_from_directory(
-          os.path.join(root_dir, 'backend', 'static', folder), filename))
+  return send_from_directory(
+      os.path.join(root_dir, 'backend', 'static', folder), filename)
 
 
 @bp.route("/pictures/<string:picture_id>")
@@ -38,6 +37,13 @@ def patch_picture(picture_id):
     return jsonify({'message': 'no picture found'}), 404
 
   data = request.get_json()
+
+  if data["key"] == "type" and data["value"] == "logo":
+    college_logo = picture.college.pictures.filter_by(type="logo").first()
+
+    if college_logo is not None:
+      college_logo.update({'type': 'campus'})
+
   picture.update({data['key']: data['value']})
   db.session.commit()
   return jsonify(data)
@@ -65,7 +71,7 @@ def get_pictures(college_id=None):
 
     resources = college.pictures.all()
 
-    data = {'items': [item.to_dict() for item in resources]}
+    data = {'pictures': [item.to_dict() for item in resources]}
 
     return jsonify(data)
 

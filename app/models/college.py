@@ -99,56 +99,6 @@ class College(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
 
     db.session.delete(self)
 
-  @staticmethod
-  def get_fields(self):
-    return {
-        "public_id": {
-            "label": "UUID"
-        },
-        "name": {
-            "label": "name"
-        },
-        "room_and_board": {
-            "label": "room and board"
-        },
-        "type_of_institution": {
-            "label": "type of institution"
-        },
-        "phone": {
-            "label": "phone"
-        },
-        "website": {
-            "label": "website"
-        },
-        "in_state_tuition": {
-            "label": "in-state tuition"
-        },
-        "out_of_state_tuition": {
-            "label": "out of state tuition"
-        },
-        "location": {
-            "label": "location"
-        },
-        "religious_affiliation": {
-            "label": "religious affiliation"
-        },
-        "setting": {
-            "label": "setting"
-        },
-        "number_of_students": {
-            "label": "number of students"
-        },
-        "unweighted_hs_gpa": {
-            "label": "unweighted highschool GPA"
-        },
-        "sat": {
-            "label": "SAT"
-        },
-        "act": {
-            "label": "ACT"
-        }
-    }
-
   def for_pagination(self):
     return {
         "name": self.name,
