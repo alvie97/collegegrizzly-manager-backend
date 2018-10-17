@@ -132,7 +132,7 @@ class Scholarship(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
         "_links": {
             "scholarship":
                 url_for(
-                    "shcolarships.get_scholarship",
+                    "scholarships.get_scholarship",
                     scholarship_id=self.public_id)
         }
     }
