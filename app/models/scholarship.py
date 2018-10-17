@@ -125,7 +125,17 @@ class Scholarship(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
     return [ethnicity.to_dict() for ethnicity in self.ethnicities.all()]
 
   def for_pagination(self):
-    return self.to_dict()
+    return {
+        "name": self.name,
+        "public_id": self.public_id,
+        "audit_dates": self.audit_dates(),
+        "_links": {
+            "scholarship":
+                url_for(
+                    "shcolarships.get_scholarship",
+                    scholarship_id=self.public_id)
+        }
+    }
 
   def to_dict(self):
     return {

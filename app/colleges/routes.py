@@ -111,21 +111,28 @@ def delete_college(college):
 @get_entity(College, "college")
 def get_college_scholarships(college):
 
-  return jsonify({
-      "scholarships": [{
-          "name":
-              scholarship.name,
-          "url":
-              url_for(
-                  "scholarships.get_scholarship",
-                  scholarship_id=scholarship.public_id)
-      } for scholarship in college.scholarships]
-  })
+  page = request.args.get("page", 1, type=int)
+  per_page = request.args.get(
+      "per_page", current_app.config["SCHOLARSHIPS_PER_PAGE"], type=int)
+
+  search = request.args.get("search", "", type=str)
+
+  if search:
+    query = college.scholarships.filter(
+        Scholarship.name.like("%{}%".format(search)))
+
+    data = Scholarship.to_collection_dict(
+        query, page, per_page, "scholarships.get_scholarships", search=search)
+  else:
+    query = college.scholarships
+    data = Scholarship.to_collection_dict(query, page, per_page,
+                                          "scholarships.get_scholarships")
+  return jsonify({"scholarships": data})
 
 
 @bp.route("/<string:college_id>/scholarships", methods=["POST"])
 @get_entity(College, "college")
-def post_scholarship(college):
+def post_college_scholarship(college):
   data = request.get_json()
 
   if not data:
