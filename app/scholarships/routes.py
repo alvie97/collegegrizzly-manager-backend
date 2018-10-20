@@ -1,5 +1,4 @@
 from flask import current_app, request, jsonify
-from flask_restful import Resource
 from marshmallow import ValidationError
 
 from app import db

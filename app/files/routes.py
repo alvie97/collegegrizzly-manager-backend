@@ -1,7 +1,6 @@
 import os
 
 from flask import current_app, request, send_from_directory, jsonify
-from flask_restful import Resource
 from marshmallow import ValidationError
 
 from app import db, photos

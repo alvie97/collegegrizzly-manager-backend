@@ -1,6 +1,5 @@
 from flask import (flash, g, jsonify, get_flashed_messages, make_response,
                    redirect, render_template, request, url_for, current_app)
-from flask_restful import Resource
 from sqlalchemy import or_
 
 from . import bp
