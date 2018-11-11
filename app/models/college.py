@@ -139,7 +139,7 @@ class College(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
                     "colleges.get_college_scholarships",
                     college_id=self.public_id),
                 "pictures":
-                url_for("files.get_pictures", college_id=self.public_id),
+                url_for("pictures.get_pictures", college_id=self.public_id),
                 "in_state_requirement":
                 self.location_requirement_endpoints(
                     "colleges.college", college_id=self.public_id)
