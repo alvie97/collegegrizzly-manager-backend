@@ -38,7 +38,6 @@ def patch_picture(picture_id):
     if college_logo is not None:
       college_logo.update({'type': 'campus'})
 
-  print(data)
   picture.update({"type": data["type"]})
   db.session.commit()
   return jsonify(data)
