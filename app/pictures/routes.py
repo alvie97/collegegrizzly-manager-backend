@@ -29,13 +29,17 @@ def patch_picture(picture_id):
 
   data = request.get_json()
 
-  if data["key"] == "type" and data["value"] == "logo":
+  if not data:
+    return jsonify({"message": "no data found"}), 422
+
+  if "type" in data and data["type"] == "logo":
     college_logo = picture.college.pictures.filter_by(type="logo").first()
 
     if college_logo is not None:
       college_logo.update({'type': 'campus'})
 
-  picture.update({data['key']: data['value']})
+  print(data)
+  picture.update({"type": data["type"]})
   db.session.commit()
   return jsonify(data)
 
