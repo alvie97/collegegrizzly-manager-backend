@@ -12,7 +12,6 @@ from app import db
 from flask import url_for
 
 
-# TODO: add common interface for add_, remove_, has_... models
 class Scholarship(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
                   DateAudit, BaseMixin, db.Model):
   id = db.Column(db.Integer, primary_key=True)
@@ -128,7 +127,7 @@ class Scholarship(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
     return {
         "name": self.name,
         "public_id": self.public_id,
-        "audit_dates": self.audit_dates(),
+        **self.audit_dates(),
         "_links": {
             "scholarship":
                 url_for(
@@ -139,50 +138,53 @@ class Scholarship(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
 
   def to_dict(self):
     return {
+        "editable_fields": {
+          "name":
+              self.name,
+          "act":
+
+              self.act,
+          "sat":
+              self.sat,
+          "amount":
+              self.amount,
+          "amount_expression":
+              self.amount_expression,
+          "unweighted_hs_gpa":
+              str(self.unweighted_hs_gpa),
+          "class_rank":
+              self.class_rank,
+          "legal_status":
+              self.legal_status,
+          "relevant_information":
+              self.relevant_information,
+          "graduated_spring_before_scholarship":
+              self.graduated_spring_before_scholarship,
+          "paid_full_time_christian_ministry_parent":
+              self.paid_full_time_christian_ministry_parent,
+          "parents_higher_education":
+              self.parents_higher_education,
+          "siblings_currently_in_scholarship":
+              self.siblings_currently_in_scholarship,
+          "application_needed":
+              self.application_needed,
+          "first_choice_national_merit":
+              self.first_choice_national_merit,
+          "exclude_from_match":
+              self.exclude_from_match,
+          "group_by":
+              self.group_by,
+          "first_generation_higher_education":
+              self.first_generation_higher_education,
+          "type":
+              self.type,
+          "description":
+              self.description,
+        },
         "public_id":
             self.public_id,
-        "name":
-            self.name,
         "audit_dates":
             self.audit_dates(),
-        "act":
-            self.act,
-        "sat":
-            self.sat,
-        "amount":
-            self.amount,
-        "amount_expression":
-            self.amount_expression,
-        "unweighted_hs_gpa":
-            str(self.unweighted_hs_gpa),
-        "class_rank":
-            self.class_rank,
-        "legal_status":
-            self.legal_status,
-        "relevant_information":
-            self.relevant_information,
-        "graduated_spring_before_scholarship":
-            self.graduated_spring_before_scholarship,
-        "paid_full_time_christian_ministry_parent":
-            self.paid_full_time_christian_ministry_parent,
-        "parents_higher_education":
-            self.parents_higher_education,
-        "siblings_currently_in_scholarship":
-            self.siblings_currently_in_scholarship,
-        "application_needed":
-            self.application_needed,
-        "first_choice_national_merit":
-            self.first_choice_national_merit,
-        "exclude_from_match":
-            self.exclude_from_match,
-        "group_by":
-            self.group_by,
-        "first_generation_higher_education":
-            self.first_generation_higher_education,
-        "type":
-            self.type,
-        "description":
-            self.description,
         "programs":
             self.get_programs(),
         "ethnicities":

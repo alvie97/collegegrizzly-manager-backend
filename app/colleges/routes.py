@@ -352,5 +352,5 @@ def majors_suggestions(query):
       Major.name.like(f"%{query}%")).limit(5).all()
 
   return jsonify({
-      "suggestions": [suggestion.name for suggestion in suggestions]
+      "suggestions": [suggestion.to_dict() for suggestion in suggestions]
   })
