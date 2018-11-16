@@ -75,9 +75,19 @@ def get_scholarships():
   per_page = request.args.get(
       "per_page", current_app.config["SCHOLARSHIPS_PER_PAGE"], type=int)
 
-  return jsonify(
-      Scholarship.to_collection_dict(Scholarship.query, page, per_page,
-                                     "scholarships.get_scholarships"))
+  search = request.args.get("search", "", type=str)
+
+  if search:
+    query = Scholarship.query.filter(Scholarship.name.like("%{}%".format(search)))
+
+    data = Scholarship.to_collection_dict(
+        query, page, per_page, "scholarships.get_scholarships", search=search)
+  else:
+    query = Scholarship.query
+    data = Scholarship.to_collection_dict(query, page, per_page,
+                                      "scholarships.get_scholarships")
+
+  return jsonify(data)
 
 
 @bp.route("/<string:scholarship_id>/programs")
