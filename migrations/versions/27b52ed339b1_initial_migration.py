@@ -1,8 +1,8 @@
-"""intial
+"""initial migration
 
-Revision ID: 345a96e8f1ba
+Revision ID: 27b52ed339b1
 Revises: 
-Create Date: 2018-10-13 20:08:31.325705
+Create Date: 2018-11-18 18:52:43.938305
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '345a96e8f1ba'
+revision = '27b52ed339b1'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -166,7 +166,7 @@ def upgrade():
     sa.Column('parents_higher_education', sa.Boolean(), nullable=True),
     sa.Column('siblings_currently_in_scholarship', sa.Boolean(), nullable=True),
     sa.Column('application_needed', sa.Boolean(), nullable=True),
-    sa.Column('first_choice_national_merit', sa.String(length=256), nullable=True),
+    sa.Column('first_choice_national_merit', sa.Boolean(), nullable=True),
     sa.Column('exclude_from_match', sa.Boolean(), nullable=True),
     sa.Column('group_by', sa.Integer(), nullable=True),
     sa.Column('first_generation_higher_education', sa.Boolean(), nullable=True),

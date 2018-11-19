@@ -32,7 +32,7 @@ class Scholarship(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
   parents_higher_education = db.Column(db.Boolean, default=False)
   siblings_currently_in_scholarship = db.Column(db.Boolean, default=False)
   application_needed = db.Column(db.Boolean, default=False)
-  first_choice_national_merit = db.Column(db.String(256), nullable=True)
+  first_choice_national_merit = db.Column(db.Boolean, default=False)
   exclude_from_match = db.Column(db.Boolean, default=False)
   group_by = db.Column(db.Integer, nullable=True)
   first_generation_higher_education = db.Column(db.Boolean, default=False)
@@ -138,6 +138,7 @@ class Scholarship(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
 
   def to_dict(self):
     return {
+        "college_name": self.college.name,
         "editable_fields": {
           "name":
               self.name,

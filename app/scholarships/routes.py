@@ -57,7 +57,7 @@ def patch_scholarship(scholarship):
 
   scholarship.update(data)
   db.session.commit()
-  return jsonify({"scholarship": scholarship.to_dict()})
+  return jsonify("Scholarship saved successfully")
 
 
 @bp.route("/<string:scholarship_id>", methods=["DELETE"])
