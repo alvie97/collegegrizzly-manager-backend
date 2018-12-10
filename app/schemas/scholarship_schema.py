@@ -1,4 +1,5 @@
 from marshmallow import fields, Schema, validates, ValidationError
+import re
 
 
 class ScholarshipSchema(Schema):
@@ -51,11 +52,27 @@ class ScholarshipSchema(Schema):
         if 0 < value > 36:
             raise ValidationError("ACT score must be between 0 and 36")
 
-    @validates("amount_expression")
-    def validate_amount_expression(self, value):
-        pass
-
     @validates("class_rank")
     def validate_class_rank(self, value):
         if value and 1 < value > 100:
             raise ValidationError("class rank must be between 1 and 100")
+
+    @validates("amount_expression")
+    def validate_amount_expression(self, value):
+        components = value.split('+')
+
+        for component in components:
+
+            AMOUNT_REGEX = ""
+
+            if component[0] == '$':
+                AMOUNT_REGEX = "\([0-9]+\)"
+            elif component[0] == '%':
+                AMOUNT_REGEX = "\((([0-9]+-[0-9]+))\)\[(t|r)\]"
+            else:
+                raise ValidationError("incorrect amount type must specify amount ($) or range (%)")
+
+            compiled_regex = re.compile(AMOUNT_REGEX)
+
+            if compiled_regex.match(component[1:]) is None:
+                raise ValidationError("Incorrent amount expression")
