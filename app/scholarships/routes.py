@@ -3,21 +3,19 @@ from marshmallow import ValidationError
 
 from app import db
 from app.models.college import College
-from app.models.ethnicity import Ethnicity
 from app.models.program import Program
 from app.models.scholarship import Scholarship
 from app.models.state import State
 from app.models.county import County
 from app.models.place import Place
 from app.models.consolidated_city import ConsolidatedCity
-from app.schemas.ethnicity_schema import EthnicitySchema
 from app.schemas.program_schema import ProgramSchema
 from app.schemas.scholarship_schema import ScholarshipSchema
 from app.common.utils import (
     generate_public_id, get_entity, get_location_requirement,
     post_location_requirement, delete_location_requirement,
     get_locations_blacklist, post_locations_blacklist,
-    delete_locations_blacklist)
+    delete_locations_blacklist, get_first)
 from app.token_schema import access_token_required
 from app.auth.csrf import csrf_token_required
 
@@ -25,7 +23,6 @@ from . import bp
 
 scholarship_schema = ScholarshipSchema()
 program_schema = ProgramSchema()
-ethnicity_schema = EthnicitySchema()
 
 
 # @bp.before_request
@@ -92,31 +89,30 @@ def get_scholarships():
 
 @bp.route("/<string:scholarship_id>/programs")
 @get_entity(Scholarship, "scholarship")
-def get_scholarship_majors(scholarship):
+def get_scholarship_programs(scholarship):
   return jsonify({"programs": scholarship.get_programs()})
 
 
 @bp.route("/<string:scholarship_id>/programs", methods=["POST"])
 @get_entity(Scholarship, "scholarship")
-def post_scholarship_majors(scholarship):
-  data = request.get_json() or {}
+def post_scholarship_programs(scholarship):
+  program = request.get_json() or {}
 
-  if not data or "programs" not in data:
+  if not program:
     return jsonify({"message": "no data provided"}), 400
 
-  for program in data["programs"]:
-    try:
-      program_schema.load(program)
-    except ValidationError as err:
-      return jsonify(err.messages), 422
+  try:
+    program_schema.load(program)
+  except ValidationError as err:
+    return jsonify(err.messages), 422
 
-    program_to_add = Program.first(name=program["name"])
+  program_to_add = Program.first(name=program["name"], round_qualification=program["round_qualification"])
 
-    if program_to_add is None:
-      program_to_add = Program(**program)
-      db.session.add(program_to_add)
+  if program_to_add is None:
+    program_to_add = Program(**program)
+    db.session.add(program_to_add)
 
-    scholarship.add_program(program_to_add)
+  scholarship.add_program(program_to_add)
 
   db.session.commit()
   return jsonify({"message": "programs added"})
@@ -124,79 +120,31 @@ def post_scholarship_majors(scholarship):
 
 @bp.route("/<string:scholarship_id>/programs", methods=["DELETE"])
 @get_entity(Scholarship, "scholarship")
-def delete_scholarship_majors(scholarship):
+def delete_scholarship_programs(scholarship):
   data = request.get_json() or {}
 
   if not data or "programs" not in data:
     return jsonify({"message": "no data provided"}), 400
 
   for program in data["programs"]:
-    program_to_remove = scholarship.programs.filter_by(name=program).first()
 
-    if program_to_remove is None:
-      return jsonify({
-          "message": scholarship.name + "doesn't have program " + program
-      }), 404
+    program_to_remove = scholarship.programs.filter_by(name=program["name"], round_qualification=program["round_qualification"]).first()
 
-    scholarship.remove_program(program_to_remove)
+    if program_to_remove is not None:
+      scholarship.remove_program(program_to_remove)
+
 
   db.session.commit()
   return jsonify({"message": "programs removed"})
 
+@bp.route("/programs_suggestions/<string:query>")
+def programs_suggestions(query):
+  suggestions = Program.query.filter(
+      Program.name.like(f"%{query}%")).limit(5).all()
 
-@bp.route("/<string:scholarship_id>/ethnicities")
-@get_entity(Scholarship, "scholarship")
-def get_scholarship_ethnicities(scholarship):
-  return jsonify({"ethnicities": scholarship.get_ethnicities()})
-
-
-@bp.route("/<string:scholarship_id>/ethnicities", methods=["POST"])
-@get_entity(Scholarship, "scholarship")
-def post_scholarship_ethnicities(scholarship):
-  data = request.get_json() or {}
-
-  if not data or "ethnicities" not in data:
-    return jsonify({"message": "no data provided"}), 400
-
-  for ethnicity in data["ethnicities"]:
-    try:
-      ethnicity_schema.load(ethnicity)
-    except ValidationError as err:
-      return jsonify(err.messages), 422
-
-    ethnicity_to_add = Ethnicity.first(name=ethnicity["name"])
-
-    if ethnicity_to_add is None:
-      ethnicity_to_add = Ethnicity(**ethnicity)
-      db.session.add(ethnicity_to_add)
-
-    scholarship.add_ethnicity(ethnicity_to_add)
-
-  db.session.commit()
-  return jsonify({"message": "ethnicities added"})
-
-
-@bp.route("/<string:scholarship_id>/ethnicities", methods=["DELETE"])
-@get_entity(Scholarship, "scholarship")
-def delete_scholarship_ethnicities(scholarship):
-  data = request.get_json() or {}
-
-  if not data or "ethnicities" not in data:
-    return jsonify({"message": "no data provided"}), 400
-
-  for ethnicity in data["ethnicities"]:
-    ethnicity_to_remove = scholarship.ethnicities.filter_by(
-        name=ethnicity).first()
-
-    if ethnicity_to_remove is None:
-      return jsonify({
-          "message": scholarship.name + "doesn't have ethnicity " + ethnicity
-      }), 404
-
-    scholarship.remove_ethnicity(ethnicity_to_remove)
-
-  db.session.commit()
-  return jsonify({"message": "ethnicities removed"})
+  return jsonify({
+      "suggestions": [suggestion.to_dict() for suggestion in suggestions]
+  })
 
 
 @bp.route("/<string:scholarship_id>/scholarships_needed")

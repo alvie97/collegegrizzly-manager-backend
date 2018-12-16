@@ -8,7 +8,6 @@ from app.models.college import College
 from app.models.scholarship import Scholarship
 from app.models.major import Major
 from app.models.program import Program
-from app.models.ethnicity import Ethnicity
 from app.models.state import State
 from app.models.county import County
 from app.models.place import Place
@@ -28,7 +27,6 @@ def make_shell_context():
       "Place": Place,
       "Consolidated_city": ConsolidatedCity,
       "Major": Major,
-      "Ethnicity": Ethnicity,
       "Program": Program,
       "User": User
   }

@@ -53,10 +53,7 @@ scholarships_needed = db.Table(
     "scholarships_needed",
     db.Column("needs_id", db.Integer, db.ForeignKey("scholarship.id")),
     db.Column("needed_id", db.Integer, db.ForeignKey("scholarship.id")))
-scholarship_ethnicity = db.Table(
-    "scholarship_ethnicity",
-    db.Column("scholarship_id", db.Integer, db.ForeignKey("scholarship.id")),
-    db.Column("ethnicity_id", db.Integer, db.ForeignKey("ethnicity.id")))
+
 scholarship_program = db.Table(
     "scholarship_program",
     db.Column("scholarship_id", db.Integer, db.ForeignKey("scholarship.id")),

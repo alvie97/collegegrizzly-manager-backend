@@ -1,8 +1,8 @@
 """initial migration
 
-Revision ID: 27b52ed339b1
+Revision ID: fd7ffd6b6585
 Revises: 
-Create Date: 2018-11-18 18:52:43.938305
+Create Date: 2018-12-15 18:34:41.919513
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '27b52ed339b1'
+revision = 'fd7ffd6b6585'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -40,12 +40,6 @@ def upgrade():
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('public_id')
     )
-    op.create_table('ethnicity',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('name', sa.String(length=256), nullable=True),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('ix_ethnicity_name'), 'ethnicity', ['name'], unique=True)
     op.create_table('major',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=256), nullable=True),
@@ -172,6 +166,7 @@ def upgrade():
     sa.Column('first_generation_higher_education', sa.Boolean(), nullable=True),
     sa.Column('type', sa.String(length=256), nullable=True),
     sa.Column('description', sa.Text(), nullable=True),
+    sa.Column('ethnicity', sa.String(length=256), nullable=True),
     sa.ForeignKeyConstraint(['college_id'], ['college.id'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('public_id')
@@ -236,12 +231,6 @@ def upgrade():
     sa.ForeignKeyConstraint(['county_id'], ['county.id'], ),
     sa.ForeignKeyConstraint(['scholarship_id'], ['scholarship.id'], )
     )
-    op.create_table('scholarship_ethnicity',
-    sa.Column('scholarship_id', sa.Integer(), nullable=True),
-    sa.Column('ethnicity_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['ethnicity_id'], ['ethnicity.id'], ),
-    sa.ForeignKeyConstraint(['scholarship_id'], ['scholarship.id'], )
-    )
     op.create_table('scholarship_place',
     sa.Column('scholarship_id', sa.Integer(), nullable=True),
     sa.Column('place_id', sa.Integer(), nullable=True),
@@ -289,7 +278,6 @@ def downgrade():
     op.drop_table('scholarship_program')
     op.drop_table('scholarship_place_blacklist')
     op.drop_table('scholarship_place')
-    op.drop_table('scholarship_ethnicity')
     op.drop_table('scholarship_county_blacklist')
     op.drop_table('scholarship_county')
     op.drop_table('scholarship_consolidated_city_blacklist')
@@ -321,7 +309,5 @@ def downgrade():
     op.drop_table('program')
     op.drop_index(op.f('ix_major_name'), table_name='major')
     op.drop_table('major')
-    op.drop_index(op.f('ix_ethnicity_name'), table_name='ethnicity')
-    op.drop_table('ethnicity')
     op.drop_table('college')
     # ### end Alembic commands ###

@@ -115,67 +115,67 @@ def test_scholarship_programs(client, scholarship_id):
   check_programs(programs["programs"][2], response_json["programs"][1])
 
 
-def test_scholarship_ethnicities(client, scholarship_id):
+# def test_scholarship_ethnicities(client, scholarship_id):
 
-  def check_ethnicities(ethnicity_1: dict, ethnicity_2: dict):
-    assert "name" in ethnicity_1 and "name" in ethnicity_2
+#   def check_ethnicities(ethnicity_1: dict, ethnicity_2: dict):
+#     assert "name" in ethnicity_1 and "name" in ethnicity_2
 
-    for k in ethnicity_1.keys():
-      if k in ethnicity_2:
-        assert ethnicity_1[k] == ethnicity_2[k]
+#     for k in ethnicity_1.keys():
+#       if k in ethnicity_2:
+#         assert ethnicity_1[k] == ethnicity_2[k]
 
-  url = "api/scholarships/" + scholarship_id + "/ethnicities"
-  response = client.get(url)
-  response_json = response.get_json()
+#   url = "api/scholarships/" + scholarship_id + "/ethnicities"
+#   response = client.get(url)
+#   response_json = response.get_json()
 
-  assert response.status_code == 200
-  assert len(response_json["ethnicities"]) == 0
+#   assert response.status_code == 200
+#   assert len(response_json["ethnicities"]) == 0
 
-  ethnicities = {
-      "ethnicities": [
-          {
-              "name": "ethnicity 1"
-          },
-          {
-              "name": "ethnicity 2"
-          },
-          {
-              "name": "ethnicity 3"
-          },
-      ]
-  }
-  response = client.post(url, json=ethnicities)
-  response_json = response.get_json()
+#   ethnicities = {
+#       "ethnicities": [
+#           {
+#               "name": "ethnicity 1"
+#           },
+#           {
+#               "name": "ethnicity 2"
+#           },
+#           {
+#               "name": "ethnicity 3"
+#           },
+#       ]
+#   }
+#   response = client.post(url, json=ethnicities)
+#   response_json = response.get_json()
 
-  assert response.status_code == 200
-  assert response_json["message"] == "ethnicities added"
+#   assert response.status_code == 200
+#   assert response_json["message"] == "ethnicities added"
 
-  response = client.get(url)
-  response_json = response.get_json()
+#   response = client.get(url)
+#   response_json = response.get_json()
 
-  assert "ethnicities" in response_json and len(
-      response_json["ethnicities"]) == 3
+#   assert "ethnicities" in response_json and len(
+#       response_json["ethnicities"]) == 3
 
-  for i, ethnicity in enumerate(response_json["ethnicities"]):
-    check_ethnicities(ethnicity, ethnicities["ethnicities"][i])
+#   for i, ethnicity in enumerate(response_json["ethnicities"]):
+#     check_ethnicities(ethnicity, ethnicities["ethnicities"][i])
 
-  response = client.delete(
-      url, json={"ethnicities": [ethnicities["ethnicities"][1]["name"]]})
-  response_json = response.get_json()
+#   response = client.delete(
+#       url, json={"ethnicities": [ethnicities["ethnicities"][1]["name"]]})
+#   response_json = response.get_json()
 
-  assert response.status_code == 200
-  assert response_json["message"] == "ethnicities removed"
+#   assert response.status_code == 200
+#   assert response_json["message"] == "ethnicities removed"
 
-  response = client.get(url)
-  response_json = response.get_json()
+#   response = client.get(url)
+#   response_json = response.get_json()
 
-  assert "ethnicities" in response_json and len(
-      response_json["ethnicities"]) == 2
+#   assert "ethnicities" in response_json and len(
+#       response_json["ethnicities"]) == 2
 
-  check_ethnicities(ethnicities["ethnicities"][0],
-                    response_json["ethnicities"][0])
-  check_ethnicities(ethnicities["ethnicities"][2],
-                    response_json["ethnicities"][1])
+#   check_ethnicities(ethnicities["ethnicities"][0],
+#                     response_json["ethnicities"][0])
+#   check_ethnicities(ethnicities["ethnicities"][2],
+#                     response_json["ethnicities"][1])
 
 
 def test_scholarships_needed(client, scholarship_id, college_id):

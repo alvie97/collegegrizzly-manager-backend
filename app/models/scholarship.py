@@ -3,9 +3,8 @@ from .common.date_audit import DateAudit
 from .common.location_mixin import LocationMixin
 from .common.location_blacklist_mixin import LocationBlacklistMixin
 from .common.paginated_api_mixin import PaginatedAPIMixin
-from .ethnicity import Ethnicity
 from .program import Program
-from .relationship_tables import (scholarship_ethnicity, scholarship_program,
+from .relationship_tables import (scholarship_program,
                                   scholarships_needed)
 
 from app import db
@@ -38,11 +37,7 @@ class Scholarship(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
   first_generation_higher_education = db.Column(db.Boolean, default=False)
   type = db.Column(db.String(256))
   description = db.Column(db.Text)
-  ethnicities = db.relationship(
-      "Ethnicity",
-      secondary=scholarship_ethnicity,
-      backref=db.backref("scholarships", lazy="dynamic"),
-      lazy="dynamic")
+  ethnicity = db.Column(db.String(256), nullable=True)
   programs = db.relationship(
       "Program",
       secondary=scholarship_program,
@@ -58,7 +53,7 @@ class Scholarship(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
 
   ATTR_FIELDS = [
       "name", "act", "sat", "amount", "amount_expression", "unweighted_hs_gpa",
-      "class_rank", "legal_status", "relevant_information",
+      "class_rank", "legal_status", "ethnicity", "relevant_information",
       "graduated_spring_before_scholarship",
       "paid_full_time_christian_ministry_parent", "parents_higher_education",
       "siblings_currently_in_scholarship", "application_needed",
@@ -70,28 +65,16 @@ class Scholarship(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
     return "<Scholarship {}>".format(self.name)
 
   # relationships methods
-  def add_ethnicity(self, ethnicity):
-    if not self.has_ethnicity(ethnicity.name):
-      self.ethnicities.append(ethnicity)
-
   def add_program(self, program):
-    if not self.has_program(program.name):
+    if not self.has_program(program):
       self.programs.append(program)
 
-  def remove_ethnicity(self, ethnicity):
-    if self.has_ethnicity(ethnicity.name):
-      self.ethnicities.remove(ethnicity)
-
   def remove_program(self, program):
-    if self.has_program(program.name):
+    if self.has_program(program):
       self.programs.remove(program)
 
-  def has_ethnicity(self, ethnicity_name):
-    return self.ethnicities.filter(
-        Ethnicity.name == ethnicity_name).count() > 0
-
-  def has_program(self, program_name):
-    return self.programs.filter(Program.name == program_name).count() > 0
+  def has_program(self, program):
+    return self.programs.filter(Program.name == program.name, Program.round_qualification == program.round_qualification).count() > 0
 
   def add_needed_scholarship(self, scholarship):
     if not self.needs_scholarship(scholarship):
@@ -118,10 +101,7 @@ class Scholarship(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
     } for scholarship in self.scholarships_needed.all()]
 
   def get_programs(self):
-    return [program.to_dict() for program in self.programs.all()]
-
-  def get_ethnicities(self):
-    return [ethnicity.to_dict() for ethnicity in self.ethnicities.all()]
+    return [program.to_dict() for program in self.programs]
 
   def for_pagination(self):
     return {
@@ -143,7 +123,6 @@ class Scholarship(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
           "name":
               self.name,
           "act":
-
               self.act,
           "sat":
               self.sat,
@@ -157,6 +136,8 @@ class Scholarship(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
               self.class_rank,
           "legal_status":
               self.legal_status,
+          "ethnicity":
+              self.ethnicity,
           "relevant_information":
               self.relevant_information,
           "graduated_spring_before_scholarship":
@@ -188,8 +169,6 @@ class Scholarship(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
             self.audit_dates(),
         "programs":
             self.get_programs(),
-        "ethnicities":
-            self.get_ethnicities(),
         "location_requirement":
             self.location_requirement_endpoints(
                 "scholarships.scholarship", scholarship_id=self.public_id),
