@@ -137,10 +137,19 @@ def delete_scholarship_programs(scholarship):
   db.session.commit()
   return jsonify({"message": "programs removed"})
 
-@bp.route("/programs_suggestions/<string:query>")
-def programs_suggestions(query):
+@bp.route("/programs_suggestions/name/<string:query>")
+def programs_suggestions_name(query):
   suggestions = Program.query.filter(
       Program.name.like(f"%{query}%")).limit(5).all()
+
+  return jsonify({
+      "suggestions": [suggestion.to_dict() for suggestion in suggestions]
+  })
+
+@bp.route("/programs_suggestions/round_qualification/<string:query>")
+def programs_suggestions_round(query):
+  suggestions = Program.query.filter(
+      Program.round_qualification.like(f"%{query}%")).limit(5).all()
 
   return jsonify({
       "suggestions": [suggestion.to_dict() for suggestion in suggestions]
