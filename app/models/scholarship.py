@@ -101,7 +101,7 @@ class Scholarship(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
     } for scholarship in self.scholarships_needed.all()]
 
   def get_programs(self):
-    return [program.to_dict() for program in self.programs]
+    return [program.to_dict() for program in self.programs.all()]
 
   def for_pagination(self):
     return {
