@@ -15,4 +15,4 @@ class Program(db.Model, BaseMixin):
     return self.to_dict()
 
   def to_dict(self):
-    return {"name": self.name, "round_qualification": self.round_qualification}
+    return {"id": self.id, "name": self.name, "round_qualification": self.round_qualification}
