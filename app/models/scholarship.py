@@ -119,6 +119,7 @@ class Scholarship(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
   def to_dict(self):
     return {
         "college_name": self.college.name,
+        "college_id": self.college.public_id,
         "editable_fields": {
           "name":
               self.name,
