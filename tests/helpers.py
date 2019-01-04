@@ -1,5 +1,6 @@
 from werkzeug.http import parse_cookie
 
+
 def get_cookie(response, name, type=str, flags=None, except_flags=None):
     cookies = response.headers.getlist('Set-Cookie')
     for cookie in cookies:
@@ -11,7 +12,7 @@ def get_cookie(response, name, type=str, flags=None, except_flags=None):
                     if flag not in cookie:
                         all_flags = False
                         break
-                
+
                 if all_flags:
                     return c.get(name, type=type)
                 else:
@@ -23,14 +24,15 @@ def get_cookie(response, name, type=str, flags=None, except_flags=None):
                     if flag in cookie:
                         all_flags = False
                         break
-                
+
                 if all_flags:
                     return c.get(name, type=type)
                 else:
                     continue
             return c.get(name, type=type)
-    
+
     return ""
+
 
 def get_raw_cookie(response, name, type=str):
     cookies = response.headers.getlist('Set-Cookie')
@@ -38,5 +40,5 @@ def get_raw_cookie(response, name, type=str):
         c = parse_cookie(cookie)
         if name in c:
             return cookie
-    
+
     return ""

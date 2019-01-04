@@ -7,44 +7,46 @@ from datetime import datetime
 from hashlib import md5
 from werkzeug.security import generate_password_hash, check_password_hash
 
+
 class User(PaginatedAPIMixin, BaseMixin, DateAudit, db.Model):
-  id = db.Column(db.Integer, primary_key=True)
-  username = db.Column(db.String(120), index=True, unique=True)
-  email = db.Column(db.String(120), index=True, unique=True)
-  password_hash = db.Column(db.String(128))
-  last_seen = db.Column(db.DateTime, default=datetime.utcnow)
-  avatar = db.Column(db.Text, nullable=True)
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(120), index=True, unique=True)
+    email = db.Column(db.String(120), index=True, unique=True)
+    password_hash = db.Column(db.String(128))
+    last_seen = db.Column(db.DateTime, default=datetime.utcnow)
+    avatar = db.Column(db.Text, nullable=True)
 
-  ATTR_FIELDS = ["email"]
+    ATTR_FIELDS = ["email"]
 
-  def __repr__(self):
-    return "<User {}>".format(self.username)
+    def __repr__(self):
+        return "<User {}>".format(self.username)
 
-  @property
-  def password(self):
-    raise AttributeError("password is not a readable attribute")
+    @property
+    def password(self):
+        raise AttributeError("password is not a readable attribute")
 
-  @password.setter
-  def password(self, password):
-    self.password_hash = generate_password_hash(password)
+    @password.setter
+    def password(self, password):
+        self.password_hash = generate_password_hash(password)
 
-  def check_password(self, password):
-    return check_password_hash(self.password_hash, password)
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
-  def get_avatar(self, size):
-    digest = md5(self.email.lower().encode("utf-8")).hexdigest()
-    return "https://www.gravatar.com/avatar/{}?d=identicon&s={}".format(
-        digest, size)
+    def get_avatar(self, size):
+        digest = md5(self.email.lower().encode("utf-8")).hexdigest()
+        return "https://www.gravatar.com/avatar/{}?d=identicon&s={}".format(
+            digest, size)
 
-  def for_pagination(self):
-    return self.to_dict()
+    def for_pagination(self):
+        return self.to_dict()
 
-  def to_dict(self):
-    data = {
-        "username": self.username,
-        "email": self.email,
-        "audit_dates": self.audit_dates(),
-        "last_seen": self.last_seen.isoformat() + "Z",
-        "avatar": self.get_avatar(128) if self.avatar is None else self.avatar
-    }
-    return data
+    def to_dict(self):
+        data = {
+            "username": self.username,
+            "email": self.email,
+            "audit_dates": self.audit_dates(),
+            "last_seen": self.last_seen.isoformat() + "Z",
+            "avatar":
+            self.get_avatar(128) if self.avatar is None else self.avatar
+        }
+        return data

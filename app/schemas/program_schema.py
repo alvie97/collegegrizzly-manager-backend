@@ -1,7 +1,9 @@
 from marshmallow import Schema, fields, validates, ValidationError
 
+
 class ProgramSchema(Schema):
-    name = fields.String(required=True, error_messages={"required": "name is required"})
+    name = fields.String(
+        required=True, error_messages={"required": "name is required"})
     round_qualification = fields.String()
 
     @validates("name")

@@ -16,54 +16,55 @@ from .csrf import csrf_token_required
 @bp.route("/login", methods=["POST", "GET"])
 @user_not_logged
 def login():
-  if request.method == "GET":
-    return render_template("login.html", messages=get_flashed_messages())
+    if request.method == "GET":
+        return render_template("login.html", messages=get_flashed_messages())
 
-  id = request.form["id"]
-  password = request.form["password"]
+    id = request.form["id"]
+    password = request.form["password"]
 
-  if not id:
-    flash("no username or email provided")
-    return redirect(url_for("auth.login")), 422
+    if not id:
+        flash("no username or email provided")
+        return redirect(url_for("auth.login")), 422
 
-  if not password:
-    flash("no password provided")
-    return redirect(url_for("auth.login")), 422
+    if not password:
+        flash("no password provided")
+        return redirect(url_for("auth.login")), 422
 
-  user = User.query.filter(or_(User.username == id, User.email == id)).first()
+    user = User.query.filter(or_(User.username == id,
+                                 User.email == id)).first()
 
-  if user is None:
-    flash(f"no user with username or email {id} found")
-    return redirect(url_for("auth.login")), 404
+    if user is None:
+        flash(f"no user with username or email {id} found")
+        return redirect(url_for("auth.login")), 404
 
-  if not user.check_password(password):
-    flash("invalid credentials")
-    return redirect(url_for("auth.login")), 401
+    if not user.check_password(password):
+        flash("invalid credentials")
+        return redirect(url_for("auth.login")), 401
 
-  response = make_response(redirect("/"))
-  set_token_cookies(response, user.username)
-  return response
+    response = make_response(redirect("/"))
+    set_token_cookies(response, user.username)
+    return response
 
 
 @bp.route("/logout", methods=["POST"])
 @csrf_token_required
 @access_token_required
 def logout():
-  user_id = get_current_user()
-  RefreshToken.revoke_user_tokens(user_id)
-  db.session.commit()
-  response = make_response(jsonify({"message": "logout successful"}))
+    user_id = get_current_user()
+    RefreshToken.revoke_user_tokens(user_id)
+    db.session.commit()
+    response = make_response(jsonify({"message": "logout successful"}))
 
-  access_cookie_name = current_app.config["ACCESS_COOKIE_NAME"]
-  refresh_cookie_name = current_app.config["REFRESH_COOKIE_NAME"]
-  csrf_cookie_name = current_app.config["CSRF_COOKIE_NAME"]
-  secure_token_cookies = current_app.config["SECURE_TOKEN_COOKIES"]
+    access_cookie_name = current_app.config["ACCESS_COOKIE_NAME"]
+    refresh_cookie_name = current_app.config["REFRESH_COOKIE_NAME"]
+    csrf_cookie_name = current_app.config["CSRF_COOKIE_NAME"]
+    secure_token_cookies = current_app.config["SECURE_TOKEN_COOKIES"]
 
-  response.set_cookie(
-      access_cookie_name, "", secure=secure_token_cookies, httponly=True)
-  response.set_cookie(
-      refresh_cookie_name, "", secure=secure_token_cookies, httponly=True)
-  response.set_cookie(
-      csrf_cookie_name, "", secure=secure_token_cookies, httponly=True)
+    response.set_cookie(
+        access_cookie_name, "", secure=secure_token_cookies, httponly=True)
+    response.set_cookie(
+        refresh_cookie_name, "", secure=secure_token_cookies, httponly=True)
+    response.set_cookie(
+        csrf_cookie_name, "", secure=secure_token_cookies, httponly=True)
 
-  return response
+    return response

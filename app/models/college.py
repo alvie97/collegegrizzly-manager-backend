@@ -103,8 +103,7 @@ class College(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
         return {
             "name": self.name,
             "public_id": self.public_id,
-            **self.audit_dates(), 
-            "logo": self.get_logo(),
+            **self.audit_dates(), "logo": self.get_logo(),
             "_links": {
                 "get_college":
                 url_for("colleges.get_college", college_id=self.public_id)

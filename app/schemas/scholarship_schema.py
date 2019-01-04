@@ -3,8 +3,8 @@ import re
 
 
 class ScholarshipSchema(Schema):
-    name = fields.String(required=True,
-                         error_messages={"required": "name field is required"})
+    name = fields.String(
+        required=True, error_messages={"required": "name field is required"})
     sat = fields.Integer()
     act = fields.Integer()
     amount = fields.String(allow_none=True)
@@ -70,7 +70,9 @@ class ScholarshipSchema(Schema):
             elif component[0] == '%':
                 AMOUNT_REGEX = "\((([0-9]+-[0-9]+))\)\[(t|r)\]"
             else:
-                raise ValidationError("incorrect amount type must specify amount ($) or range (%)")
+                raise ValidationError(
+                    "incorrect amount type must specify amount ($) or range (%)"
+                )
 
             compiled_regex = re.compile(AMOUNT_REGEX)
 

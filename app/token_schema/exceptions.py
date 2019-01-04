@@ -4,11 +4,13 @@ class TokenSchemaException(Exception):
     """
     pass
 
+
 class InvalidRefreshTokenError(TokenSchemaException):
     """
     Error when refresh token is invalid
     """
     pass
+
 
 class InvalidAccessTokenError(TokenSchemaException):
     """
@@ -16,11 +18,13 @@ class InvalidAccessTokenError(TokenSchemaException):
     """
     pass
 
+
 class TokensCompromisedError(TokenSchemaException):
     """
     Base exception for compromised tokens
     """
     pass
+
 
 class AccessTokenCompromisedError(TokensCompromisedError):
     """
@@ -28,17 +32,20 @@ class AccessTokenCompromisedError(TokensCompromisedError):
     """
     pass
 
+
 class RefreshTokenCompromisedError(TokensCompromisedError):
     """
     Error when the refresh token has been compromised
     """
     pass
 
+
 class RevokedTokenError(TokenSchemaException):
     """
     Error when a token has been revoked
     """
     pass
+
 
 class AccessTokenNotExpiredError(TokenSchemaException):
     """

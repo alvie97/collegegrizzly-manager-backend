@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+
 class TokenSchema(object):
     """
     Class that defines the settings and callbacks for the token schema

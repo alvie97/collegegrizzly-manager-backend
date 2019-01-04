@@ -10,110 +10,112 @@ from app.models.picture import Picture
 
 from . import bp
 
+
 @bp.route("/<string:picture_id>")
 def get_picture(picture_id):
-  picture = Picture.first(public_id=picture_id)
+    picture = Picture.first(public_id=picture_id)
 
-  if picture is None:
-    return jsonify({'message': 'no picture found'}), 404
+    if picture is None:
+        return jsonify({'message': 'no picture found'}), 404
 
-  return jsonify(picture.to_dict())
+    return jsonify(picture.to_dict())
 
 
 @bp.route("/<string:picture_id>", methods=["PATCH"])
 def patch_picture(picture_id):
-  picture = Picture.first(public_id=picture_id)
+    picture = Picture.first(public_id=picture_id)
 
-  if picture is None:
-    return jsonify({'message': 'no picture found'}), 404
+    if picture is None:
+        return jsonify({'message': 'no picture found'}), 404
 
-  data = request.get_json()
+    data = request.get_json()
 
-  if not data:
-    return jsonify({"message": "no data found"}), 422
+    if not data:
+        return jsonify({"message": "no data found"}), 422
 
-  if "type" in data and data["type"] == "logo":
-    college_logo = picture.college.pictures.filter_by(type="logo").first()
+    if "type" in data and data["type"] == "logo":
+        college_logo = picture.college.pictures.filter_by(type="logo").first()
 
-    if college_logo is not None:
-      college_logo.update({'type': 'campus'})
+        if college_logo is not None:
+            college_logo.update({'type': 'campus'})
 
-  picture.update({"type": data["type"]})
-  db.session.commit()
-  return jsonify(data)
+    picture.update({"type": data["type"]})
+    db.session.commit()
+    return jsonify(data)
 
 
 @bp.route("/<string:picture_id>", methods=["DELETE"])
 def delete_picture(picture_id):
-  picture = Picture.query.filter_by(public_id=picture_id).first()
+    picture = Picture.query.filter_by(public_id=picture_id).first()
 
-  if picture is None:
-    return jsonify({'message': 'no picture found'}), 404
+    if picture is None:
+        return jsonify({'message': 'no picture found'}), 404
 
-  db.session.delete(picture)
-  db.session.commit()
-  return jsonify({'message': 'picture deleted'})
+    db.session.delete(picture)
+    db.session.commit()
+    return jsonify({'message': 'picture deleted'})
 
 
 @bp.route("/colleges/<string:college_id>")
 @bp.route("")
 def get_pictures(college_id=None):
-  if college_id is not None:
-    college = College.query.filter_by(public_id=college_id).first()
-    if college is None:
-      return jsonify({'message': 'College not found'}), 404
+    if college_id is not None:
+        college = College.query.filter_by(public_id=college_id).first()
+        if college is None:
+            return jsonify({'message': 'College not found'}), 404
 
-    resources = college.pictures.all()
+        resources = college.pictures.all()
 
-    data = {'pictures': [item.to_dict() for item in resources]}
+        data = {'pictures': [item.to_dict() for item in resources]}
+
+        return jsonify(data)
+
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get(
+        'per_page', current_app.config['COLLEGES_PER_PAGE'], type=int)
+
+    data = Picture.to_collection_dict(Picture.query, page, per_page,
+                                      'pictures.get_pictures')
 
     return jsonify(data)
-
-  page = request.args.get('page', 1, type=int)
-  per_page = request.args.get(
-      'per_page', current_app.config['COLLEGES_PER_PAGE'], type=int)
-
-  data = Picture.to_collection_dict(Picture.query, page, per_page,
-                                    'pictures.get_pictures')
-
-  return jsonify(data)
 
 
 @bp.route("/colleges/<string:college_id>", methods=["POST"])
 def post_picture(college_id):
 
-  if 'picture' not in request.files:
-    return jsonify({'message': 'file missing'}), 404
+    if 'picture' not in request.files:
+        return jsonify({'message': 'file missing'}), 404
 
-  college = College.query.filter_by(public_id=college_id).first()
+    college = College.query.filter_by(public_id=college_id).first()
 
-  if college is None:
-    return jsonify({'message': 'college not found'}), 404
+    if college is None:
+        return jsonify({'message': 'college not found'}), 404
 
-  filename = photos.save(request.files['picture'])
-  data = request.get_json() or {}
-  if 'type' not in data:
-    data['type'] = 'campus'
+    filename = photos.save(request.files['picture'])
+    data = request.get_json() or {}
+    if 'type' not in data:
+        data['type'] = 'campus'
 
-  picture = Picture(
-      public_id=generate_public_id(), name=filename, college=college, **data)
-  db.session.add(picture)
-  db.session.commit()
+    picture = Picture(
+        public_id=generate_public_id(), name=filename, college=college, **data)
+    db.session.add(picture)
+    db.session.commit()
 
-  return jsonify(picture.public_id)
+    return jsonify(picture.public_id)
 
 
 @bp.route("", methods=["DELETE"])
 def delete_pictures():
-  data = request.get_json() or {}
+    data = request.get_json() or {}
 
-  if not data or "pictures" not in data:
-    return jsonify({"message": "no pictures id given"}), 422
+    if not data or "pictures" not in data:
+        return jsonify({"message": "no pictures id given"}), 422
 
-  pictures = Picture.query.filter(Picture.public_id.in_(data['pictures'])).all()
+    pictures = Picture.query.filter(Picture.public_id.in_(
+        data['pictures'])).all()
 
-  for picture in pictures:
-    picture.delete()
-  db.session.commit()
+    for picture in pictures:
+        picture.delete()
+    db.session.commit()
 
-  return jsonify({'message': 'Pictures deleted'})
+    return jsonify({'message': 'Pictures deleted'})
