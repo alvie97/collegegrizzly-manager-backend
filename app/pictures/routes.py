@@ -10,6 +10,14 @@ from app.models.picture import Picture
 
 from . import bp
 
+from app.token_schema import access_token_required
+from app.auth.csrf import csrf_token_required
+
+@bp.before_request
+@csrf_token_required
+@access_token_required
+def before_request():
+  pass
 
 @bp.route("/<string:picture_id>")
 def get_picture(picture_id):

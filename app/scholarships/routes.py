@@ -24,11 +24,11 @@ from . import bp
 scholarship_schema = ScholarshipSchema()
 program_schema = ProgramSchema()
 
-# @bp.before_request
-# @csrf_token_required
-# @access_token_required
-# def before_request():
-#   pass
+@bp.before_request
+@csrf_token_required
+@access_token_required
+def before_request():
+  pass
 
 
 @bp.route("/<string:scholarship_id>")

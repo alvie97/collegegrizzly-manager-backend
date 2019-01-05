@@ -7,7 +7,7 @@ from app import db
 from app.models.refresh_token import RefreshToken
 from app.models.user import User
 from app.token_schema import (access_token_required, set_token_cookies,
-                              get_current_user)
+                              get_current_user, get_refresh_token_from_cookie)
 from .utils import user_not_logged
 
 from .csrf import csrf_token_required
@@ -47,12 +47,24 @@ def login():
 
 
 @bp.route("/logout", methods=["POST"])
-@csrf_token_required
-@access_token_required
 def logout():
-    user_id = get_current_user()
-    RefreshToken.revoke_user_tokens(user_id)
-    db.session.commit()
+
+    try:
+        token = get_refresh_token_from_cookie()
+        token = RefreshToken.first(token=token)
+
+        if token is not None:
+            user_id = token.user_id
+        else:
+            user_id = get_current_user()
+
+    except KeyError:
+        user_id = get_current_user()
+
+    if user_id is not None:
+        RefreshToken.revoke_user_tokens(user_id)
+        db.session.commit()
+
     response = make_response(jsonify({"message": "logout successful"}))
 
     access_cookie_name = current_app.config["ACCESS_COOKIE_NAME"]
@@ -61,10 +73,22 @@ def logout():
     secure_token_cookies = current_app.config["SECURE_TOKEN_COOKIES"]
 
     response.set_cookie(
-        access_cookie_name, "", secure=secure_token_cookies, httponly=True)
+        access_cookie_name,
+        "",
+        expires=0,
+        secure=secure_token_cookies,
+        httponly=True)
     response.set_cookie(
-        refresh_cookie_name, "", secure=secure_token_cookies, httponly=True)
+        refresh_cookie_name,
+        "",
+        expires=0,
+        secure=secure_token_cookies,
+        httponly=True)
     response.set_cookie(
-        csrf_cookie_name, "", secure=secure_token_cookies, httponly=True)
+        csrf_cookie_name,
+        "",
+        expires=0,
+        secure=secure_token_cookies,
+        httponly=True)
 
     return response

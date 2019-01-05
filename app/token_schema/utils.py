@@ -114,7 +114,7 @@ def set_token_cookies(response, user_id, access_token_claims=None):
         current_app.config["ACCESS_COOKIE_NAME"],
         access_token,
         secure=current_app.config["SECURE_TOKEN_COOKIES"],
-        expires=now + current_app.config["ACCESS_COOKIE_EXPIRATION"],
+        expires=now + current_app.config["REFRESH_COOKIE_EXPIRATION"],
         httponly=True)
     response.set_cookie(
         current_app.config["REFRESH_COOKIE_NAME"],

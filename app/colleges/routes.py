@@ -28,11 +28,11 @@ major_schema = MajorSchema()
 majors_schema = MajorSchema(many=True)
 scholarship_schema = ScholarshipSchema()
 
-# @bp.before_request
-# @csrf_token_required
-# @access_token_required
-# def before_request():
-#   pass
+@bp.before_request
+@csrf_token_required
+@access_token_required
+def before_request():
+  pass
 
 
 @bp.route("/", methods=["GET"], strict_slashes=False)
