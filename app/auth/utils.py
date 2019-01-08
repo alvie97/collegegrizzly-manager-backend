@@ -23,6 +23,7 @@ def user_not_logged(f):
         try:
             decode_jwt(access_token, current_app.config["JWT_SECRET"],
                        current_app.config["JWT_ALGORITHM"])
+            return jsonify({"message": "user already logged in"}), 403
         except ExpiredSignatureError:
             return jsonify({"message": "user already logged in"}), 403
         except PyJWTError:
