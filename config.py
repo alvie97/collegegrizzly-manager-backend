@@ -14,11 +14,12 @@ class Config(object):
     SECURE_TOKEN_COOKIES = False
     JWT_SECRET = os.environ.get('SECRET_KEY') or 'my-secret-never-guess'
     JWT_ALGORITHM = "HS256"
-    ACCESS_COOKIE_NAME = "actk"
-    REFRESH_COOKIE_NAME = "rftk"
+    ACCESS_TOKEN_COOKIE_NAME = "actk"
+    ACCESS_TOKEN_DURATION = timedelta(seconds=60)
+    REFRESH_TOKEN_COOKIE_NAME = "rftk"
     REFRESH_TOKEN_DURATION = timedelta(days=30)
-    REFRESH_COOKIE_EXPIRATION = timedelta(days=31)
     CSRF_COOKIE_NAME = "X-CSRF-TOKEN"
+    CSRF_HEADER_NAME = "X-XSRF-TOKEN"
     MAIL_SERVER = os.environ.get('MAIL_SERVER')
     MAIL_PORT = int(os.environ.get('MAIL_PORT') or 25)
     MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS') is not None

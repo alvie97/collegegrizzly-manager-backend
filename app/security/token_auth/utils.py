@@ -1,12 +1,15 @@
 from datetime import datetime, timedelta
 from uuid import uuid4
+from functools import wraps
 import base64
 
 import jwt
-from flask import current_app
+from flask import current_app, g, request, jsonify, make_response
+from sqlalchemy import and_
 
 from app.models.refresh_token import RefreshToken
 from app import db
+from app.security.csrf import clear_csrf_token_cookies
 
 
 def encode_jwt(secret, algorithm, duration, additional_claims=None):
@@ -18,10 +21,9 @@ def encode_jwt(secret, algorithm, duration, additional_claims=None):
     :param duration: time until the token expires. Parameter is a timedelta
     :param additional_claims: any other claims to provide to the token.
     """
-    jti = str(uuid4())
     now = datetime.utcnow()
 
-    claims = {"iat": now, "exp": now + duration, "jti": jti}
+    claims = {"iat": now, "exp": now + duration}
 
     if additional_claims is not None:
         claims.update(additional_claims)
@@ -55,14 +57,16 @@ def create_access_token(user_id, user_claims=None):
     :returns encoded jwt string
     """
 
-    jwt_claims = {"user_id": user_id}
+    jti = str(uuid4())
+    jwt_claims = {"user_id": user_id, "jti": jti}
 
     if user_claims is not None:
-        jwt_claims.update(user_claims)
+        user_claims.update(jwt_claims)
+        jwt_claims = user_claims
 
-    return encode_jwt(current_app.config["JWT_SECRET"],
-                      current_app.config["JWT_ALGORITHM"],
-                      current_app.config["ACCESS_TOKEN_DURATION"], jwt_claims)
+    return encode_jwt(
+        current_app.config["JWT_SECRET"], current_app.config["JWT_ALGORITHM"],
+        current_app.config["ACCESS_TOKEN_DURATION"], jwt_claims), jti
 
 
 def create_refresh_token(user_id, jti):
@@ -77,11 +81,13 @@ def create_refresh_token(user_id, jti):
 
     token = str(uuid4())
 
-    refresh_token = RefreshToken(token, user_id=user_id, access_token_jti=jti)
+    refresh_token = RefreshToken(
+        token=token, user_id=user_id, access_token_jti=jti)
 
     db.session.add(refresh_token)
+    db.session.commit()
 
-    return refresh_token
+    return refresh_token.token
 
 
 def set_access_token_cookie(response, access_token):
@@ -94,13 +100,11 @@ def set_access_token_cookie(response, access_token):
 
     now = datetime.utcnow()
 
-    b64encoded_access_token = base64.b64encode(bytes(access_token, "utf-8"))
-
     response.set_cookie(
         current_app.config["ACCESS_TOKEN_COOKIE_NAME"],
-        b64encoded_access_token,
-        secure=current_app.config["SECURE_ACCESS_TOKEN_COOKIE"],
-        expires=now + current_app.config["ACCESS_TOKEN_EXPIRATION"],
+        access_token,
+        secure=current_app.config["SECURE_TOKEN_COOKIES"],
+        expires=now + current_app.config["REFRESH_TOKEN_DURATION"],
         httponly=True)
 
 
@@ -112,12 +116,30 @@ def set_refresh_token_cookie(response, refresh_token):
     :param refresh_token: refresh token
     """
 
+    now = datetime.utcnow()
+
     response.set_cookie(
         current_app.config["REFRESH_TOKEN_COOKIE_NAME"],
         refresh_token,
-        secure=current_app.config["SECURE_REFRESH_TOKEN_COOKIE"],
-        expires=now + current_app.config["REFRESH_TOKEN_EXPIRATION"],
+        secure=current_app.config["SECURE_TOKEN_COOKIES"],
+        expires=now + current_app.config["REFRESH_TOKEN_DURATION"],
         httponly=True)
+
+
+def set_token_cookies(response, user_id):
+    """
+    Sets both token cookies
+
+    :param respones: Flask response object
+    :param user_id: user id to attatch to session
+    """
+
+    access_token, jti = create_access_token(user_id)
+
+    refresh_token = create_refresh_token(user_id, jti)
+
+    set_access_token_cookie(response, access_token)
+    set_refresh_token_cookie(response, refresh_token)
 
 
 def get_access_token_from_cookie():
@@ -125,10 +147,8 @@ def get_access_token_from_cookie():
     Returns access token from the cookie
     """
 
-    b64encoded_access_token = request.cookies[
-        current_app.config["ACCESS_TOKEN_COOKIE_NAME"]]
-
-    access_token = base64.b64decode(b64encoded_access_token).decode("utf-8")
+    access_token = request.cookies[current_app.
+                                   config["ACCESS_TOKEN_COOKIE_NAME"]]
 
     return access_token
 
@@ -144,30 +164,96 @@ def get_refresh_token_from_cookie():
     return refresh_token
 
 
+def clear_token_cookies(response):
+    """
+    clears both token cookies
+
+    :param response: Flask response object
+    """
+
+    access_cookie_name = current_app.config["ACCESS_TOKEN_COOKIE_NAME"]
+    refresh_cookie_name = current_app.config["REFRESH_TOKEN_COOKIE_NAME"]
+    secure_token_cookies = current_app.config["SECURE_TOKEN_COOKIES"]
+
+    response.set_cookie(
+        access_cookie_name,
+        "",
+        expires=0,
+        secure=secure_token_cookies,
+        httponly=True)
+    response.set_cookie(
+        refresh_cookie_name,
+        "",
+        expires=0,
+        secure=secure_token_cookies,
+        httponly=True)
+
+
+def revoke_user_tokens(user_id):
+    """
+    Revokes all user refresh tokens
+
+    :param user_id: id of the user
+    """
+
+    stmt = RefreshToken.__table__.update().where(
+        and_(RefreshToken.__table__.c.user_id == user_id,
+             RefreshToken.__table__.c.expires_at > datetime.utcnow(),
+             RefreshToken.__table__.c.revoked == False)).values(revoked=True)
+
+    db.session.execute(stmt)
+
+
+def revoke_token(cls, token):
+    """
+    Revoke single token
+    :param token: token object to be revoked
+    """
+
+    if token.is_valid():
+        token.revoked = True
+
+    db.session.commit()
+
+
 # TODO: refactor, divide decorator
 def authentication_required(f):
     """
     Checks access token validity
     """
 
-    @wraps
+    @wraps(f)
     def f_wrapper(*args, **kwargs):
 
         try:
             access_token = get_access_token_from_cookie()
         except KeyError:
-            return jsonify({"message": "invalid token"}), 401
+            response = make_response(
+                jsonify({
+                    "message": "invalid token"
+                }), 401)
+            clear_token_cookies(response)
+            clear_csrf_token_cookies(response)
+
+            return response
 
         try:
-            _app_ctx_stack.top.jwt_claims = decode_jwt(
-                access_token, current_app.config["JWT_SECRET"],
-                current_app.config["JWT_ALGORITHM"])
+            g.jwt_claims = decode_jwt(access_token,
+                                      current_app.config["JWT_SECRET"],
+                                      current_app.config["JWT_ALGORITHM"])
         except jwt.exceptions.ExpiredSignatureError:
 
             try:
                 refresh_token = get_refresh_token_from_cookie()
             except KeyError:
-                return jsonify({"message": "invalid token"}), 401
+                response = make_response(
+                    jsonify({
+                        "message": "invalid token"
+                    }), 401)
+                clear_token_cookies(response)
+                clear_csrf_token_cookies(response)
+
+                return response
 
             refresh_token = RefreshToken.first(token=refresh_token)
 
@@ -178,50 +264,46 @@ def authentication_required(f):
                     current_app.config["JWT_ALGORITHM"],
                     options={"verify_exp": False})
 
-                if not refresh_token.is_jti_valid(jwt_claims.jti):
+                if not refresh_token.is_jti_valid(jwt_claims["jti"]):
                     # check if access token is blacklisted if it isn't
                     # jwt secret has been compromised
 
-                    refresh_token.revoke_user_tokens(refresh_token)
-                    return jsonify({"message": "invalid token"}), 401
+                    revoke_user_tokens(refresh_token.user_id)
+                    db.session.commit()
+                    response = make_response(
+                        jsonify({
+                            "message": "invalid token"
+                        }), 401)
+                    clear_token_cookies(response)
+                    clear_csrf_token_cookies(response)
 
-                new_access_token = create_access_token(jwt_claims.user_id,
-                                                       jwt_claims)
+                    return response
 
-                _app_ctx_stack.top.new_access_token = new_access_token
+                new_access_token, new_jti = create_access_token(
+                    jwt_claims["user_id"], jwt_claims)
+                refresh_token.access_token_jti = new_jti
+                db.session.commit()
+
+                g.new_access_token = new_access_token
                 return f(*args, **kwargs)
 
-            return jsonify({"message": "invalid token"}), 401
+            response = make_response(
+                jsonify({
+                    "message": "invalid token"
+                }), 401)
+            clear_token_cookies(response)
+            clear_csrf_token_cookies(response)
+
+            return response
         except jwt.exceptions.InvalidTokenError:
-            return jsonify({"message": "invalid token"}), 401
+            response = make_response(
+                jsonify({
+                    "message": "invalid token"
+                }), 401)
+            clear_token_cookies(response)
+            clear_csrf_token_cookies(response)
 
-        return f(*args, **kwargs)
-
-    return f_wrapper
-
-
-def access_token_required(f):
-    """
-    Decorator for routes that require the access token
-    """
-
-    @wraps(f)
-    def f_wrapper(*args, **kwargs):
-
-        try:
-            access_token = get_access_token_from_cookie()
-        except KeyError:
-            return jsonify({"message": "access token not in cookies"}), 401
-
-        try:
-            _app_ctx_stack.top.jwt_claims = decode_jwt(
-                access_token, current_app.config["JWT_SECRET"],
-                current_app.config["JWT_ALGORITHM"])
-
-        except jwt.exceptions.ExpiredSignatureError:
-            return jsonify({"message": "expired access token"}), 401
-        except jwt.exceptions.PyJWTError:
-            return jsonify({"message": "invalid access token"}), 401
+            return response
 
         return f(*args, **kwargs)
 

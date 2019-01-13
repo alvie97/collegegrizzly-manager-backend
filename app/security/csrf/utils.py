@@ -6,6 +6,10 @@ from flask import request, jsonify, current_app
 
 
 def generate_csrf_token():
+    """
+    Generates csrf token and returns it
+    """
+
     return str(uuid4())
 
 
@@ -16,7 +20,7 @@ def validate_csrf_token():
         cookie_csrf_token = request.cookies[current_app.
                                             config["CSRF_COOKIE_NAME"]]
         header_csrf_token = request.headers[current_app.
-                                            config["CSRF_COOKIE_NAME"]]
+                                            config["CSRF_HEADER_NAME"]]
     except KeyError:
         return False
 
@@ -29,16 +33,25 @@ def validate_csrf_token():
     return True
 
 
-def set_csrf_token_cookie(response, csrf_token):
-    """Sets CSRF token to cookie
+def set_csrf_token_cookies(response, csrf_token):
+    """
+    Sets CSRF token to cookies
 
-  :param response: response object
-  """
+    :param response: response object
+    :param csrf_token: csrf token string
+    """
     response.set_cookie(
         current_app.config["CSRF_COOKIE_NAME"],
         csrf_token,
         secure=current_app.config["SECURE_TOKEN_COOKIES"],
         httponly=True,
+        expires=datetime.utcnow() +
+        current_app.config["REFRESH_TOKEN_DURATION"])
+
+    response.set_cookie(
+        current_app.config["CSRF_HEADER_NAME"],
+        csrf_token,
+        secure=current_app.config["SECURE_TOKEN_COOKIES"],
         expires=datetime.utcnow() +
         current_app.config["REFRESH_TOKEN_DURATION"])
 
@@ -54,3 +67,29 @@ def csrf_token_required(f):
         return f(*args, **kwargs)
 
     return f_wrapper
+
+
+def clear_csrf_token_cookies(response):
+    """
+    Clears csrf token cookies
+
+    :param response: Flask response object
+    """
+
+    csrf_cookie_name = current_app.config["CSRF_COOKIE_NAME"]
+    csrf_header_name = current_app.config["CSRF_HEADER_NAME"]
+    secure_token_cookies = current_app.config["SECURE_TOKEN_COOKIES"]
+
+    response.set_cookie(
+        csrf_cookie_name,
+        "",
+        expires=0,
+        secure=secure_token_cookies,
+        httponly=True)
+
+    response.set_cookie(
+        csrf_header_name,
+        "",
+        expires=0,
+        secure=secure_token_cookies,
+        httponly=True)

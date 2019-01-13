@@ -1,8 +1,8 @@
-"""initial migration
+"""access_token_jti column to refresh_token table
 
-Revision ID: fd7ffd6b6585
+Revision ID: d15cae5ce81c
 Revises: 
-Create Date: 2018-12-15 18:34:41.919513
+Create Date: 2019-01-13 16:56:22.424775
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'fd7ffd6b6585'
+revision = 'd15cae5ce81c'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -53,12 +53,12 @@ def upgrade():
     sa.Column('round_qualification', sa.String(length=256), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(op.f('ix_program_name'), 'program', ['name'], unique=True)
+    op.create_index(op.f('ix_program_name'), 'program', ['name'], unique=False)
     op.create_table('refresh_token',
     sa.Column('token', sa.String(length=256), nullable=False),
     sa.Column('issued_at', sa.DateTime(), nullable=True),
     sa.Column('expires_at', sa.DateTime(), nullable=True),
-    sa.Column('mapped_token', sa.String(length=512), nullable=True),
+    sa.Column('access_token_jti', sa.String(length=512), nullable=True),
     sa.Column('user_id', sa.String(length=256), nullable=True),
     sa.Column('revoked', sa.Boolean(), nullable=True),
     sa.PrimaryKeyConstraint('token')

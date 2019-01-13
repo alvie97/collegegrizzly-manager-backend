@@ -8,7 +8,6 @@ from .relationship_tables import college_major
 from app import db, photos
 from flask import url_for
 from hashlib import md5
-from typing import List
 
 
 class College(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
@@ -65,25 +64,25 @@ class College(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
         if self.has_major(major.name):
             self.majors.remove(major)
 
-    def has_major(self, major_name: str) -> bool:
+    def has_major(self, major_name):
         return self.majors.filter(Major.name == major_name).count() > 0
 
-    def get_majors(self) -> List[dict]:
+    def get_majors(self):
 
         return [major.to_dict() for major in self.majors.all()]
 
-    def get_avatar(self, size: int) -> str:
+    def get_avatar(self, size):
         digest = md5("test@email.com".encode("utf-8")).hexdigest()
         return "https://www.gravatar.com/avatar/{}?d=identicon&s={}".format(
             digest, size)
 
-    def total_ofs(self) -> float:
+    def total_ofs(self):
         return self.room_and_board + self.out_of_state_tuition
 
-    def total_is(self) -> float:
+    def total_is(self):
         return self.room_and_board + self.in_state_tuition
 
-    def get_logo(self) -> str:
+    def get_logo(self):
         logo = self.pictures.filter_by(type="logo").first()
 
         if logo is None:

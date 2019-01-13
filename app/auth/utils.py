@@ -6,8 +6,8 @@ from jwt import PyJWTError, ExpiredSignatureError
 
 from app import db
 from app.models.refresh_token import RefreshToken
-from app.token_schema import (get_access_token_from_cookie,
-                              get_refresh_token_from_cookie, decode_jwt)
+from app.security.token_auth import (get_access_token_from_cookie,
+                                     get_refresh_token_from_cookie, decode_jwt)
 
 
 def user_not_logged(f):

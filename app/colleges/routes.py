@@ -18,21 +18,12 @@ from app.common.utils import (
     get_locations_blacklist, post_locations_blacklist,
     delete_locations_blacklist)
 
-from app.token_schema import access_token_required
-from app.auth.csrf import csrf_token_required
-
 from . import bp
 
 college_schema = CollegeSchema()
 major_schema = MajorSchema()
 majors_schema = MajorSchema(many=True)
 scholarship_schema = ScholarshipSchema()
-
-@bp.before_request
-@csrf_token_required
-@access_token_required
-def before_request():
-  pass
 
 
 @bp.route("/", methods=["GET"], strict_slashes=False)

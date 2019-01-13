@@ -16,19 +16,11 @@ from app.common.utils import (
     post_location_requirement, delete_location_requirement,
     get_locations_blacklist, post_locations_blacklist,
     delete_locations_blacklist, get_first)
-from app.token_schema import access_token_required
-from app.auth.csrf import csrf_token_required
 
 from . import bp
 
 scholarship_schema = ScholarshipSchema()
 program_schema = ProgramSchema()
-
-@bp.before_request
-@csrf_token_required
-@access_token_required
-def before_request():
-  pass
 
 
 @bp.route("/<string:scholarship_id>")
