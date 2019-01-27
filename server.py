@@ -13,6 +13,8 @@ from app.models.county import County
 from app.models.place import Place
 from app.models.consolidated_city import ConsolidatedCity
 from app.models.refresh_token import RefreshToken
+from app.models.college_details import CollegeDetails
+from app.models.scholarship_details import ScholarshipDetails
 
 cli.register(app)
 
@@ -30,5 +32,7 @@ def make_shell_context():
         "Major": Major,
         "Program": Program,
         "User": User,
-        "RefreshToken": RefreshToken
+        "RefreshToken": RefreshToken,
+        "CollegeDetails": CollegeDetails,
+        "ScholarshipDetails": ScholarshipDetails
     }

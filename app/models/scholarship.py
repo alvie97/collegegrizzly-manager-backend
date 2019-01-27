@@ -50,6 +50,9 @@ class Scholarship(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
         backref=db.backref("needed_by_scholarships", lazy="dynamic"),
         lazy="dynamic")
 
+    scholarship_details = db.relationship(
+        "ScholarshipDetails", uselist=False, backref="scholarship")
+
     ATTR_FIELDS = [
         "name", "act", "sat", "amount", "amount_expression",
         "unweighted_hs_gpa", "class_rank", "legal_status", "ethnicity",

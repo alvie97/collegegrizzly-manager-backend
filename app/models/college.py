@@ -11,7 +11,7 @@ from hashlib import md5
 
 
 class College(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
-              DateAudit, BaseMixin, db.Model):
+              BaseMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     public_id = db.Column(db.String(50), unique=True)
     name = db.Column(db.String(256))
@@ -45,6 +45,9 @@ class College(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
         secondary=college_major,
         backref=db.backref("colleges", lazy="dynamic"),
         lazy="dynamic")
+
+    college_details = db.relationship(
+        "CollegeDetails", uselist=False, backref="college")
 
     ATTR_FIELDS = [
         "name", "room_and_board", "type_of_institution", "phone", "website",
@@ -128,7 +131,6 @@ class College(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
                 "sat": self.sat,
                 "act": self.act
             },
-            "audit_dates": self.audit_dates(),
             "logo": self.get_logo(),
             "majors": self.get_majors(),
             "_links": {
