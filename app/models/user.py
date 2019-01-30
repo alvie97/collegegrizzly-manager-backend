@@ -13,13 +13,13 @@ class User(PaginatedAPIMixin, BaseMixin, DateAudit, db.Model):
     username = db.Column(db.String(120), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(128))
-    last_seen = db.Column(db.DateTime, default=datetime.utcnow)
-    avatar = db.Column(db.Text, nullable=True)
+    last_session = db.Column(db.DateTime, default=datetime.utcnow)
+    role = db.Column(db.String(256))
 
-    ATTR_FIELDS = ["email"]
+    ATTR_FIELDS = ["email", "role"]
 
     def __repr__(self):
-        return "<User {}>".format(self.username)
+        return f"<User {self.username}>"
 
     @property
     def password(self):
@@ -32,21 +32,14 @@ class User(PaginatedAPIMixin, BaseMixin, DateAudit, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    def get_avatar(self, size):
-        digest = md5(self.email.lower().encode("utf-8")).hexdigest()
-        return "https://www.gravatar.com/avatar/{}?d=identicon&s={}".format(
-            digest, size)
-
     def for_pagination(self):
         return self.to_dict()
 
     def to_dict(self):
-        data = {
+        return {
             "username": self.username,
             "email": self.email,
-            "audit_dates": self.audit_dates(),
-            "last_seen": self.last_seen.isoformat() + "Z",
-            "avatar":
-            self.get_avatar(128) if self.avatar is None else self.avatar
+            "created_at": self.created_at.isoformat() + "Z",
+            "updated_at": self.updated_at.isoformat() + "Z",
+            "last_session": self.last_session.isoformat() + "Z"
         }
-        return data

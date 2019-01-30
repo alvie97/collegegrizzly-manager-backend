@@ -4,12 +4,14 @@ from app.models.consolidated_city import ConsolidatedCity as CC
 from app.models.county import County
 from app.models.place import Place
 from app.models.state import State
+from app.security.utils import user_role, ADMINISTRATOR, MODERATOR, BASIC
 
 from . import bp
 
 
 # TODO: change lazy to dynamic for pagination
 @bp.route("/states")
+@user_role([ADMINISTRATOR, MODERATOR, BASIC])
 def get_states():
     per_page = request.args.get(
         "per_page", current_app.config["PER_PAGE"], type=int)
@@ -30,6 +32,7 @@ def get_states():
 
 
 @bp.route("/states/search/<string:name>")
+@user_role([ADMINISTRATOR, MODERATOR, BASIC])
 def get_state_by_name(name):
 
     state = State.query.filter(State.name.like("%{}%".format(name))).first()
@@ -41,6 +44,7 @@ def get_state_by_name(name):
 
 
 @bp.route("/states/<string:fips_code>")
+@user_role([ADMINISTRATOR, MODERATOR, BASIC])
 def get_state(fips_code):
 
     state = State.query.filter_by(fips_code=fips_code).first()
@@ -52,6 +56,7 @@ def get_state(fips_code):
 
 
 @bp.route("/states/<string:state_fips>/counties")
+@user_role([ADMINISTRATOR, MODERATOR, BASIC])
 def get_state_counties(state_fips):
     per_page = request.args.get(
         "per_page", current_app.config["PER_PAGE"], type=int)
@@ -75,6 +80,7 @@ def get_state_counties(state_fips):
 
 
 @bp.route("/states/<string:state_fips>/places")
+@user_role([ADMINISTRATOR, MODERATOR, BASIC])
 def get_state_places(state_fips=None):
     per_page = request.args.get(
         "per_page", current_app.config["PER_PAGE"], type=int)
@@ -96,6 +102,7 @@ def get_state_places(state_fips=None):
 
 
 @bp.route("/states/<string:state_fips>/consolidated_cities")
+@user_role([ADMINISTRATOR, MODERATOR, BASIC])
 def get_state_consolidated_cities(state_fips):
     per_page = request.args.get(
         "per_page", current_app.config["PER_PAGE"], type=int)
@@ -119,6 +126,7 @@ def get_state_consolidated_cities(state_fips):
 
 
 @bp.route("/counties")
+@user_role([ADMINISTRATOR, MODERATOR, BASIC])
 def get_counties():
     per_page = request.args.get(
         "per_page", current_app.config["PER_PAGE"], type=int)
@@ -139,6 +147,7 @@ def get_counties():
 
 
 @bp.route("/places")
+@user_role([ADMINISTRATOR, MODERATOR, BASIC])
 def get_places():
     per_page = request.args.get(
         "per_page", current_app.config["PER_PAGE"], type=int)
@@ -159,6 +168,7 @@ def get_places():
 
 
 @bp.route("/consolidated_cities")
+@user_role([ADMINISTRATOR, MODERATOR, BASIC])
 def get_consolidated_cities():
     per_page = request.args.get(
         "per_page", current_app.config["PER_PAGE"], type=int)

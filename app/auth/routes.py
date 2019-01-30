@@ -42,7 +42,7 @@ def login():
         return redirect(url_for("auth.login")), 401
 
     response = make_response(redirect("/"))
-    set_token_cookies(response, user.id)
+    set_token_cookies(response, user.id, user.role)
     return response
 
 

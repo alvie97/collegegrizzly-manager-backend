@@ -126,15 +126,17 @@ def set_refresh_token_cookie(response, refresh_token):
         httponly=True)
 
 
-def set_token_cookies(response, user_id):
+def set_token_cookies(response, user_id, user_role):
     """
     Sets both token cookies
 
     :param respones: Flask response object
     :param user_id: user id to attatch to session
+    :param user_role: role of the user
     """
 
-    access_token, jti = create_access_token(user_id)
+    access_token, jti = create_access_token(
+        user_id, user_claims={"role": user_role})
 
     refresh_token = create_refresh_token(user_id, jti)
 

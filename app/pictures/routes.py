@@ -7,11 +7,13 @@ from app import db, photos
 from app.common.utils import generate_public_id
 from app.models.college import College
 from app.models.picture import Picture
+from app.security.utils import user_role, ADMINISTRATOR, MODERATOR, BASIC
 
 from . import bp
 
 
 @bp.route("/<string:picture_id>")
+@user_role([ADMINISTRATOR, MODERATOR, BASIC])
 def get_picture(picture_id):
     picture = Picture.first(public_id=picture_id)
 
@@ -22,6 +24,7 @@ def get_picture(picture_id):
 
 
 @bp.route("/<string:picture_id>", methods=["PATCH"])
+@user_role([ADMINISTRATOR, BASIC])
 def patch_picture(picture_id):
     picture = Picture.first(public_id=picture_id)
 
@@ -45,6 +48,7 @@ def patch_picture(picture_id):
 
 
 @bp.route("/<string:picture_id>", methods=["DELETE"])
+@user_role([ADMINISTRATOR, BASIC])
 def delete_picture(picture_id):
     picture = Picture.query.filter_by(public_id=picture_id).first()
 
@@ -58,6 +62,7 @@ def delete_picture(picture_id):
 
 @bp.route("/colleges/<string:college_id>")
 @bp.route("")
+@user_role([ADMINISTRATOR, MODERATOR, BASIC])
 def get_pictures(college_id=None):
     if college_id is not None:
         college = College.query.filter_by(public_id=college_id).first()
@@ -81,6 +86,7 @@ def get_pictures(college_id=None):
 
 
 @bp.route("/colleges/<string:college_id>", methods=["POST"])
+@user_role([ADMINISTRATOR, BASIC])
 def post_picture(college_id):
 
     if 'picture' not in request.files:
@@ -105,6 +111,7 @@ def post_picture(college_id):
 
 
 @bp.route("", methods=["DELETE"])
+@user_role([ADMINISTRATOR, BASIC])
 def delete_pictures():
     data = request.get_json() or {}
 
