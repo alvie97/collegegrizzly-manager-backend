@@ -10,11 +10,12 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 class User(PaginatedAPIMixin, BaseMixin, DateAudit, db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    public_id = db.Column(db.String(50), index=True, unique=True)
     username = db.Column(db.String(120), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(128))
     last_session = db.Column(db.DateTime, default=datetime.utcnow)
-    role = db.Column(db.String(256))
+    role = db.Column(db.String(256), default="basic")
 
     ATTR_FIELDS = ["email", "role"]
 
@@ -39,6 +40,7 @@ class User(PaginatedAPIMixin, BaseMixin, DateAudit, db.Model):
         return {
             "username": self.username,
             "email": self.email,
+            "role": self.role,
             "created_at": self.created_at.isoformat() + "Z",
             "updated_at": self.updated_at.isoformat() + "Z",
             "last_session": self.last_session.isoformat() + "Z"
