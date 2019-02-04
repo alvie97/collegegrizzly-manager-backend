@@ -9,7 +9,8 @@ from app.models.user import User
 from .utils import user_not_logged
 from app.security.utils import get_current_user
 from app.security.token_auth import (get_refresh_token_from_cookie,
-                                     set_token_cookies, clear_token_cookies)
+                                     set_token_cookies, clear_token_cookies,
+                                     revoke_user_tokens)
 from app.security.csrf import clear_csrf_token_cookies
 
 
@@ -62,7 +63,7 @@ def logout():
         user_id = get_current_user()
 
     if user_id is not None:
-        RefreshToken.revoke_user_tokens(user_id)
+        revoke_user_tokens(user_id)
         db.session.commit()
 
     response = make_response(jsonify({"message": "logout successful"}))

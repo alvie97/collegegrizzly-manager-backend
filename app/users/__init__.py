@@ -1,4 +1,4 @@
-from flask import Blueprint
+from flask import Blueprint, g
 bp = Blueprint("users", __name__)
 
 from app.security.token_auth import (authentication_required,

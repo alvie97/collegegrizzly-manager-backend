@@ -4,8 +4,8 @@
 
 from . import bp
 from app.security.utils import user_role, ADMINISTRATOR
-from flask import request, jsonify
-from common.utils import get_entity
+from flask import request, jsonify, current_app
+from app.common.utils import get_entity, generate_public_id
 from app.models.user import User
 
 
@@ -18,10 +18,33 @@ def create_user():
     if not data:
         return jsonify({"message": "no data provided"}), 400
 
-    user = User(**data)
+    user = User(public_id=generate_public_id(), **data)
 
     db.session.add(user)
     db.session.commit()
+
+
+@bp.route("/")
+@user_role([ADMINISTRATOR])
+def get_users():
+
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get(
+        "per_page", current_app.config["USERS_PER_PAGE"], type=int)
+
+    search = request.args.get("search", "", type=str)
+
+    if search:
+        query = User.query.filter(User.name.like("%{}%".format(search)))
+
+        data = User.to_collection_dict(
+            query, page, per_page, "users.get_users", search=search)
+    else:
+        query = User.query
+        data = User.to_collection_dict(query, page, per_page,
+                                       "users.get_users")
+
+    return jsonify(data)
 
 
 @bp.route("/<string:user_id>")

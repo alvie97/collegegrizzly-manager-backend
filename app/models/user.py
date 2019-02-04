@@ -38,6 +38,7 @@ class User(PaginatedAPIMixin, BaseMixin, DateAudit, db.Model):
 
     def to_dict(self):
         return {
+            "public_id": self.public_id,
             "username": self.username,
             "email": self.email,
             "role": self.role,

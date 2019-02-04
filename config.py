@@ -27,6 +27,7 @@ class Config(object):
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     ADMINS = ['alvie97m@gmail.com']
     COLLEGES_PER_PAGE = 5
+    USERS_PER_PAGE = 5
     SCHOLARSHIPS_PER_PAGE = 5
     PER_PAGE = 5
     UPLOADED_PHOTOS_DEST = 'static/photos/'
