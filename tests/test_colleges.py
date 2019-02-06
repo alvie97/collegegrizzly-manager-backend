@@ -1,93 +1,49 @@
-def test_college(client):
+from app.common.utils import generate_public_id
+from app import db
+from app.models.college import College
+
+
+def test_get_colleges(app, client, auth):
+    """ get all colleges and test search function """
+
     url = "/api/colleges"
-    response = client.post(url, json={"name": "college test"})
-    response_json = response.get_json()
 
-    assert response.status_code == 200
-    assert "college_id" in response.get_json()
+    # create colleges to test
 
-    college_id = response_json["college_id"]
+    colleges_properties = []
 
-    response = client.patch(
-        url + '/' + college_id, json={"location": "testing location"})
-    response_json = response.get_json()
+    with app.app_context():
+        for i in range(50):
 
-    assert response.status_code == 200
-    assert response_json == "college saved successfully"
+            colleges_properties.append({
+                "name": f"test college {i}",
+                "public_id": generate_public_id()
+            })
 
-    response = client.get(url + '/' + college_id)
-    response_json = response.get_json()
+            college = College(**colleges_properties[i])
+            db.session.add(college)
 
-    assert response.status_code == 200
-    assert response_json["college"]["editable_fields"][
-        "location"] == "testing location"
+        db.session.commit()
+
+    # login
+
+    login_response = auth.login()
+
+    # get colleges
 
     response = client.get(url)
-    response_json = response.get_json()
+    data = response.get_json()
+    colleges = data["items"]
 
-    assert response.status_code == 200
-    assert len(response_json["items"]) > 0
-    assert response_json["items"][0]["public_id"] == college_id
+    for i, college in enumerate(colleges):
+        assert college["name"] == colleges_properties[i]["name"] and college[
+            "public_id"] == colleges_properties[i]["public_id"]
 
-    response = client.delete(url + '/' + college_id)
-    response_json = response.get_json()
+    # get college that ends with "ge 2"
 
-    assert response.status_code == 200
-    assert response_json["message"] == "college deleted"
+    response = client.get(url + "?search=ge 2")
+    data = response.get_json()
+    colleges = data["items"]
 
-    response = client.get(url + '/' + college_id)
-    response_json = response.get_json()
-
-    assert response.status_code == 404
-    assert response_json["message"] == "college not found"
-
-
-def test_college_majors(college_id, client):
-    # 1. add major(s)
-    # 2. get majors(s)
-    # 3. delete major(s)
-
-    def check_majors(major_1, major_2):
-        assert "name" in major_1 and "name" in major_2
-
-        for k in major_1.keys():
-            if k in major_2:
-                assert major_1[k] == major_2[k]
-
-    url = "/api/colleges/" + college_id + "/majors"
-
-    majors_test = [{
-        "name": "major test 1"
-    }, {
-        "name": "major test 2",
-        "description": "major test 2 description"
-    }, {
-        "name": "major test 3"
-    }]
-
-    request = client.post(url, json={"majors": majors_test})
-
-    assert request.status_code == 200
-    assert request.get_json()["message"] == "majors added"
-
-    request = client.get(url)
-
-    assert request.status_code == 200
-    majors_added = request.get_json()
-    assert "majors" in majors_added
-
-    for i, major in enumerate(majors_test):
-        check_majors(major, majors_added["majors"][i])
-
-    request = client.delete(
-        url, json={"majors": [majors_test[0]["name"], majors_test[2]["name"]]})
-
-    assert request.status_code == 200
-    assert request.get_json()["message"] == "majors removed"
-
-    request = client.get(url)
-
-    assert request.status_code == 200
-    majors_removed = request.get_json()
-
-    check_majors(majors_test[1], majors_removed["majors"][0])
+    for college in colleges:
+        assert college["name"].find("ge 2") != -1

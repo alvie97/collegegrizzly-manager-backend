@@ -2,6 +2,7 @@ from app import create_app, db
 from app.common.utils import generate_public_id
 from app.models.college import College
 from app.models.scholarship import Scholarship
+from app.models.user import User
 from config import Config
 import os
 import pytest
@@ -22,6 +23,13 @@ def app():
 
     with app.app_context():
         db.create_all()
+        user = User(
+            username="test",
+            email="test@test.com",
+            password="test",
+            role="administrator")
+        db.session.add(user)
+        db.session.commit()
 
     yield app
 
@@ -67,13 +75,13 @@ class AuthActions(object):
     def login(self, username="test", password="test"):
         return self._client.post(
             "/auth/login", data={
-                "username": username,
+                "id": username,
                 "password": password
             })
 
     def logout(self):
         return self._client.get(
-            "/auth/logout", headers={"x-csrf-token": self._csrf_token})
+            "/auth/logout", headers={"X-XSRF-TOKEN": self._csrf_token})
 
 
 @pytest.fixture
