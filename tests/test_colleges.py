@@ -2,11 +2,11 @@ from app.common.utils import generate_public_id
 from app import db
 from app.models.college import College
 
+url = "/api/colleges"
+
 
 def test_get_colleges(app, client, auth):
     """ get all colleges and test search function """
-
-    url = "/api/colleges"
 
     # create colleges to test
 
@@ -47,3 +47,18 @@ def test_get_colleges(app, client, auth):
 
     for college in colleges:
         assert college["name"].find("ge 2") != -1
+
+
+def test_post_colleges(app, client, auth):
+    """ create colleges """
+
+    auth.login()
+
+    data = {"name": "test post college"}
+
+    response = client.post(url, json=data)
+
+    with app.app_context():
+        college = College.first(name=data["name"])
+
+        assert college is not None
