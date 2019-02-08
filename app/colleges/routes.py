@@ -76,6 +76,7 @@ def get_college(college):
 
 
 @bp.route("/<string:college_id>", methods=["PATCH"])
+@user_role([ADMINISTRATOR, BASIC])
 @get_entity(College, "college")
 def patch_college(college):
     data = request.get_json() or {}
@@ -94,6 +95,7 @@ def patch_college(college):
 
 
 @bp.route("/<string:college_id>", methods=["DELETE"])
+@user_role([ADMINISTRATOR, BASIC])
 @get_entity(College, "college")
 def delete_college(college):
     college.delete()
@@ -214,7 +216,7 @@ def delete_college_majors(college):
 @get_entity(College, "college")
 def get_college_states(college):
     return get_location_requirement(
-        State, "colleges.college", college, college_id=college.public_id)
+        State, "colleges", "college", college, college_id=college.public_id)
 
 
 @bp.route("/<string:college_id>/states", methods=["POST"])
@@ -236,7 +238,7 @@ def delete_college_states(college):
 @get_entity(College, "college")
 def get_college_counties(college):
     return get_location_requirement(
-        County, "colleges.college", college, college_id=college.public_id)
+        County, "colleges", "college", college, college_id=college.public_id)
 
 
 @bp.route("/<string:college_id>/counties", methods=["POST"])
@@ -258,7 +260,7 @@ def delete_college_counties(college):
 @get_entity(College, "college")
 def get_college_places(college):
     return get_location_requirement(
-        Place, "colleges.college", college, college_id=college.public_id)
+        Place, "colleges", "college", college, college_id=college.public_id)
 
 
 @bp.route("/<string:college_id>/places", methods=["POST"])
@@ -281,7 +283,8 @@ def delete_college_places(college):
 def get_college_consolidated_cities(college):
     return get_location_requirement(
         ConsolidatedCity,
-        "colleges.college",
+        "colleges",
+        "college",
         college,
         college_id=college.public_id)
 
@@ -305,7 +308,7 @@ def delete_college_consolidated_cities(college):
 @get_entity(College, "college")
 def get_college_states_blacklist(college):
     return get_locations_blacklist(
-        State, "colleges.college", college, college_id=college.public_id)
+        State, "colleges", "college", college, college_id=college.public_id)
 
 
 @bp.route("/<string:college_id>/blacklist/states", methods=["POST"])
@@ -327,7 +330,7 @@ def delete_college_states_blacklist(college):
 @get_entity(College, "college")
 def get_college_counties_blacklist(college):
     return get_locations_blacklist(
-        County, "colleges.college", college, college_id=college.public_id)
+        County, "colleges", "college", college, college_id=college.public_id)
 
 
 @bp.route("/<string:college_id>/blacklist/counties", methods=["POST"])
@@ -349,7 +352,7 @@ def delete_college_counties_blacklist(college):
 @get_entity(College, "college")
 def get_college_places_blacklist(college):
     return get_locations_blacklist(
-        Place, "colleges.college", college, college_id=college.public_id)
+        Place, "colleges", "college", college, college_id=college.public_id)
 
 
 @bp.route("/<string:college_id>/blacklist/places", methods=["POST"])
@@ -373,7 +376,8 @@ def delete_college_places_blacklist(college):
 def get_college_consolidated_cities_blacklist(college):
     return get_locations_blacklist(
         ConsolidatedCity,
-        "colleges.college",
+        "colleges",
+        "college",
         college,
         college_id=college.public_id)
 

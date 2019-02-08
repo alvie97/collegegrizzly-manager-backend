@@ -32,7 +32,8 @@ def get_entity(entity, entity_name):
     return get_entity_decorator
 
 
-def get_location_requirement(location, base_endpoint, entity, **endpoint_args):
+def get_location_requirement(location, package_name, base_endpoint, entity,
+                             **endpoint_args):
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get(
         "per_page", current_app.config["PER_PAGE"], type=int)
@@ -42,11 +43,12 @@ def get_location_requirement(location, base_endpoint, entity, **endpoint_args):
     try:
         if search:
             locations = entity.search_location_requirement(
-                search, location, base_endpoint, page, per_page,
+                search, location, package_name, base_endpoint, page, per_page,
                 **endpoint_args)
         else:
             locations = entity.get_location_requirement(
-                location, base_endpoint, page, per_page, **endpoint_args)
+                location, package_name, base_endpoint, page, per_page,
+                **endpoint_args)
 
     except LocationEntityError as err:
         print("LocationEntityError:", err)

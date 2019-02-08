@@ -1,19 +1,24 @@
+from hashlib import md5
+
+from flask import url_for
+
+from app import db, photos
+from app.common.utils import generate_public_id
+
 from .common.base_mixin import BaseMixin
 from .common.date_audit import DateAudit
-from .common.location_mixin import LocationMixin
 from .common.location_blacklist_mixin import LocationBlacklistMixin
+from .common.location_mixin import LocationMixin
 from .common.paginated_api_mixin import PaginatedAPIMixin
 from .major import Major
 from .relationship_tables import college_major
-from app import db, photos
-from flask import url_for
-from hashlib import md5
 
 
 class College(PaginatedAPIMixin, DateAudit, LocationMixin,
               LocationBlacklistMixin, BaseMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    public_id = db.Column(db.String(50), unique=True)
+    public_id = db.Column(
+        db.String(50), unique=True, default=generate_public_id)
     name = db.Column(db.String(256))
     room_and_board = db.Column(db.Numeric(8, 2), default=0)
     type_of_institution = db.Column(db.String(256), nullable=True)
@@ -142,6 +147,6 @@ class College(PaginatedAPIMixin, DateAudit, LocationMixin,
                 url_for("pictures.get_pictures", college_id=self.public_id),
                 "in_state_requirement":
                 self.location_requirement_endpoints(
-                    "colleges.college", college_id=self.public_id)
+                    "colleges", "college", college_id=self.public_id)
             }
         }

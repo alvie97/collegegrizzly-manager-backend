@@ -125,26 +125,27 @@ class LocationMixin(object):
         return location_query.filter(
             location_entity.fips_code == fips_code).count() > 0
 
-    def get_location_requirement(self, location_entity, base_endpoint, page,
-                                 per_page, **endpoint_args):
+    def get_location_requirement(self, location_entity, package_name,
+                                 base_endpoint, page, per_page,
+                                 **endpoint_args):
         """Returns paginated list of locations as a dictionary"""
 
         if location_entity is State:
             location_name = "states"
             location_query = self.location_requirement_states
-            location_url = base_endpoint + "_states"
+            location_url = f"{package_name}.get_{base_endpoint}_states"
         elif location_entity is County:
             location_name = "counties"
             location_query = self.location_requirement_counties
-            location_url = base_endpoint + "_counties"
+            location_url = f"{package_name}.get_{base_endpoint}_counties"
         elif location_entity is Place:
             location_name = "places"
             location_query = self.location_requirement_places
-            location_url = base_endpoint + "_places"
+            location_url = f"{package_name}.get_{base_endpoint}_places"
         elif location_entity is ConsolidatedCity:
             location_name = "consolidated_cities"
             location_query = self.location_requirement_consolidated_cities
-            location_url = base_endpoint + "_consolidated_cities"
+            location_url = f"{package_name}.get_{base_endpoint}_consolidated_cities"
         else:
             raise LocationEntityError(
                 "location entity is not a location model")
@@ -163,19 +164,19 @@ class LocationMixin(object):
         if location_entity is State:
             location_name = "states"
             location_query = self.location_requirement_states
-            location_url = base_endpoint + "_states"
+            location_url = f"{package_name}.get_{base_endpoint}_states"
         elif location_entity is County:
             location_name = "counties"
             location_query = self.location_requirement_counties
-            location_url = base_endpoint + "_counties"
+            location_url = f"{package_name}.get_{base_endpoint}_counties"
         elif location_entity is Place:
             location_name = "places"
             location_query = self.location_requirement_places
-            location_url = base_endpoint + "_places"
+            location_url = f"{package_name}.get_{base_endpoint}_places"
         elif location_entity is ConsolidatedCity:
             location_name = "consolidated_cities"
             location_query = self.location_requirement_consolidated_cities
-            location_url = base_endpoint + "_consolidated_cities"
+            location_url = f"{package_name}.get_{base_endpoint}_consolidated_cities"
         else:
             raise LocationEntityError(
                 "location entity is not a location model")
@@ -194,15 +195,26 @@ class LocationMixin(object):
                 **endpoint_args)
         }
 
-    def location_requirement_endpoints(self, base_endpoint, **endpoint_args):
-        """Returns all enpoints to get all location requirements"""
+    def location_requirement_endpoints(self, package_name, base_endpoint,
+                                       **endpoint_args):
+        """
+        Returns all endpoints to get all location requirements
+
+        :param package_name: name of the package that holds the routes
+        :param base_endpoint: base endpoint
+        :param endpoint_args: endpoint arguments
+        """
         return {
             "states":
-            url_for(base_endpoint + "_states", **endpoint_args),
+            url_for(f"{package_name}.get_{base_endpoint}_states",
+                    **endpoint_args),
             "counties":
-            url_for(base_endpoint + "_counties", **endpoint_args),
+            url_for(f"{package_name}.get_{base_endpoint}_counties",
+                    **endpoint_args),
             "places":
-            url_for(base_endpoint + "_places", **endpoint_args),
+            url_for(f"{package_name}.get_{base_endpoint}_places",
+                    **endpoint_args),
             "consolidated_cities":
-            url_for(base_endpoint + "_consolidated_cities", **endpoint_args)
+            url_for(f"{package_name}.get_{base_endpoint}_consolidated_cities",
+                    **endpoint_args)
         }

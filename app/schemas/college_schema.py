@@ -1,4 +1,3 @@
-from app.common.utils import generate_public_id
 from app.models.college import College
 from marshmallow import (fields, Schema, validates, ValidationError, post_load)
 
@@ -44,4 +43,4 @@ class CollegeSchema(Schema):
 
     @post_load
     def make_college(self, data):
-        return College(public_id=generate_public_id(), **data)
+        return College(**data)

@@ -23,13 +23,6 @@ def app():
 
     with app.app_context():
         db.create_all()
-        user = User(
-            username="test",
-            email="test@test.com",
-            password="test",
-            role="administrator")
-        db.session.add(user)
-        db.session.commit()
 
     yield app
 
@@ -40,30 +33,6 @@ def app():
 @pytest.fixture
 def client(app):
     return app.test_client()
-
-
-@pytest.fixture
-def college_id(app):
-    with app.app_context():
-        college = College(public_id=generate_public_id(), name="test college")
-        db.session.add(college)
-        db.session.commit()
-
-        return college.public_id
-
-
-@pytest.fixture
-def scholarship_id(app, college_id):
-    with app.app_context():
-        college = College.first(public_id=college_id)
-        scholarship = Scholarship(
-            public_id=generate_public_id(),
-            college=college,
-            name="test scholarship")
-        db.session.add(scholarship)
-        db.session.commit()
-
-        return scholarship.public_id
 
 
 class AuthActions(object):
@@ -85,5 +54,13 @@ class AuthActions(object):
 
 
 @pytest.fixture
-def auth(client):
+def auth(app, client):
+    with app.app_context():
+        user = User(
+            username="test",
+            email="test@test.com",
+            password="test",
+            role="administrator")
+        db.session.add(user)
+        db.session.commit()
     return AuthActions(client)
