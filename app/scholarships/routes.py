@@ -23,6 +23,31 @@ from . import bp
 scholarship_schema = ScholarshipSchema()
 program_schema = ProgramSchema()
 
+@bp.route("/", methods=["GET"], strict_slashes=False)
+@user_role([ADMINISTRATOR, MODERATOR, BASIC])
+def get_scholarships():
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get(
+        "per_page", current_app.config["SCHOLARSHIPS_PER_PAGE"], type=int)
+
+    search = request.args.get("search", "", type=str)
+
+    if search:
+        query = Scholarship.query.filter(
+            Scholarship.name.like("%{}%".format(search)))
+
+        data = Scholarship.to_collection_dict(
+            query,
+            page,
+            per_page,
+            "scholarships.get_scholarships",
+            search=search)
+    else:
+        query = Scholarship.query
+        data = Scholarship.to_collection_dict(query, page, per_page,
+                                              "scholarships.get_scholarships")
+
+    return jsonify(data)
 
 @bp.route("/<string:scholarship_id>")
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])
@@ -59,34 +84,6 @@ def delete_scholarship(scholarship):
     db.session.delete(scholarship)
     db.session.commit()
     return jsonify({"message": "scholarship deleted"})
-
-
-@bp.route("/", methods=["GET"], strict_slashes=False)
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-def get_scholarships():
-    page = request.args.get("page", 1, type=int)
-    per_page = request.args.get(
-        "per_page", current_app.config["SCHOLARSHIPS_PER_PAGE"], type=int)
-
-    search = request.args.get("search", "", type=str)
-
-    if search:
-        query = Scholarship.query.filter(
-            Scholarship.name.like("%{}%".format(search)))
-
-        data = Scholarship.to_collection_dict(
-            query,
-            page,
-            per_page,
-            "scholarships.get_scholarships",
-            search=search)
-    else:
-        query = Scholarship.query
-        data = Scholarship.to_collection_dict(query, page, per_page,
-                                              "scholarships.get_scholarships")
-
-    return jsonify(data)
-
 
 @bp.route("/<string:scholarship_id>/programs")
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])

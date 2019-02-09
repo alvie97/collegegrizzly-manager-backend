@@ -26,7 +26,7 @@ def test_get_colleges(app, client, auth):
 
     # login
 
-    login_response = auth.login()
+    auth.login()
 
     # get colleges
 

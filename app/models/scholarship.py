@@ -5,6 +5,7 @@ from .common.location_blacklist_mixin import LocationBlacklistMixin
 from .common.paginated_api_mixin import PaginatedAPIMixin
 from .program import Program
 from .relationship_tables import (scholarship_program, scholarships_needed)
+from app.common.utils import generate_public_id
 
 from app import db
 from flask import url_for
@@ -13,7 +14,8 @@ from flask import url_for
 class Scholarship(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
                   DateAudit, BaseMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    public_id = db.Column(db.String(50), unique=True)
+    public_id = db.Column(
+        db.String(50), unique=True, default=generate_public_id)
     name = db.Column(db.String(256))
     college_id = db.Column(db.Integer, db.ForeignKey("college.id"))
     act = db.Column(db.SmallInteger, default=0)
