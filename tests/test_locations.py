@@ -1,3 +1,4 @@
+# TODO: add tests for state counties, places and consolidated cities
 from app.models.college import College
 from app.models.consolidated_city import ConsolidatedCity
 from app.models.county import County
@@ -6,233 +7,81 @@ from app.models.scholarship import Scholarship
 from app.models.state import State
 from app.cli import _save_states
 
+url = "/api/locations"
 
-def test_location_requirements(app, client, scholarship_id):
+
+def test_states(app, client, auth):
+
     with app.app_context():
         _save_states(2)
-        scholarship = Scholarship.first(public_id=scholarship_id)
-        college_id = scholarship.college.public_id
 
-    response = client.get("/api/locations/states/search/alabama")
+        db_states = State.query.all()
 
-    assert response.status_code == 200
-    alabama = response.get_json()["state"]
-    assert alabama["name"] == "Alabama"
-    assert "fips_code" in alabama
+        auth.login()
 
-    response = client.get("/api/locations/states/02")
-    alaska = response.get_json()["state"]
+        response = client.get(url + "/states")
 
-    assert alaska["name"] == "Alaska"
+        states = response.get_json()
+        states = states["states"]["items"]
 
-    response = client.post(
-        f"/api/colleges/{college_id}/states",
-        json={"location_fips": [alabama["fips_code"], alaska["fips_code"]]})
+        for i, state in enumerate(states):
+            assert state["name"] == db_states[i].name
 
-    assert response.status_code == 200
-    assert response.get_json()["message"] == "Locations added"
+        state = State.query.first()
 
-    response = client.get(f"/api/colleges/{college_id}/states")
+        response = client.get(url + f"/states/{state.fips_code}")
+        response_state = response.get_json()["state"]
 
-    assert response.status_code == 200
-    states = response.get_json()["states"]["items"]
-
-    assert [states[0]["fips_code"], states[1]["fips_code"]] == [
-        alabama["fips_code"], alaska["fips_code"]
-    ]
-
-    response = client.post(
-        f"/api/scholarships/{scholarship_id}/states",
-        json={"location_fips": [alabama["fips_code"], alaska["fips_code"]]})
-
-    assert response.status_code == 200
-    assert response.get_json()["message"] == "Locations added"
-
-    response = client.get(f"/api/scholarships/{scholarship_id}/states")
-
-    assert response.status_code == 200
-    states = response.get_json()["states"]["items"]
-
-    assert [states[0]["fips_code"], states[1]["fips_code"]] == [
-        alabama["fips_code"], alaska["fips_code"]
-    ]
+        assert response_state["name"] == state.name
 
 
-def test_counties_requirement(app, client, scholarship_id):
+def test_counties(app, client, auth):
+
     with app.app_context():
         _save_states(1)
-        scholarship = Scholarship.first(public_id=scholarship_id)
-        college_id = scholarship.college.public_id
+        db_counties = County.query.limit(5).all()
 
-    response = client.get("/api/locations/states/search/alabama")
+        auth.login()
 
-    assert response.status_code == 200
-    alabama = response.get_json()["state"]
-    assert alabama["name"] == "Alabama"
-    assert "fips_code" in alabama
+        response = client.get(url + "/counties")
 
-    response = client.get(alabama["_links"]["counties"])
-    assert response.status_code == 200
+        counties = response.get_json()
+        counties = counties["counties"]["items"]
 
-    counties = response.get_json()["counties"]["items"]
-
-    response = client.post(
-        f"/api/colleges/{college_id}/counties",
-        json={
-            "location_fips":
-            [counties[0]["fips_code"], counties[1]["fips_code"]]
-        })
-
-    assert response.status_code == 200
-    assert response.get_json()["message"] == "Locations added"
-
-    response = client.get(f"/api/colleges/{college_id}/counties")
-
-    assert response.status_code == 200
-    counties_response = response.get_json()["counties"]["items"]
-
-    assert [
-        counties_response[0]["fips_code"], counties_response[1]["fips_code"]
-    ] == [counties[0]["fips_code"], counties[1]["fips_code"]]
-
-    response = client.post(
-        f"/api/scholarships/{scholarship_id}/counties",
-        json={
-            "location_fips":
-            [counties[0]["fips_code"], counties[1]["fips_code"]]
-        })
-
-    assert response.status_code == 200
-    assert response.get_json()["message"] == "Locations added"
-
-    response = client.get(f"/api/scholarships/{scholarship_id}/counties")
-
-    assert response.status_code == 200
-    counties_response = response.get_json()["counties"]["items"]
-
-    assert [
-        counties_response[0]["fips_code"], counties_response[1]["fips_code"]
-    ] == [counties[0]["fips_code"], counties[1]["fips_code"]]
+        for i, county in enumerate(counties):
+            assert county["name"] == db_counties[i].name
 
 
-def test_location_places(app, client, scholarship_id):
+def test_places(app, client, auth):
+
     with app.app_context():
         _save_states(1)
-        scholarship = Scholarship.first(public_id=scholarship_id)
-        college_id = scholarship.college.public_id
+        db_places = Place.query.limit(5).all()
 
-    response = client.get("/api/locations/states/search/alabama")
+        auth.login()
 
-    assert response.status_code == 200
-    alabama = response.get_json()["state"]
-    assert alabama["name"] == "Alabama"
-    assert "fips_code" in alabama
+        response = client.get(url + "/places")
 
-    response = client.get(alabama["_links"]["places"])
-    assert response.status_code == 200
+        places = response.get_json()
+        places = places["places"]["items"]
 
-    places = response.get_json()["places"]["items"]
-
-    response = client.post(
-        f"/api/colleges/{college_id}/places",
-        json={
-            "location_fips": [places[0]["fips_code"], places[1]["fips_code"]]
-        })
-
-    assert response.status_code == 200
-    assert response.get_json()["message"] == "Locations added"
-
-    response = client.get(f"/api/colleges/{college_id}/places")
-
-    assert response.status_code == 200
-    places_response = response.get_json()["places"]["items"]
-
-    assert [places_response[0]["fips_code"], places_response[1]["fips_code"]
-           ] == [places[0]["fips_code"], places[1]["fips_code"]]
-
-    response = client.post(
-        f"/api/scholarships/{scholarship_id}/places",
-        json={
-            "location_fips": [places[0]["fips_code"], places[1]["fips_code"]]
-        })
-
-    assert response.status_code == 200
-    assert response.get_json()["message"] == "Locations added"
-
-    response = client.get(f"/api/scholarships/{scholarship_id}/places")
-
-    assert response.status_code == 200
-    places_response = response.get_json()["places"]["items"]
-
-    assert [places_response[0]["fips_code"], places_response[1]["fips_code"]
-           ] == [places[0]["fips_code"], places[1]["fips_code"]]
+        for i, place in enumerate(places):
+            assert place["name"] == db_places[i].name
 
 
-def test_location_consolidated_cities(app, client, scholarship_id):
+def test_consolidated_cities(app, client, auth):
+
     with app.app_context():
-        _save_states(14)
-        scholarship = Scholarship.first(public_id=scholarship_id)
-        college_id = scholarship.college.public_id
+        _save_states(1)
+        db_consolidated_cities = ConsolidatedCity.query.limit(5).all()
 
-    response = client.get("/api/locations/states/13")
+        auth.login()
 
-    assert response.status_code == 200
-    state = response.get_json()["state"]
+        response = client.get(url + "/consolidated_cities")
 
-    response = client.get(state["_links"]["consolidated_cities"])
-    assert response.status_code == 200
+        consolidated_cities = response.get_json()
+        consolidated_cities = consolidated_cities["consolidated_cities"][
+            "items"]
 
-    consolidated_cities = response.get_json()["consolidated_cities"]["items"]
-
-    response = client.post(
-        f"/api/colleges/{college_id}/consolidated_cities",
-        json={
-            "location_fips": [
-                consolidated_cities[0]["fips_code"],
-                consolidated_cities[1]["fips_code"]
-            ]
-        })
-
-    assert response.status_code == 200
-    assert response.get_json()["message"] == "Locations added"
-
-    response = client.get(f"/api/colleges/{college_id}/consolidated_cities")
-
-    assert response.status_code == 200
-    consolidated_cities_response = response.get_json(
-    )["consolidated_cities"]["items"]
-
-    assert [
-        consolidated_cities_response[0]["fips_code"],
-        consolidated_cities_response[1]["fips_code"]
-    ] == [
-        consolidated_cities[0]["fips_code"],
-        consolidated_cities[1]["fips_code"]
-    ]
-
-    response = client.post(
-        f"/api/scholarships/{scholarship_id}/consolidated_cities",
-        json={
-            "location_fips": [
-                consolidated_cities[0]["fips_code"],
-                consolidated_cities[1]["fips_code"]
-            ]
-        })
-
-    assert response.status_code == 200
-    assert response.get_json()["message"] == "Locations added"
-
-    response = client.get(
-        f"/api/scholarships/{scholarship_id}/consolidated_cities")
-
-    assert response.status_code == 200
-    consolidated_cities_response = response.get_json(
-    )["consolidated_cities"]["items"]
-
-    assert [
-        consolidated_cities_response[0]["fips_code"],
-        consolidated_cities_response[1]["fips_code"]
-    ] == [
-        consolidated_cities[0]["fips_code"],
-        consolidated_cities[1]["fips_code"]
-    ]
+        for i, consolidated_city in enumerate(consolidated_cities):
+            assert consolidated_city["name"] == db_consolidated_cities[i].name

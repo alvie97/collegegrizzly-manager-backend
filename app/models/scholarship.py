@@ -17,7 +17,8 @@ class Scholarship(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
     public_id = db.Column(
         db.String(50), unique=True, default=generate_public_id)
     name = db.Column(db.String(256))
-    college_id = db.Column(db.Integer, db.ForeignKey("college.id"))
+    college_id = db.Column(
+        db.Integer, db.ForeignKey("college.id"), nullable=True)
     act = db.Column(db.SmallInteger, default=0)
     sat = db.Column(db.SmallInteger, default=0)
     amount = db.Column(db.String(256), nullable=True)
@@ -123,10 +124,8 @@ class Scholarship(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
 
     def to_dict(self):
         return {
-            "college_name":
-            self.college.name,
             "college_id":
-            self.college.public_id,
+            None if self.college is None else self.college.public_id,
             "editable_fields": {
                 "name":
                 self.name,
@@ -179,7 +178,7 @@ class Scholarship(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
             self.get_programs(),
             "location_requirement":
             self.location_requirement_endpoints(
-                "scholarships.scholarship", scholarship_id=self.public_id),
+                "scholarships", "scholarship", scholarship_id=self.public_id),
             "scholarships_needed":
             self.get_scholarships_needed()
         }

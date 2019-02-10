@@ -23,6 +23,7 @@ from . import bp
 scholarship_schema = ScholarshipSchema()
 program_schema = ProgramSchema()
 
+
 @bp.route("/", methods=["GET"], strict_slashes=False)
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])
 def get_scholarships():
@@ -48,6 +49,7 @@ def get_scholarships():
                                               "scholarships.get_scholarships")
 
     return jsonify(data)
+
 
 @bp.route("/<string:scholarship_id>")
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])
@@ -84,6 +86,7 @@ def delete_scholarship(scholarship):
     db.session.delete(scholarship)
     db.session.commit()
     return jsonify({"message": "scholarship deleted"})
+
 
 @bp.route("/<string:scholarship_id>/programs")
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])
@@ -225,7 +228,8 @@ def get_scholarship_states(scholarship):
 
     return get_location_requirement(
         State,
-        "scholarships.scholarship",
+        "scholarships",
+        "scholarship",
         scholarship,
         scholarship_id=scholarship.public_id)
 
@@ -251,7 +255,8 @@ def get_scholarship_counties(scholarship):
 
     return get_location_requirement(
         County,
-        "scholarships.scholarship",
+        "scholarships",
+        "scholarship",
         scholarship,
         scholarship_id=scholarship.public_id)
 
@@ -277,7 +282,7 @@ def get_scholarship_places(scholarship):
 
     return get_location_requirement(
         Place,
-        "scholarships.scholarship",
+        "scholarships", "scholarship",
         scholarship,
         scholarship_id=scholarship.public_id)
 
@@ -303,7 +308,7 @@ def get_scholarship_consolidated_cities(scholarship):
 
     return get_location_requirement(
         ConsolidatedCity,
-        "scholarships.scholarship",
+        "scholarships", "scholarship",
         scholarship,
         scholarship_id=scholarship.public_id)
 
@@ -329,7 +334,7 @@ def get_scholarship_states_blacklist(scholarship):
 
     return get_locations_blacklist(
         State,
-        "scholarships.scholarship",
+        "scholarships", "scholarship",
         scholarship,
         scholarship_id=scholarship.public_id)
 
@@ -355,7 +360,7 @@ def get_scholarship_counties_blacklist(scholarship):
 
     return get_locations_blacklist(
         County,
-        "scholarships.scholarship",
+        "scholarships", "scholarship",
         scholarship,
         scholarship_id=scholarship.public_id)
 
@@ -382,7 +387,7 @@ def get_scholarship_places_blacklist(scholarship):
 
     return get_locations_blacklist(
         Place,
-        "scholarships.scholarship",
+        "scholarships", "scholarship",
         scholarship,
         scholarship_id=scholarship.public_id)
 
@@ -409,7 +414,7 @@ def get_scholarship_consolidated_cities_blacklist(scholarship):
 
     return get_locations_blacklist(
         ConsolidatedCity,
-        "scholarships.scholarship",
+        "scholarships", "scholarship",
         scholarship,
         scholarship_id=scholarship.public_id)
 

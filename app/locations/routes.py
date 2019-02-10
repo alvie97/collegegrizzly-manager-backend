@@ -31,18 +31,6 @@ def get_states():
     return jsonify({"states": data})
 
 
-@bp.route("/states/search/<string:name>")
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-def get_state_by_name(name):
-
-    state = State.query.filter(State.name.like("%{}%".format(name))).first()
-
-    if state is not None:
-        return jsonify({"state": state.to_dict()})
-
-    return jsonify({"message": "Not state found"}), 404
-
-
 @bp.route("/states/<string:fips_code>")
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])
 def get_state(fips_code):
