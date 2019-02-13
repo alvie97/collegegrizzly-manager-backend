@@ -1,4 +1,5 @@
 from app.models.user import User
+from app import db
 
 url = "/api/users"
 
@@ -84,3 +85,123 @@ def test_crud_users(app, client, auth):
     assert users[0]["role"] == user_admin["role"]
     assert users[1]["username"] == user_moderator["username"]
     assert users[1]["role"] == user_moderator["role"]
+
+
+def test_user_role_protected_routes(app, client):
+    """ test routes protected by user roles """
+
+    user_admin = {
+        "username": "test_administrator",
+        "email": "admin@gmail.com",
+        "password": "123456",
+        "role": "administrator"
+    }
+
+    user_moderator = {
+        "username": "test_moderator",
+        "email": "moderator@gmail.com",
+        "password": "123456",
+        "role": "moderator"
+    }
+
+    user_basic = {
+        "username": "test_basic",
+        "email": "basic@gmail.com",
+        "password": "123456",
+        "role": "basic"
+    }
+
+    with app.app_context():
+
+        user = User(**user_admin)
+        db.session.add(user)
+
+        user = User(**user_moderator)
+        db.session.add(user)
+
+        user = User(**user_basic)
+        db.session.add(user)
+
+        db.session.commit()
+
+    # try only admin role routes
+
+    client.post(
+        "/auth/login",
+        data={
+            "id": user_admin["username"],
+            "password": user_admin["password"]
+        })
+
+    response = client.get("/api/users")
+
+    assert response.status_code == 200
+
+    client.post("/auth/logout", headers={"X-XSRF-TOKEN": ""})
+
+    client.post(
+        "/auth/login",
+        data={
+            "id": user_moderator["username"],
+            "password": user_moderator["password"]
+        })
+
+    response = client.get("/api/users")
+
+    assert response.status_code == 403
+
+    client.post("/auth/logout", headers={"X-XSRF-TOKEN": ""})
+
+    client.post(
+        "/auth/login",
+        data={
+            "id": user_basic["username"],
+            "password": user_basic["password"]
+        })
+
+    response = client.get("/api/users")
+
+    assert response.status_code == 403
+
+    client.post("/auth/logout", headers={"X-XSRF-TOKEN": ""})
+
+    # try routes protected from moderator role
+
+    client.post(
+        "/auth/login",
+        data={
+            "id": user_admin["username"],
+            "password": user_admin["password"]
+        })
+
+    response = client.post("/api/colleges", json={"name": "test college"})
+
+    assert response.status_code == 200
+
+    client.post("/auth/logout", headers={"X-XSRF-TOKEN": ""})
+
+    client.post(
+        "/auth/login",
+        data={
+            "id": user_moderator["username"],
+            "password": user_moderator["password"]
+        })
+
+    response = client.post("/api/colleges", json={"name": "test college"})
+
+    assert response.status_code == 403
+
+    client.post("/auth/logout", headers={"X-XSRF-TOKEN": ""})
+
+    client.post(
+        "/auth/login",
+        data={
+            "id": user_basic["username"],
+            "password": user_basic["password"]
+        })
+
+    response = client.post("/api/colleges", json={"name": "test college"})
+
+    assert response.status_code == 200
+
+    client.post("/auth/logout", headers={"X-XSRF-TOKEN": ""})
