@@ -6,6 +6,7 @@ class Program(db.Model, BaseMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(256), index=True)
     round_qualification = db.Column(db.String(256), nullable=True)
+    __str_repr__ = "program"
 
     ATTR_FIELDS = ["name", "round_qualification"]
 

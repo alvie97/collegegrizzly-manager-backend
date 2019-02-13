@@ -34,7 +34,7 @@ def get_current_user():
         return None
 
     try:
-        return jwt_claims.user_id
+        return jwt_claims["user_id"]
     except KeyError:
         return None
 

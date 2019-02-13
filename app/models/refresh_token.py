@@ -17,6 +17,7 @@ class RefreshToken(db.Model, BaseMixin):
     access_token_jti = db.Column(db.String(512))
     user_id = db.Column(db.String(256))
     revoked = db.Column(db.Boolean(), default=False)
+    __str_repr__ = "refresh_token"
 
     def __repr__(self):
         return f"<Token {self.token}>"

@@ -68,16 +68,16 @@ def post_college():
     return jsonify({"college_id": college.public_id})
 
 
-@bp.route("/<string:college_id>", methods=["GET"])
+@bp.route("/<string:public_id>", methods=["GET"])
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(College, "college")
+@get_entity(College, "public_id")
 def get_college(college):
     return jsonify({"college": college.to_dict()})
 
 
-@bp.route("/<string:college_id>", methods=["PATCH"])
+@bp.route("/<string:public_id>", methods=["PATCH"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "college")
+@get_entity(College, "public_id")
 def patch_college(college):
     data = request.get_json() or {}
 
@@ -94,9 +94,9 @@ def patch_college(college):
     return jsonify("college saved successfully")
 
 
-@bp.route("/<string:college_id>", methods=["DELETE"])
+@bp.route("/<string:public_id>", methods=["DELETE"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "college")
+@get_entity(College, "public_id")
 def delete_college(college):
     college.delete()
     db.session.commit()
@@ -104,9 +104,9 @@ def delete_college(college):
     return jsonify({"message": "college deleted"})
 
 
-@bp.route("/<string:college_id>/scholarships", methods=["GET"])
+@bp.route("/<string:public_id>/scholarships", methods=["GET"])
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(College, "college")
+@get_entity(College, "public_id")
 def get_college_scholarships(college):
 
     page = request.args.get("page", 1, type=int)
@@ -132,8 +132,8 @@ def get_college_scholarships(college):
     return jsonify({"scholarships": data})
 
 
-@bp.route("/<string:college_id>/scholarships", methods=["POST"])
-@get_entity(College, "college")
+@bp.route("/<string:public_id>/scholarships", methods=["POST"])
+@get_entity(College, "public_id")
 def post_college_scholarship(college):
     data = request.get_json()
 
@@ -154,15 +154,15 @@ def post_college_scholarship(college):
     return jsonify({"scholarship_id": scholarship.public_id})
 
 
-@bp.route("/<string:college_id>/majors", methods=["GET"])
+@bp.route("/<string:public_id>/majors", methods=["GET"])
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(College, "college")
+@get_entity(College, "public_id")
 def get_college_majors(college):
     return jsonify({"majors": college.get_majors()})
 
 
-@bp.route("/<string:college_id>/majors", methods=["POST"])
-@get_entity(College, "college")
+@bp.route("/<string:public_id>/majors", methods=["POST"])
+@get_entity(College, "public_id")
 def post_college_majors(college):
     data = request.get_json() or {}
 
@@ -188,8 +188,8 @@ def post_college_majors(college):
     return jsonify({"message": "majors added"})
 
 
-@bp.route("/<string:college_id>/majors", methods=["DELETE"])
-@get_entity(College, "college")
+@bp.route("/<string:public_id>/majors", methods=["DELETE"])
+@get_entity(College, "public_id")
 def delete_college_majors(college):
     data = request.get_json() or {}
 
@@ -211,189 +211,188 @@ def delete_college_majors(college):
     return jsonify({"message": "majors removed"})
 
 
-@bp.route("/<string:college_id>/states", methods=["GET"])
+@bp.route("/<string:public_id>/states", methods=["GET"])
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(College, "college")
+@get_entity(College, "public_id")
 def get_college_states(college):
     return get_location_requirement(
-        State, "colleges", "college", college, college_id=college.public_id)
+        State, "colleges", "college", college, public_id=college.public_id)
 
 
-@bp.route("/<string:college_id>/states", methods=["POST"])
+@bp.route("/<string:public_id>/states", methods=["POST"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "college")
+@get_entity(College, "public_id")
 def post_college_states(college):
     return post_location_requirement(State, college)
 
 
-@bp.route("/<string:college_id>/states", methods=["DELETE"])
+@bp.route("/<string:public_id>/states", methods=["DELETE"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "college")
+@get_entity(College, "public_id")
 def delete_college_states(college):
     return delete_location_requirement(State, college)
 
 
-@bp.route("/<string:college_id>/counties", methods=["GET"])
+@bp.route("/<string:public_id>/counties", methods=["GET"])
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(College, "college")
+@get_entity(College, "public_id")
 def get_college_counties(college):
     return get_location_requirement(
-        County, "colleges", "college", college, college_id=college.public_id)
+        County, "colleges", "college", college, public_id=college.public_id)
 
 
-@bp.route("/<string:college_id>/counties", methods=["POST"])
+@bp.route("/<string:public_id>/counties", methods=["POST"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "college")
+@get_entity(College, "public_id")
 def post_college_counties(college):
     return post_location_requirement(County, college)
 
 
-@bp.route("/<string:college_id>/counties", methods=["DELETE"])
+@bp.route("/<string:public_id>/counties", methods=["DELETE"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "college")
+@get_entity(College, "public_id")
 def delete_college_counties(college):
     return delete_location_requirement(County, college)
 
 
-@bp.route("/<string:college_id>/places", methods=["GET"])
+@bp.route("/<string:public_id>/places", methods=["GET"])
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(College, "college")
+@get_entity(College, "public_id")
 def get_college_places(college):
     return get_location_requirement(
-        Place, "colleges", "college", college, college_id=college.public_id)
+        Place, "colleges", "college", college, public_id=college.public_id)
 
 
-@bp.route("/<string:college_id>/places", methods=["POST"])
+@bp.route("/<string:public_id>/places", methods=["POST"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "college")
+@get_entity(College, "public_id")
 def post_college_places(college):
     return post_location_requirement(Place, college)
 
 
-@bp.route("/<string:college_id>/places", methods=["DELETE"])
+@bp.route("/<string:public_id>/places", methods=["DELETE"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "college")
+@get_entity(College, "public_id")
 def delete_college_places(college):
     return delete_location_requirement(Place, college)
 
 
-@bp.route("/<string:college_id>/consolidated_cities", methods=["GET"])
+@bp.route("/<string:public_id>/consolidated_cities", methods=["GET"])
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(College, "college")
+@get_entity(College, "public_id")
 def get_college_consolidated_cities(college):
     return get_location_requirement(
         ConsolidatedCity,
         "colleges",
         "college",
         college,
-        college_id=college.public_id)
+        public_id=college.public_id)
 
 
-@bp.route("/<string:college_id>/consolidated_cities", methods=["POST"])
+@bp.route("/<string:public_id>/consolidated_cities", methods=["POST"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "college")
+@get_entity(College, "public_id")
 def post_college_consolidated_cities(college):
     return post_location_requirement(ConsolidatedCity, college)
 
 
-@bp.route("/<string:college_id>/consolidated_cities", methods=["DELETE"])
+@bp.route("/<string:public_id>/consolidated_cities", methods=["DELETE"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "college")
+@get_entity(College, "public_id")
 def delete_college_consolidated_cities(college):
     return delete_location_requirement(ConsolidatedCity, college)
 
 
-@bp.route("/<string:college_id>/blacklist/states", methods=["GET"])
+@bp.route("/<string:public_id>/blacklist/states", methods=["GET"])
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(College, "college")
+@get_entity(College, "public_id")
 def get_college_states_blacklist(college):
     return get_locations_blacklist(
-        State, "colleges", "college", college, college_id=college.public_id)
+        State, "colleges", "college", college, public_id=college.public_id)
 
 
-@bp.route("/<string:college_id>/blacklist/states", methods=["POST"])
+@bp.route("/<string:public_id>/blacklist/states", methods=["POST"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "college")
+@get_entity(College, "public_id")
 def post_college_states_blacklist(college):
     return post_locations_blacklist(State, college)
 
 
-@bp.route("/<string:college_id>/blacklist/states", methods=["DELETE"])
+@bp.route("/<string:public_id>/blacklist/states", methods=["DELETE"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "college")
+@get_entity(College, "public_id")
 def delete_college_states_blacklist(college):
     return delete_locations_blacklist(State, college)
 
 
-@bp.route("/<string:college_id>/blacklist/counties", methods=["GET"])
+@bp.route("/<string:public_id>/blacklist/counties", methods=["GET"])
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(College, "college")
+@get_entity(College, "public_id")
 def get_college_counties_blacklist(college):
     return get_locations_blacklist(
-        County, "colleges", "college", college, college_id=college.public_id)
+        County, "colleges", "college", college, public_id=college.public_id)
 
 
-@bp.route("/<string:college_id>/blacklist/counties", methods=["POST"])
+@bp.route("/<string:public_id>/blacklist/counties", methods=["POST"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "college")
+@get_entity(College, "public_id")
 def post_college_counties_blacklist(college):
     return post_locations_blacklist(County, college)
 
 
-@bp.route("/<string:college_id>/blacklist/counties", methods=["DELETE"])
+@bp.route("/<string:public_id>/blacklist/counties", methods=["DELETE"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "college")
+@get_entity(College, "public_id")
 def delete_college_counties_blacklist(college):
     return delete_locations_blacklist(County, college)
 
 
-@bp.route("/<string:college_id>/blacklist/places", methods=["GET"])
+@bp.route("/<string:public_id>/blacklist/places", methods=["GET"])
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(College, "college")
+@get_entity(College, "public_id")
 def get_college_places_blacklist(college):
     return get_locations_blacklist(
-        Place, "colleges", "college", college, college_id=college.public_id)
+        Place, "colleges", "college", college, public_id=college.public_id)
 
 
-@bp.route("/<string:college_id>/blacklist/places", methods=["POST"])
+@bp.route("/<string:public_id>/blacklist/places", methods=["POST"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "college")
+@get_entity(College, "public_id")
 def post_college_places_blacklist(college):
     return post_locations_blacklist(Place, college)
 
 
-@bp.route("/<string:college_id>/blacklist/places", methods=["DELETE"])
+@bp.route("/<string:public_id>/blacklist/places", methods=["DELETE"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "college")
+@get_entity(College, "public_id")
 def delete_college_places_blacklist(college):
     return delete_locations_blacklist(Place, college)
 
 
-@bp.route(
-    "/<string:college_id>/blacklist/consolidated_cities", methods=["GET"])
+@bp.route("/<string:public_id>/blacklist/consolidated_cities", methods=["GET"])
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(College, "college")
+@get_entity(College, "public_id")
 def get_college_consolidated_cities_blacklist(college):
     return get_locations_blacklist(
         ConsolidatedCity,
         "colleges",
         "college",
         college,
-        college_id=college.public_id)
+        public_id=college.public_id)
 
 
 @bp.route(
-    "/<string:college_id>/blacklist/consolidated_cities", methods=["POST"])
+    "/<string:public_id>/blacklist/consolidated_cities", methods=["POST"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "college")
+@get_entity(College, "public_id")
 def post_college_consolidated_cities_blacklist(college):
     return post_locations_blacklist(ConsolidatedCity, college)
 
 
 @bp.route(
-    "/<string:college_id>/blacklist/consolidated_cities", methods=["DELETE"])
+    "/<string:public_id>/blacklist/consolidated_cities", methods=["DELETE"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "college")
+@get_entity(College, "public_id")
 def delete_college_consolidated_cities_blacklist(college):
     return delete_locations_blacklist(ConsolidatedCity, college)
 

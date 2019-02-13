@@ -11,19 +11,22 @@ def generate_public_id():
     return str(uuid4()).replace('-', '')
 
 
-def get_entity(entity, entity_name):
+def get_entity(entity, search_key):
 
     def get_entity_decorator(f):
 
         @wraps(f)
         def f_wrapper(*args, **kwargs):
-            entity_obj = entity.first(public_id=kwargs[entity_name + "_id"])
+            search_arguments = {search_key: kwargs[search_key]}
+            entity_obj = entity.first(**search_arguments)
 
             if entity_obj is None:
-                return jsonify({"message": entity_name + " not found"}), 404
+                return jsonify({
+                    "message": entity.__str_repr__ + " not found"
+                }), 404
 
-            kwargs[entity_name] = entity_obj
-            del kwargs[entity_name + "_id"]
+            kwargs[entity.__str_repr__] = entity_obj
+            del kwargs[search_key]
 
             return f(*args, **kwargs)
 
@@ -99,7 +102,8 @@ def delete_location_requirement(location, entity):
     return jsonify({"message": "Locations removed"})
 
 
-def get_locations_blacklist(location, base_endpoint, entity, **endpoint_args):
+def get_locations_blacklist(location, package_name, base_endpoint, entity,
+                            **endpoint_args):
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get(
         "per_page", current_app.config["PER_PAGE"], type=int)
@@ -109,11 +113,12 @@ def get_locations_blacklist(location, base_endpoint, entity, **endpoint_args):
     try:
         if search:
             locations = entity.search_locations_blacklist(
-                search, location, base_endpoint, page, per_page,
+                search, location, package_name, base_endpoint, page, per_page,
                 **endpoint_args)
         else:
             locations = entity.get_locations_blacklist(
-                location, base_endpoint, page, per_page, **endpoint_args)
+                location, package_name, base_endpoint, page, per_page,
+                **endpoint_args)
 
     except LocationEntityError as err:
         print("LocationEntityError:", err)

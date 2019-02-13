@@ -127,26 +127,27 @@ class LocationBlacklistMixin(object):
         return location_query.filter(
             location_entity.fips_code == fips_code).count() > 0
 
-    def get_locations_blacklist(self, location_entity, base_endpoint, page,
-                                per_page, **endpoint_args):
+    def get_locations_blacklist(self, location_entity, package_name,
+                                base_endpoint, page, per_page,
+                                **endpoint_args):
         """Returns paginated list of locations as a dictionary"""
 
         if location_entity is State:
             location_name = "states"
             location_query = self.states_blacklist
-            location_url = base_endpoint + "_states_blacklist"
+            location_url = f"{package_name}.get_{base_endpoint}_states_blacklist"
         elif location_entity is County:
             location_name = "counties"
             location_query = self.counties_blacklist
-            location_url = base_endpoint + "_counties_blacklist"
+            location_url = f"{package_name}.get_{base_endpoint}_counties_blacklist"
         elif location_entity is Place:
             location_name = "places"
             location_query = self.places_blacklist
-            location_url = base_endpoint + "_places_blacklist"
+            location_url = f"{package_name}.get_{base_endpoint}_places_blacklist"
         elif location_entity is ConsolidatedCity:
             location_name = "consolidated_cities"
             location_query = self.consolidated_cities_blacklist
-            location_url = base_endpoint + "_consolidated_cities_blacklist"
+            location_url = f"{package_name}.get_{base_endpoint}_consolidated_cities_blacklist"
         else:
             raise LocationEntityError(
                 "location entity is not a location model")
@@ -158,26 +159,26 @@ class LocationBlacklistMixin(object):
         }
 
     def search_location_in_blacklist(self, search, location_entity,
-                                     base_endpoint, page, per_page,
-                                     **endpoint_args):
+                                     package_name, base_endpoint, page,
+                                     per_page, **endpoint_args):
         """Returns paginated list of locations as a dictionary"""
 
         if location_entity is State:
             location_name = "states"
             location_query = self.states_blacklist
-            location_url = base_endpoint + "_states_blacklist"
+            location_url = f"{package_name}.get_{base_endpoint}_states_blacklist"
         elif location_entity is County:
             location_name = "counties"
             location_query = self.counties_blacklist
-            location_url = base_endpoint + "_counties_blacklist"
+            location_url = f"{package_name}.get_{base_endpoint}_counties_blacklist"
         elif location_entity is Place:
             location_name = "places"
             location_query = self.places_blacklist
-            location_url = base_endpoint + "_places_blacklist"
+            location_url = f"{package_name}.get_{base_endpoint}_places_blacklist"
         elif location_entity is ConsolidatedCity:
             location_name = "consolidated_cities"
             location_query = self.consolidated_cities_blacklist
-            location_url = base_endpoint + "_consolidated_cities_blacklist"
+            location_url = f"{package_name}.get_{base_endpoint}_consolidated_cities_blacklist"
         else:
             raise LocationEntityError(
                 "location entity is not a location model")
@@ -196,16 +197,21 @@ class LocationBlacklistMixin(object):
                 **endpoint_args)
         }
 
-    def locations_blacklist_endpoints(self, base_endpoint, **endpoint_args):
+    def locations_blacklist_endpoints(self, package_name, base_endpoint,
+                                      **endpoint_args):
         """Returns all enpoints to get all location requirements"""
         return {
             "states":
-            url_for(base_endpoint + "_states_blacklist", **endpoint_args),
+            url_for(f"{package_name}.get_{base_endpoint}_states_blacklist",
+                    **endpoint_args),
             "counties":
-            url_for(base_endpoint + "_counties_blacklist", **endpoint_args),
+            url_for(f"{package_name}.get_{base_endpoint}_counties_blacklist",
+                    **endpoint_args),
             "places":
-            url_for(base_endpoint + "_places_blacklist", **endpoint_args),
+            url_for(f"{package_name}.get_{base_endpoint}_places_blacklist",
+                    **endpoint_args),
             "consolidated_cities":
-            url_for(base_endpoint + "_consolidated_cities_blacklist",
-                    **endpoint_args)
+            url_for(
+                f"{package_name}.get_{base_endpoint}_consolidated_cities_blacklist",
+                **endpoint_args)
         }

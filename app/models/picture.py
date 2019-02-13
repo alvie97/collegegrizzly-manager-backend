@@ -14,6 +14,7 @@ class Picture(PaginatedAPIMixin, BaseMixin, DateAudit, db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
     type = db.Column(db.String(256), default="campus")
     college_id = db.Column(db.Integer, db.ForeignKey("college.id"))
+    __str_repr__ = "picture"
 
     ATTR_FIELDS = ["type"]
 

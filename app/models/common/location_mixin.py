@@ -157,8 +157,8 @@ class LocationMixin(object):
         }
 
     def search_location_requirement(self, search, location_entity,
-                                    base_endpoint, page, per_page,
-                                    **endpoint_args):
+                                    package_name, base_endpoint, page,
+                                    per_page, **endpoint_args):
         """Returns paginated list of locations as a dictionary"""
 
         if location_entity is State:

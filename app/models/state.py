@@ -8,6 +8,7 @@ class State(db.Model, PaginatedAPIMixin, BaseMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(256))
     fips_code = db.Column(db.String(10), index=True, unique=True)
+    __str_repr__ = "state"
     counties = db.relationship("County", backref="state", lazy="dynamic")
     places = db.relationship("Place", backref="state", lazy="dynamic")
     consolidated_cities = db.relationship(

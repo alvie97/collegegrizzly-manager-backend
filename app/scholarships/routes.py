@@ -51,17 +51,17 @@ def get_scholarships():
     return jsonify(data)
 
 
-@bp.route("/<string:scholarship_id>")
+@bp.route("/<string:public_id>")
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(Scholarship, "scholarship")
+@get_entity(Scholarship, "public_id")
 def get_scholarship(scholarship):
 
     return jsonify({"scholarship": scholarship.to_dict()})
 
 
-@bp.route("/<string:scholarship_id>", methods=["PATCH"])
+@bp.route("/<string:public_id>", methods=["PATCH"])
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(Scholarship, "scholarship")
+@get_entity(Scholarship, "public_id")
 def patch_scholarship(scholarship):
     data = request.get_json()
 
@@ -78,9 +78,9 @@ def patch_scholarship(scholarship):
     return jsonify("Scholarship saved successfully")
 
 
-@bp.route("/<string:scholarship_id>", methods=["DELETE"])
+@bp.route("/<string:public_id>", methods=["DELETE"])
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(Scholarship, "scholarship")
+@get_entity(Scholarship, "public_id")
 def delete_scholarship(scholarship):
 
     db.session.delete(scholarship)
@@ -88,15 +88,15 @@ def delete_scholarship(scholarship):
     return jsonify({"message": "scholarship deleted"})
 
 
-@bp.route("/<string:scholarship_id>/programs")
+@bp.route("/<string:public_id>/programs")
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(Scholarship, "scholarship")
+@get_entity(Scholarship, "public_id")
 def get_scholarship_programs(scholarship):
     return jsonify({"programs": scholarship.get_programs()})
 
 
-@bp.route("/<string:scholarship_id>/programs", methods=["POST"])
-@get_entity(Scholarship, "scholarship")
+@bp.route("/<string:public_id>/programs", methods=["POST"])
+@get_entity(Scholarship, "public_id")
 def post_scholarship_programs(scholarship):
     program = request.get_json() or {}
 
@@ -122,9 +122,9 @@ def post_scholarship_programs(scholarship):
     return jsonify({"message": "programs added"})
 
 
-@bp.route("/<string:scholarship_id>/programs", methods=["DELETE"])
+@bp.route("/<string:public_id>/programs", methods=["DELETE"])
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(Scholarship, "scholarship")
+@get_entity(Scholarship, "public_id")
 def delete_scholarship_programs(scholarship):
     data = request.get_json() or {}
 
@@ -166,9 +166,9 @@ def programs_suggestions_round(query):
     })
 
 
-@bp.route("/<string:scholarship_id>/scholarships_needed")
+@bp.route("/<string:public_id>/scholarships_needed")
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(Scholarship, "scholarship")
+@get_entity(Scholarship, "public_id")
 def get(scholarship):
 
     return jsonify({
@@ -176,9 +176,9 @@ def get(scholarship):
     })
 
 
-@bp.route("/<string:scholarship_id>/scholarships_needed", methods=["POST"])
+@bp.route("/<string:public_id>/scholarships_needed", methods=["POST"])
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(Scholarship, "scholarship")
+@get_entity(Scholarship, "public_id")
 def post(scholarship):
     data = request.get_json() or {}
 
@@ -201,9 +201,9 @@ def post(scholarship):
     return jsonify({"message": "needed scholarships added"})
 
 
-@bp.route("/<string:scholarship_id>/scholarships_needed", methods=["DELETE"])
+@bp.route("/<string:public_id>/scholarships_needed", methods=["DELETE"])
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(Scholarship, "scholarship")
+@get_entity(Scholarship, "public_id")
 def delete(scholarship):
     data = request.get_json() or {}
 
@@ -221,9 +221,9 @@ def delete(scholarship):
     return jsonify({"message": "needed scholarships removed"})
 
 
-@bp.route("/<string:scholarship_id>/states", methods=["GET"])
+@bp.route("/<string:public_id>/states", methods=["GET"])
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(Scholarship, "scholarship")
+@get_entity(Scholarship, "public_id")
 def get_scholarship_states(scholarship):
 
     return get_location_requirement(
@@ -231,26 +231,26 @@ def get_scholarship_states(scholarship):
         "scholarships",
         "scholarship",
         scholarship,
-        scholarship_id=scholarship.public_id)
+        public_id=scholarship.public_id)
 
 
-@bp.route("/<string:scholarship_id>/states", methods=["POST"])
+@bp.route("/<string:public_id>/states", methods=["POST"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "scholarship")
+@get_entity(Scholarship, "public_id")
 def post_scholarship_states(scholarship):
     return post_location_requirement(State, scholarship)
 
 
-@bp.route("/<string:scholarship_id>/states", methods=["DELETE"])
+@bp.route("/<string:public_id>/states", methods=["DELETE"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "scholarship")
+@get_entity(Scholarship, "public_id")
 def delete_scholarship_states(scholarship):
     return delete_location_requirement(State, scholarship)
 
 
-@bp.route("/<string:scholarship_id>/counties", methods=["GET"])
+@bp.route("/<string:public_id>/counties", methods=["GET"])
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(Scholarship, "scholarship")
+@get_entity(Scholarship, "public_id")
 def get_scholarship_counties(scholarship):
 
     return get_location_requirement(
@@ -258,179 +258,183 @@ def get_scholarship_counties(scholarship):
         "scholarships",
         "scholarship",
         scholarship,
-        scholarship_id=scholarship.public_id)
+        public_id=scholarship.public_id)
 
 
-@bp.route("/<string:scholarship_id>/counties", methods=["POST"])
+@bp.route("/<string:public_id>/counties", methods=["POST"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "scholarship")
+@get_entity(Scholarship, "public_id")
 def post_scholarship_counties(scholarship):
     return post_location_requirement(County, scholarship)
 
 
-@bp.route("/<string:scholarship_id>/counties", methods=["DELETE"])
+@bp.route("/<string:public_id>/counties", methods=["DELETE"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "scholarship")
+@get_entity(Scholarship, "public_id")
 def delete_scholarship_counties(scholarship):
     return delete_location_requirement(County, scholarship)
 
 
-@bp.route("/<string:scholarship_id>/places", methods=["GET"])
+@bp.route("/<string:public_id>/places", methods=["GET"])
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(Scholarship, "scholarship")
+@get_entity(Scholarship, "public_id")
 def get_scholarship_places(scholarship):
 
     return get_location_requirement(
         Place,
-        "scholarships", "scholarship",
+        "scholarships",
+        "scholarship",
         scholarship,
-        scholarship_id=scholarship.public_id)
+        public_id=scholarship.public_id)
 
 
-@bp.route("/<string:scholarship_id>/places", methods=["POST"])
+@bp.route("/<string:public_id>/places", methods=["POST"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "scholarship")
+@get_entity(Scholarship, "public_id")
 def post_scholarship_places(scholarship):
     return post_location_requirement(Place, scholarship)
 
 
-@bp.route("/<string:scholarship_id>/places", methods=["DELETE"])
+@bp.route("/<string:public_id>/places", methods=["DELETE"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "scholarship")
+@get_entity(Scholarship, "public_id")
 def delete_scholarship_places(scholarship):
     return delete_location_requirement(Place, scholarship)
 
 
-@bp.route("/<string:scholarship_id>/consolidated_cities", methods=["GET"])
+@bp.route("/<string:public_id>/consolidated_cities", methods=["GET"])
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(Scholarship, "scholarship")
+@get_entity(Scholarship, "public_id")
 def get_scholarship_consolidated_cities(scholarship):
 
     return get_location_requirement(
         ConsolidatedCity,
-        "scholarships", "scholarship",
+        "scholarships",
+        "scholarship",
         scholarship,
-        scholarship_id=scholarship.public_id)
+        public_id=scholarship.public_id)
 
 
-@bp.route("/<string:scholarship_id>/consolidated_cities", methods=["POST"])
+@bp.route("/<string:public_id>/consolidated_cities", methods=["POST"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "scholarship")
+@get_entity(Scholarship, "public_id")
 def post_scholarship_consolidated_cities(scholarship):
     return post_location_requirement(ConsolidatedCity, scholarship)
 
 
-@bp.route("/<string:scholarship_id>/consolidated_cities", methods=["DELETE"])
+@bp.route("/<string:public_id>/consolidated_cities", methods=["DELETE"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "scholarship")
+@get_entity(Scholarship, "public_id")
 def delete_scholarship_consolidated_cities(scholarship):
     return delete_location_requirement(ConsolidatedCity, scholarship)
 
 
-@bp.route("/<string:scholarship_id>/blacklist/states", methods=["GET"])
+@bp.route("/<string:public_id>/blacklist/states", methods=["GET"])
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(Scholarship, "scholarship")
+@get_entity(Scholarship, "public_id")
 def get_scholarship_states_blacklist(scholarship):
 
     return get_locations_blacklist(
         State,
-        "scholarships", "scholarship",
+        "scholarships",
+        "scholarship",
         scholarship,
-        scholarship_id=scholarship.public_id)
+        public_id=scholarship.public_id)
 
 
-@bp.route("/<string:scholarship_id>/blacklist/states", methods=["POST"])
+@bp.route("/<string:public_id>/blacklist/states", methods=["POST"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "scholarship")
+@get_entity(Scholarship, "public_id")
 def post_scholarship_states_blacklist(scholarship):
     return post_locations_blacklist(State, scholarship)
 
 
-@bp.route("/<string:scholarship_id>/blacklist/states", methods=["DELETE"])
+@bp.route("/<string:public_id>/blacklist/states", methods=["DELETE"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "scholarship")
+@get_entity(Scholarship, "public_id")
 def delete_scholarship_states_blacklist(scholarship):
     return delete_locations_blacklist(State, scholarship)
 
 
-@bp.route("/<string:scholarship_id>/blacklist/counties", methods=["GET"])
+@bp.route("/<string:public_id>/blacklist/counties", methods=["GET"])
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(Scholarship, "scholarship")
+@get_entity(Scholarship, "public_id")
 def get_scholarship_counties_blacklist(scholarship):
 
     return get_locations_blacklist(
         County,
-        "scholarships", "scholarship",
+        "scholarships",
+        "scholarship",
         scholarship,
-        scholarship_id=scholarship.public_id)
+        public_id=scholarship.public_id)
 
 
-@bp.route("/<string:scholarship_id>/blacklist/counties", methods=["POST"])
+@bp.route("/<string:public_id>/blacklist/counties", methods=["POST"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "scholarship")
+@get_entity(Scholarship, "public_id")
 def post_scholarship_counties_blacklist(scholarship):
     return post_locations_blacklist(County, scholarship)
 
 
-@bp.route("/<string:scholarship_id>/blacklist/counties", methods=["DELETE"])
+@bp.route("/<string:public_id>/blacklist/counties", methods=["DELETE"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "scholarship")
+@get_entity(Scholarship, "public_id")
 def delete_scholarship_counties_blacklist(scholarship):
     return delete_locations_blacklist(County, scholarship)
 
 
-@bp.route("/<string:scholarship_id>/blacklist/places", methods=["GET"])
+@bp.route("/<string:public_id>/blacklist/places", methods=["GET"])
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "scholarship")
+@get_entity(Scholarship, "public_id")
 def get_scholarship_places_blacklist(scholarship):
 
     return get_locations_blacklist(
         Place,
-        "scholarships", "scholarship",
+        "scholarships",
+        "scholarship",
         scholarship,
-        scholarship_id=scholarship.public_id)
+        public_id=scholarship.public_id)
 
 
-@bp.route("/<string:scholarship_id>/blacklist/places", methods=["POST"])
+@bp.route("/<string:public_id>/blacklist/places", methods=["POST"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "scholarship")
+@get_entity(Scholarship, "public_id")
 def post_scholarship_places_blacklist(scholarship):
     return post_locations_blacklist(Place, scholarship)
 
 
-@bp.route("/<string:scholarship_id>/blacklist/places", methods=["DELETE"])
+@bp.route("/<string:public_id>/blacklist/places", methods=["DELETE"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "scholarship")
+@get_entity(Scholarship, "public_id")
 def delete_scholarship_places_blacklist(scholarship):
     return delete_locations_blacklist(Place, scholarship)
 
 
-@bp.route(
-    "/<string:scholarship_id>/blacklist/consolidated_cities", methods=["GET"])
+@bp.route("/<string:public_id>/blacklist/consolidated_cities", methods=["GET"])
 @user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(Scholarship, "scholarship")
+@get_entity(Scholarship, "public_id")
 def get_scholarship_consolidated_cities_blacklist(scholarship):
 
     return get_locations_blacklist(
         ConsolidatedCity,
-        "scholarships", "scholarship",
+        "scholarships",
+        "scholarship",
         scholarship,
-        scholarship_id=scholarship.public_id)
+        public_id=scholarship.public_id)
 
 
 @bp.route(
-    "/<string:scholarship_id>/blacklist/consolidated_cities", methods=["POST"])
+    "/<string:public_id>/blacklist/consolidated_cities", methods=["POST"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "scholarship")
+@get_entity(Scholarship, "public_id")
 def post_scholarship_consolidated_cities_blacklist(scholarship):
     return post_locations_blacklist(ConsolidatedCity, scholarship)
 
 
 @bp.route(
-    "/<string:scholarship_id>/blacklist/consolidated_cities",
-    methods=["DELETE"])
+    "/<string:public_id>/blacklist/consolidated_cities", methods=["DELETE"])
 @user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "scholarship")
+@get_entity(Scholarship, "public_id")
 def delete_scholarship_consolidated_cities_blacklist(scholarship):
     return delete_locations_blacklist(ConsolidatedCity, scholarship)

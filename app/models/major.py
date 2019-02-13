@@ -7,6 +7,7 @@ class Major(db.Model, PaginatedAPIMixin, BaseMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(256), unique=True, index=True)
     description = db.Column(db.Text, nullable=True)
+    __str_repr__ = "major"
 
     ATTR_FIELDS = ["name", "description"]
 

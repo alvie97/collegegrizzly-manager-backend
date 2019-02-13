@@ -3,6 +3,7 @@ from .common.base_mixin import BaseMixin
 from .common.date_audit import DateAudit
 
 from app import db
+from app.common.utils import generate_public_id
 from datetime import datetime
 from hashlib import md5
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -10,12 +11,14 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 class User(PaginatedAPIMixin, BaseMixin, DateAudit, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    public_id = db.Column(db.String(50), index=True, unique=True)
+    public_id = db.Column(
+        db.String(50), index=True, unique=True, default=generate_public_id)
     username = db.Column(db.String(120), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(128))
     last_session = db.Column(db.DateTime, default=datetime.utcnow)
     role = db.Column(db.String(256), default="basic")
+    __str_repr__ = "user"
 
     ATTR_FIELDS = ["email", "role"]
 

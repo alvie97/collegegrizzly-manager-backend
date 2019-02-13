@@ -7,6 +7,7 @@ class CollegeDetails(db.Model, DateAudit, BaseMixin):
     id = db.Column(db.Integer, primary_key=True)
     status = db.Column(db.String(256), nullable=True)
     college_id = db.Column(db.Integer, db.ForeignKey("college.id"))
+    __str_repr__ = "college_details"
 
     ATTR_FIELDS = ["status"]
 

@@ -40,6 +40,7 @@ class Scholarship(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
     type = db.Column(db.String(256))
     description = db.Column(db.Text)
     ethnicity = db.Column(db.String(256), nullable=True)
+    __str_repr__ = "scholarship"
     programs = db.relationship(
         "Program",
         secondary=scholarship_program,
@@ -104,7 +105,7 @@ class Scholarship(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
             "url":
             url_for(
                 "scholarships.get_scholarship",
-                scholarship_id=scholarship.public_id)
+                public_id=scholarship.public_id)
         } for scholarship in self.scholarships_needed.all()]
 
     def get_programs(self):
@@ -117,8 +118,7 @@ class Scholarship(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
             **self.audit_dates(), "_links": {
                 "scholarship":
                 url_for(
-                    "scholarships.get_scholarship",
-                    scholarship_id=self.public_id)
+                    "scholarships.get_scholarship", public_id=self.public_id)
             }
         }
 
@@ -178,7 +178,7 @@ class Scholarship(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,
             self.get_programs(),
             "location_requirement":
             self.location_requirement_endpoints(
-                "scholarships", "scholarship", scholarship_id=self.public_id),
+                "scholarships", "scholarship", public_id=self.public_id),
             "scholarships_needed":
             self.get_scholarships_needed()
         }

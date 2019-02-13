@@ -8,6 +8,7 @@ class Place(db.Model, BaseMixin, PaginatedAPIMixin):
     name = db.Column(db.String(256))
     fips_code = db.Column(db.String(10), index=True, unique=True)
     state_id = db.Column(db.Integer, db.ForeignKey("state.id"))
+    __str_repr__ = "place"
 
     ATTR_FIELDS = ["name", "fips_code"]
 

@@ -33,6 +33,7 @@ class College(PaginatedAPIMixin, DateAudit, LocationMixin,
     unweighted_hs_gpa = db.Column(db.Numeric(4, 2), default=0)
     sat = db.Column(db.Integer, default=0)
     act = db.Column(db.Integer, default=0)
+    __str_repr__ = "college"
     scholarships = db.relationship(
         "Scholarship",
         backref="college",
@@ -113,7 +114,7 @@ class College(PaginatedAPIMixin, DateAudit, LocationMixin,
             **self.audit_dates(), "logo": self.get_logo(),
             "_links": {
                 "get_college":
-                url_for("colleges.get_college", college_id=self.public_id)
+                url_for("colleges.get_college", public_id=self.public_id)
             }
         }
 
@@ -142,11 +143,11 @@ class College(PaginatedAPIMixin, DateAudit, LocationMixin,
                 "scholarships":
                 url_for(
                     "colleges.get_college_scholarships",
-                    college_id=self.public_id),
+                    public_id=self.public_id),
                 "pictures":
-                url_for("pictures.get_pictures", college_id=self.public_id),
+                url_for("pictures.get_pictures", public_id=self.public_id),
                 "in_state_requirement":
                 self.location_requirement_endpoints(
-                    "colleges", "college", college_id=self.public_id)
+                    "colleges", "college", public_id=self.public_id)
             }
         }
