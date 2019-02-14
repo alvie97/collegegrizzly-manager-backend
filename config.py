@@ -29,6 +29,7 @@ class Config(object):
     COLLEGES_PER_PAGE = 5
     USERS_PER_PAGE = 5
     SCHOLARSHIPS_PER_PAGE = 5
+    SUBMISSIONS_PER_PAGE = 5
     PER_PAGE = 5
     UPLOADED_PHOTOS_DEST = 'static/photos/'
     UPLOADED_PHOTOS_URL = 'http://localhost:5000/api/files/photos/'

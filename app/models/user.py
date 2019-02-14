@@ -18,6 +18,7 @@ class User(PaginatedAPIMixin, BaseMixin, DateAudit, db.Model):
     password_hash = db.Column(db.String(128))
     last_session = db.Column(db.DateTime, default=datetime.utcnow)
     role = db.Column(db.String(256), default="basic")
+    submissions = db.relationship("Submission", backref="user", lazy="dynamic")
     __str_repr__ = "user"
 
     ATTR_FIELDS = ["email", "role"]

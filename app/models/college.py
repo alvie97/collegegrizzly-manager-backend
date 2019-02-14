@@ -55,6 +55,9 @@ class College(PaginatedAPIMixin, DateAudit, LocationMixin,
     college_details = db.relationship(
         "CollegeDetails", uselist=False, backref="college")
 
+    submissions = db.relationship(
+        "Submission", backref="college", lazy="dynamic")
+
     ATTR_FIELDS = [
         "name", "room_and_board", "type_of_institution", "phone", "website",
         "in_state_tuition", "out_of_state_tuition", "location",
