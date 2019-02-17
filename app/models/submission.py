@@ -18,7 +18,7 @@ class Submission(db.Model, PaginatedAPIMixin, DateAudit, BaseMixin):
     reviewed_by_admin_at = db.Column(db.DateTime, nullable=True)
     reviewed_by_moderator = db.Column(db.String(256), nullable=True)
     reviewed_by_admin = db.Column(db.String(256), nullable=True)
-    status = db.Column(db.String(256), default="pending approval")
+    status = db.Column(db.String(256), default="pending:")
     college_name = db.Column(db.String(256), nullable=True)
     submitted_by = db.Column(db.String(256), nullable=True)
     college_id = db.Column(db.Integer, db.ForeignKey("college.id"))
@@ -33,12 +33,18 @@ class Submission(db.Model, PaginatedAPIMixin, DateAudit, BaseMixin):
             "public_id": self.public_id,
             "review_details": {
                 "moderator": {
-                    "username": self.reviewed_by_moderator,
-                    "reviewed_at": self.reviewed_by_moderator_at
+                    "username":
+                    self.reviewed_by_moderator,
+                    "reviewed_at":
+                    self.reviewed_by_moderator_at.isoformat() + 'Z'
+                    if self.reviewed_by_moderator is not None else None
                 },
                 "administrator": {
-                    "username": self.reviewed_by_admin,
-                    "reviewed_at": self.reviewed_by_admin_at
+                    "username":
+                    self.reviewed_by_admin,
+                    "reviewed_at":
+                    self.reviewed_by_admin_at.isoformat() + 'Z'
+                    if self.reviewed_by_admin is not None else None
                 }
             },
             **self.audit_dates(), "status": self.status,
