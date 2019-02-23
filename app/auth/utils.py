@@ -1,32 +1,47 @@
-import re
-from functools import wraps
+import functools
 
-from flask import g, jsonify, make_response, redirect, request, current_app
-from jwt import PyJWTError, ExpiredSignatureError
+import flask
+import jwt
 
-from app import db
-from app.models.refresh_token import RefreshToken
-from app.security.token_auth import (get_access_token_from_cookie,
-                                     get_refresh_token_from_cookie, decode_jwt)
+import app
+from app.models import refresh_token
+from app.security import token_auth
 
 
 def user_not_logged(f):
-    """decorator to redirect if user is already logged in"""
+    """Decorator to redirect if user is already logged in.
 
-    @wraps(f)
+    Args:
+        f: function to wrap.
+    
+    Returns:
+        Function wrapper
+    """
+
+    @functools.wraps(f)
     def f_wrapper(*args, **kwargs):
+        """Function wrapper
+
+        Args:
+            *args: variable length argument list.
+            **kwargs: arbitrary keyword arguments.
+        
+        Returns:
+            flask response or the wrapped function
+        """
         try:
-            access_token = get_access_token_from_cookie()
+            access_token = token_auth.get_access_token_from_cookie()
         except KeyError:
             return f(*args, **kwargs)
 
         try:
-            decode_jwt(access_token, current_app.config["JWT_SECRET"],
-                       current_app.config["JWT_ALGORITHM"])
-            return jsonify({"message": "user already logged in"}), 403
-        except ExpiredSignatureError:
-            return jsonify({"message": "user already logged in"}), 403
-        except PyJWTError:
+            token_auth.decode_jwt(access_token,
+                                  flask.current_app.config["JWT_SECRET"],
+                                  flask.current_app.config["JWT_ALGORITHM"])
+            return flask.jsonify({"message": "user already logged in"}), 403
+        except jwt.ExpiredSignatureError:
+            return flask.jsonify({"message": "user already logged in"}), 403
+        except jwt.PyJWTError:
             return f(*args, **kwargs)
 
         return f(*args, **kwargs)

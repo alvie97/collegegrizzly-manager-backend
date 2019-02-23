@@ -1,73 +1,95 @@
-from flask import (flash, g, jsonify, get_flashed_messages, make_response,
-                   redirect, render_template, request, url_for, current_app)
-from sqlalchemy import or_
+import flask
+import sqlalchemy
 
-from . import bp
-from app import db
-from app.models.refresh_token import RefreshToken
-from app.models.user import User
-from .utils import user_not_logged
-from app.security.utils import get_current_user
-from app.security.token_auth import (get_refresh_token_from_cookie,
-                                     set_token_cookies, clear_token_cookies,
-                                     revoke_user_tokens)
-from app.security.csrf import clear_csrf_token_cookies
+import app
+from app.models import refresh_token
+from app.models import user as user_model
+from app import auth
+
+from app import security
+from app.security import token_auth
+from app.security import csrf
 
 
-@bp.route("/login", methods=["POST", "GET"])
-@user_not_logged
+@auth.bp.route("/login", methods=["POST", "GET"])
+@auth.utils.user_not_logged
 def login():
-    if request.method == "GET":
-        return render_template("login.html", messages=get_flashed_messages())
+    """ Loggs user to the application.
 
-    id = request.form["id"]
-    password = request.form["password"]
+    Loggs user to the application, accepts POST and GET methods.
+
+    Requires:
+        Form data.
+
+        id: user identification (username or email).
+        password: user password
+
+    Returns:
+        redirects to application or loggin page if not successful
+    """
+    if flask.request.method == "GET":
+        return flask.render_template(
+            "login.html", messages=flask.get_flashed_messages())
+
+    id = flask.request.form["id"]
+    password = flask.request.form["password"]
 
     if not id:
-        flash("no username or email provided")
-        return redirect(url_for("auth.login")), 422
+        flask.flash("no username or email provided")
+        return flask.redirect(flask.url_for("auth.login")), 422
 
     if not password:
-        flash("no password provided")
-        return redirect(url_for("auth.login")), 422
+        flask.flash("no password provided")
+        return flask.redirect(flask.url_for("auth.login")), 422
 
-    user = User.query.filter(or_(User.username == id,
-                                 User.email == id)).first()
+    user = user_model.User.query.filter(
+        sqlalchemy.or_(user_model.User.username == id,
+                       user_model.User.email == id)).first()
 
     if user is None:
-        flash(f"no user with username or email {id} found")
-        return redirect(url_for("auth.login")), 404
+        flask.flash(f"no user with username or email {id} found")
+        return flask.redirect(flask.url_for("auth.login")), 404
 
     if not user.check_password(password):
-        flash("invalid credentials")
-        return redirect(url_for("auth.login")), 401
+        flask.flash("invalid credentials")
+        return flask.redirect(flask.url_for("auth.login")), 401
 
-    response = make_response(redirect("/"))
-    set_token_cookies(response, user.id, user.role)
+    response = flask.make_response(flask.redirect("/"))
+    token_auth.set_token_cookies(response, user.id, user.role)
     return response
 
 
-@bp.route("/logout", methods=["POST"])
+@auth.bp.route("/logout", methods=["POST"])
 def logout():
+    """Logs user out of the application.
+
+    Logs user out of the application, accepts POST method.
+
+    Returns:
+        Json response.
+    """
 
     try:
-        token = get_refresh_token_from_cookie()
-        token = RefreshToken.first(token=token)
+        token = token_auth.get_refresh_token_from_cookie()
+        token = refresh_token.RefreshToken.first(token=token)
 
         if token is not None:
             user_id = token.user_id
         else:
-            user_id = get_current_user()
+            user_id = security.get_current_user()
 
     except KeyError:
-        user_id = get_current_user()
+        user_id = security.get_current_user()
 
     if user_id is not None:
-        revoke_user_tokens(user_id)
-        db.session.commit()
+        token_auth.revoke_user_tokens(user_id)
+        app.db.session.commit()
 
-    response = make_response(jsonify({"message": "logout successful"}))
-    clear_token_cookies(response)
-    clear_csrf_token_cookies(response)
+    response = flask.make_response(
+        flask.jsonify({
+            "message": "logout successful"
+        }))
+    token_auth.clear_token_cookies(response)
+    csrf.clear_csrf_token_cookies(response)
 
     return response

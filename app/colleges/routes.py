@@ -1,125 +1,123 @@
-from flask import jsonify, request, url_for, current_app
-from marshmallow import ValidationError
+import flask
+import marshmallow
 
-from app import db
-from app.models.college import College
-from app.models.scholarship import Scholarship
-from app.models.major import Major
-from app.models.state import State
-from app.models.county import County
-from app.models.place import Place
-from app.models.consolidated_city import ConsolidatedCity
-from app.schemas.college_schema import CollegeSchema
-from app.schemas.scholarship_schema import ScholarshipSchema
-from app.schemas.major_schema import MajorSchema
-from app.common.utils import (
-    generate_public_id, get_entity, get_location_requirement,
-    post_location_requirement, delete_location_requirement,
-    get_locations_blacklist, post_locations_blacklist,
-    delete_locations_blacklist)
-from app.security.utils import user_role, ADMINISTRATOR, MODERATOR, BASIC
+import app
+from app import colleges as colleges_module
+from app import security
+from app import utils
+from app.models import college as college_model
+from app.models import consolidated_city as consolidated_city_model
+from app.models import county as county_model
+from app.models import major as major_model
+from app.models import place as place_model
+from app.models import scholarship as scholarship_model
+from app.models import state as state_model
+from app.schemas import college_schema
+from app.schemas import major_schema as major_sc
+from app.schemas import scholarship_schema
 
-from . import bp
-
-college_schema = CollegeSchema()
-major_schema = MajorSchema()
-majors_schema = MajorSchema(many=True)
-scholarship_schema = ScholarshipSchema()
+college_schema = college_schema.CollegeSchema()
+major_schema = major_sc.MajorSchema()
+majors_schema = major_sc.MajorSchema(many=True)
+scholarship_schema = scholarship_schema.ScholarshipSchema()
 
 
-@bp.route("/", methods=["GET"], strict_slashes=False)
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
+@colleges_module.bp.route("/", methods=["GET"], strict_slashes=False)
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_colleges():
-    page = request.args.get("page", 1, type=int)
-    per_page = request.args.get(
-        "per_page", current_app.config["COLLEGES_PER_PAGE"], type=int)
+    page = flask.request.args.get("page", 1, type=int)
+    per_page = flask.request.args.get(
+        "per_page", flask.current_app.config["COLLEGES_PER_PAGE"], type=int)
 
-    search = request.args.get("search", "", type=str)
+    search = flask.request.args.get("search", "", type=str)
 
     if search:
-        query = College.query.filter(College.name.like("%{}%".format(search)))
+        query = college_model.College.query.filter(
+            college_model.College.name.like("%{}%".format(search)))
 
-        data = College.to_collection_dict(
+        data = college_model.College.to_collection_dict(
             query, page, per_page, "colleges.get_colleges", search=search)
     else:
-        query = College.query
-        data = College.to_collection_dict(query, page, per_page,
-                                          "colleges.get_colleges")
+        query = college_model.College.query
+        data = college_model.College.to_collection_dict(
+            query, page, per_page, "colleges.get_colleges")
 
-    return jsonify(data)
+    return flask.jsonify(data)
 
 
-@bp.route("/", methods=["POST"], strict_slashes=False)
-@user_role([ADMINISTRATOR, BASIC])
+@colleges_module.bp.route("/", methods=["POST"], strict_slashes=False)
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def post_college():
-    data = request.get_json() or {}
+    data = flask.request.get_json() or {}
 
     if not data:
-        return jsonify({"message": "no data provided"}), 400
+        return flask.jsonify({"message": "no data provided"}), 400
 
     try:
         college = college_schema.load(data)
-    except ValidationError as err:
-        return jsonify(err.messages), 422
+    except marshmallow.ValidationError as err:
+        return flask.jsonify(err.messages), 422
 
-    db.session.add(college)
-    db.session.commit()
+    app.db.session.add(college)
+    app.db.session.commit()
 
-    return jsonify({"college_id": college.public_id})
+    return flask.jsonify({"college_id": college.public_id})
 
 
-@bp.route("/<string:public_id>", methods=["GET"])
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(College, "public_id")
+@colleges_module.bp.route("/<string:public_id>", methods=["GET"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(college_model.College, "public_id")
 def get_college(college):
-    return jsonify({"college": college.to_dict()})
+    return flask.jsonify({"college": college.to_dict()})
 
 
-@bp.route("/<string:public_id>", methods=["PATCH"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "public_id")
+@colleges_module.bp.route("/<string:public_id>", methods=["PATCH"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(college_model.College, "public_id")
 def patch_college(college):
-    data = request.get_json() or {}
+    data = flask.request.get_json() or {}
 
     if not data:
-        return jsonify({"message": "no data provided"}), 400
+        return flask.jsonify({"message": "no data provided"}), 400
 
     try:
         college_schema.load(data, partial=True)
-    except ValidationError as err:
-        return jsonify(err.messages), 422
+    except marshmallow.ValidationError as err:
+        return flask.jsonify(err.messages), 422
 
     college.update(data)
-    db.session.commit()
-    return jsonify("college saved successfully")
+    app.db.session.commit()
+    return flask.jsonify("college saved successfully")
 
 
-@bp.route("/<string:public_id>", methods=["DELETE"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "public_id")
+@colleges_module.bp.route("/<string:public_id>", methods=["DELETE"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(college_model.College, "public_id")
 def delete_college(college):
     college.delete()
-    db.session.commit()
+    app.db.session.commit()
 
-    return jsonify({"message": "college deleted"})
+    return flask.jsonify({"message": "college deleted"})
 
 
-@bp.route("/<string:public_id>/scholarships", methods=["GET"])
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(College, "public_id")
+@colleges_module.bp.route("/<string:public_id>/scholarships", methods=["GET"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(college_model.College, "public_id")
 def get_college_scholarships(college):
 
-    page = request.args.get("page", 1, type=int)
-    per_page = request.args.get(
-        "per_page", current_app.config["SCHOLARSHIPS_PER_PAGE"], type=int)
+    page = flask.request.args.get("page", 1, type=int)
+    per_page = flask.request.args.get(
+        "per_page",
+        flask.current_app.config["SCHOLARSHIPS_PER_PAGE"],
+        type=int)
 
-    search = request.args.get("search", "", type=str)
+    search = flask.request.args.get("search", "", type=str)
 
     if search:
         query = college.scholarships.filter(
-            Scholarship.name.like("%{}%".format(search)))
+            scholarship_model.Scholarship.name.like("%{}%".format(search)))
 
-        data = Scholarship.to_collection_dict(
+        data = scholarship_model.Scholarship.to_collection_dict(
             query,
             page,
             per_page,
@@ -127,282 +125,323 @@ def get_college_scholarships(college):
             search=search)
     else:
         query = college.scholarships
-        data = Scholarship.to_collection_dict(query, page, per_page,
-                                              "scholarships.get_scholarships")
-    return jsonify({"scholarships": data})
+        data = scholarship_model.Scholarship.to_collection_dict(
+            query, page, per_page, "scholarships.get_scholarships")
+    return flask.jsonify({"scholarships": data})
 
 
-@bp.route("/<string:public_id>/scholarships", methods=["POST"])
-@get_entity(College, "public_id")
+@colleges_module.bp.route("/<string:public_id>/scholarships", methods=["POST"])
+@utils.get_entity(college_model.College, "public_id")
 def post_college_scholarship(college):
-    data = request.get_json()
+    data = flask.request.get_json()
 
     if not data:
-        return jsonify({"message": "no data provided"}), 400
+        return flask.jsonify({"message": "no data provided"}), 400
 
     try:
         scholarship_schema.load(data)
-    except ValidationError as err:
-        return jsonify(err.messages), 422
+    except marshmallow.ValidationError as err:
+        return flask.jsonify(err.messages), 422
 
-    scholarship = Scholarship(
-        public_id=generate_public_id(), college=college, **data)
+    scholarship = scholarship_model.Scholarship(
+        public_id=utils.generate_public_id(), college=college, **data)
 
-    db.session.add(scholarship)
-    db.session.commit()
+    app.db.session.add(scholarship)
+    app.db.session.commit()
 
-    return jsonify({"scholarship_id": scholarship.public_id})
+    return flask.jsonify({"scholarship_id": scholarship.public_id})
 
 
-@bp.route("/<string:public_id>/majors", methods=["GET"])
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(College, "public_id")
+@colleges_module.bp.route("/<string:public_id>/majors", methods=["GET"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(college_model.College, "public_id")
 def get_college_majors(college):
-    return jsonify({"majors": college.get_majors()})
+    return flask.jsonify({"majors": college.get_majors()})
 
 
-@bp.route("/<string:public_id>/majors", methods=["POST"])
-@get_entity(College, "public_id")
+@colleges_module.bp.route("/<string:public_id>/majors", methods=["POST"])
+@utils.get_entity(college_model.College, "public_id")
 def post_college_majors(college):
-    data = request.get_json() or {}
+    data = flask.request.get_json() or {}
 
     if not data or "majors" not in data:
-        return jsonify({"message": "no data provided"}), 400
+        return flask.jsonify({"message": "no data provided"}), 400
 
     for major in data["majors"]:
 
         try:
             major_schema.load(major)
-        except ValidationError as err:
-            return jsonify(err.messages), 422
+        except marshmallow.ValidationError as err:
+            return flask.jsonify(err.messages), 422
 
-        major_to_add = Major.first(name=major["name"])
+        major_to_add = major_model.Major.first(name=major["name"])
 
         if major_to_add is None:
-            major_to_add = Major(**major)
-            db.session.add(major_to_add)
+            major_to_add = major_model.Major(**major)
+            app.db.session.add(major_to_add)
 
         college.add_major(major_to_add)
 
-    db.session.commit()
-    return jsonify({"message": "majors added"})
+    app.db.session.commit()
+    return flask.jsonify({"message": "majors added"})
 
 
-@bp.route("/<string:public_id>/majors", methods=["DELETE"])
-@get_entity(College, "public_id")
+@colleges_module.bp.route("/<string:public_id>/majors", methods=["DELETE"])
+@utils.get_entity(college_model.College, "public_id")
 def delete_college_majors(college):
-    data = request.get_json() or {}
+    data = flask.request.get_json() or {}
 
     if not data or "majors" not in data:
-        return jsonify({"message": "no data provided"}), 400
+        return flask.jsonify({"message": "no data provided"}), 400
 
     for major in data["majors"]:
         major_to_remove = college.majors.filter_by(name=major).first()
 
         if major_to_remove is None:
-            return jsonify({
+            return flask.jsonify({
                 "message":
                 college.name + "doesn't have major " + major
             }), 404
 
         college.remove_major(major_to_remove)
 
-    db.session.commit()
-    return jsonify({"message": "majors removed"})
+    app.db.session.commit()
+    return flask.jsonify({"message": "majors removed"})
 
 
-@bp.route("/<string:public_id>/states", methods=["GET"])
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(College, "public_id")
+@colleges_module.bp.route("/<string:public_id>/states", methods=["GET"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(college_model.College, "public_id")
 def get_college_states(college):
-    return get_location_requirement(
-        State, "colleges", "college", college, public_id=college.public_id)
+    return utils.get_location_requirement(
+        state_model.State,
+        "colleges",
+        "college",
+        college,
+        public_id=college.public_id)
 
 
-@bp.route("/<string:public_id>/states", methods=["POST"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "public_id")
+@colleges_module.bp.route("/<string:public_id>/states", methods=["POST"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(college_model.College, "public_id")
 def post_college_states(college):
-    return post_location_requirement(State, college)
+    return utils.post_location_requirement(state_model.State, college)
 
 
-@bp.route("/<string:public_id>/states", methods=["DELETE"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "public_id")
+@colleges_module.bp.route("/<string:public_id>/states", methods=["DELETE"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(college_model.College, "public_id")
 def delete_college_states(college):
-    return delete_location_requirement(State, college)
+    return utils.delete_location_requirement(state_model.State, college)
 
 
-@bp.route("/<string:public_id>/counties", methods=["GET"])
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(College, "public_id")
+@colleges_module.bp.route("/<string:public_id>/counties", methods=["GET"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(college_model.College, "public_id")
 def get_college_counties(college):
-    return get_location_requirement(
-        County, "colleges", "college", college, public_id=college.public_id)
+    return utils.get_location_requirement(
+        county_model.County,
+        "colleges",
+        "college",
+        college,
+        public_id=college.public_id)
 
 
-@bp.route("/<string:public_id>/counties", methods=["POST"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "public_id")
+@colleges_module.bp.route("/<string:public_id>/counties", methods=["POST"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(college_model.College, "public_id")
 def post_college_counties(college):
-    return post_location_requirement(County, college)
+    return utils.post_location_requirement(county_model.County, college)
 
 
-@bp.route("/<string:public_id>/counties", methods=["DELETE"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "public_id")
+@colleges_module.bp.route("/<string:public_id>/counties", methods=["DELETE"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(college_model.College, "public_id")
 def delete_college_counties(college):
-    return delete_location_requirement(County, college)
+    return utils.delete_location_requirement(county_model.County, college)
 
 
-@bp.route("/<string:public_id>/places", methods=["GET"])
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(College, "public_id")
+@colleges_module.bp.route("/<string:public_id>/places", methods=["GET"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(college_model.College, "public_id")
 def get_college_places(college):
-    return get_location_requirement(
-        Place, "colleges", "college", college, public_id=college.public_id)
+    return utils.get_location_requirement(
+        place_model.Place,
+        "colleges",
+        "college",
+        college,
+        public_id=college.public_id)
 
 
-@bp.route("/<string:public_id>/places", methods=["POST"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "public_id")
+@colleges_module.bp.route("/<string:public_id>/places", methods=["POST"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(college_model.College, "public_id")
 def post_college_places(college):
-    return post_location_requirement(Place, college)
+    return utils.post_location_requirement(place_model.Place, college)
 
 
-@bp.route("/<string:public_id>/places", methods=["DELETE"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "public_id")
+@colleges_module.bp.route("/<string:public_id>/places", methods=["DELETE"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(college_model.College, "public_id")
 def delete_college_places(college):
-    return delete_location_requirement(Place, college)
+    return utils.delete_location_requirement(place_model.Place, college)
 
 
-@bp.route("/<string:public_id>/consolidated_cities", methods=["GET"])
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(College, "public_id")
+@colleges_module.bp.route(
+    "/<string:public_id>/consolidated_cities", methods=["GET"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(college_model.College, "public_id")
 def get_college_consolidated_cities(college):
-    return get_location_requirement(
-        ConsolidatedCity,
+    return utils.get_location_requirement(
+        consolidated_city_model.ConsolidatedCity,
         "colleges",
         "college",
         college,
         public_id=college.public_id)
 
 
-@bp.route("/<string:public_id>/consolidated_cities", methods=["POST"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "public_id")
+@colleges_module.bp.route(
+    "/<string:public_id>/consolidated_cities", methods=["POST"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(college_model.College, "public_id")
 def post_college_consolidated_cities(college):
-    return post_location_requirement(ConsolidatedCity, college)
+    return utils.post_location_requirement(
+        consolidated_city_model.ConsolidatedCity, college)
 
 
-@bp.route("/<string:public_id>/consolidated_cities", methods=["DELETE"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "public_id")
+@colleges_module.bp.route(
+    "/<string:public_id>/consolidated_cities", methods=["DELETE"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(college_model.College, "public_id")
 def delete_college_consolidated_cities(college):
-    return delete_location_requirement(ConsolidatedCity, college)
+    return utils.delete_location_requirement(
+        consolidated_city_model.ConsolidatedCity, college)
 
 
-@bp.route("/<string:public_id>/blacklist/states", methods=["GET"])
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(College, "public_id")
+@colleges_module.bp.route(
+    "/<string:public_id>/blacklist/states", methods=["GET"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(college_model.College, "public_id")
 def get_college_states_blacklist(college):
-    return get_locations_blacklist(
-        State, "colleges", "college", college, public_id=college.public_id)
-
-
-@bp.route("/<string:public_id>/blacklist/states", methods=["POST"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "public_id")
-def post_college_states_blacklist(college):
-    return post_locations_blacklist(State, college)
-
-
-@bp.route("/<string:public_id>/blacklist/states", methods=["DELETE"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "public_id")
-def delete_college_states_blacklist(college):
-    return delete_locations_blacklist(State, college)
-
-
-@bp.route("/<string:public_id>/blacklist/counties", methods=["GET"])
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(College, "public_id")
-def get_college_counties_blacklist(college):
-    return get_locations_blacklist(
-        County, "colleges", "college", college, public_id=college.public_id)
-
-
-@bp.route("/<string:public_id>/blacklist/counties", methods=["POST"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "public_id")
-def post_college_counties_blacklist(college):
-    return post_locations_blacklist(County, college)
-
-
-@bp.route("/<string:public_id>/blacklist/counties", methods=["DELETE"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "public_id")
-def delete_college_counties_blacklist(college):
-    return delete_locations_blacklist(County, college)
-
-
-@bp.route("/<string:public_id>/blacklist/places", methods=["GET"])
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(College, "public_id")
-def get_college_places_blacklist(college):
-    return get_locations_blacklist(
-        Place, "colleges", "college", college, public_id=college.public_id)
-
-
-@bp.route("/<string:public_id>/blacklist/places", methods=["POST"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "public_id")
-def post_college_places_blacklist(college):
-    return post_locations_blacklist(Place, college)
-
-
-@bp.route("/<string:public_id>/blacklist/places", methods=["DELETE"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "public_id")
-def delete_college_places_blacklist(college):
-    return delete_locations_blacklist(Place, college)
-
-
-@bp.route("/<string:public_id>/blacklist/consolidated_cities", methods=["GET"])
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(College, "public_id")
-def get_college_consolidated_cities_blacklist(college):
-    return get_locations_blacklist(
-        ConsolidatedCity,
+    return utils.get_locations_blacklist(
+        state_model.State,
         "colleges",
         "college",
         college,
         public_id=college.public_id)
 
 
-@bp.route(
+@colleges_module.bp.route(
+    "/<string:public_id>/blacklist/states", methods=["POST"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(college_model.College, "public_id")
+def post_college_states_blacklist(college):
+    return utils.post_locations_blacklist(state_model.State, college)
+
+
+@colleges_module.bp.route(
+    "/<string:public_id>/blacklist/states", methods=["DELETE"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(college_model.College, "public_id")
+def delete_college_states_blacklist(college):
+    return utils.delete_locations_blacklist(state_model.State, college)
+
+
+@colleges_module.bp.route(
+    "/<string:public_id>/blacklist/counties", methods=["GET"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(college_model.College, "public_id")
+def get_college_counties_blacklist(college):
+    return utils.get_locations_blacklist(
+        county_model.County,
+        "colleges",
+        "college",
+        college,
+        public_id=college.public_id)
+
+
+@colleges_module.bp.route(
+    "/<string:public_id>/blacklist/counties", methods=["POST"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(college_model.College, "public_id")
+def post_college_counties_blacklist(college):
+    return utils.post_locations_blacklist(county_model.County, college)
+
+
+@colleges_module.bp.route(
+    "/<string:public_id>/blacklist/counties", methods=["DELETE"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(college_model.College, "public_id")
+def delete_college_counties_blacklist(college):
+    return utils.delete_locations_blacklist(county_model.County, college)
+
+
+@colleges_module.bp.route(
+    "/<string:public_id>/blacklist/places", methods=["GET"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(college_model.College, "public_id")
+def get_college_places_blacklist(college):
+    return utils.get_locations_blacklist(
+        place_model.Place,
+        "colleges",
+        "college",
+        college,
+        public_id=college.public_id)
+
+
+@colleges_module.bp.route(
+    "/<string:public_id>/blacklist/places", methods=["POST"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(college_model.College, "public_id")
+def post_college_places_blacklist(college):
+    return utils.post_locations_blacklist(place_model.Place, college)
+
+
+@colleges_module.bp.route(
+    "/<string:public_id>/blacklist/places", methods=["DELETE"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(college_model.College, "public_id")
+def delete_college_places_blacklist(college):
+    return utils.delete_locations_blacklist(place_model.Place, college)
+
+
+@colleges_module.bp.route(
+    "/<string:public_id>/blacklist/consolidated_cities", methods=["GET"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(college_model.College, "public_id")
+def get_college_consolidated_cities_blacklist(college):
+    return utils.get_locations_blacklist(
+        consolidated_city_model.ConsolidatedCity,
+        "colleges",
+        "college",
+        college,
+        public_id=college.public_id)
+
+
+@colleges_module.bp.route(
     "/<string:public_id>/blacklist/consolidated_cities", methods=["POST"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "public_id")
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(college_model.College, "public_id")
 def post_college_consolidated_cities_blacklist(college):
-    return post_locations_blacklist(ConsolidatedCity, college)
+    return utils.post_locations_blacklist(
+        consolidated_city_model.ConsolidatedCity, college)
 
 
-@bp.route(
+@colleges_module.bp.route(
     "/<string:public_id>/blacklist/consolidated_cities", methods=["DELETE"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "public_id")
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(college_model.College, "public_id")
 def delete_college_consolidated_cities_blacklist(college):
-    return delete_locations_blacklist(ConsolidatedCity, college)
+    return utils.delete_locations_blacklist(
+        consolidated_city_model.ConsolidatedCity, college)
 
 
-@bp.route("/majors_suggestions/<string:query>")
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
+@colleges_module.bp.route("/majors_suggestions/<string:query>")
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def majors_suggestions(query):
-    suggestions = Major.query.filter(
-        Major.name.like(f"%{query}%")).limit(5).all()
+    suggestions = major_model.Major.query.filter(
+        major_model.Major.name.like(f"%{query}%")).limit(5).all()
 
-    return jsonify({
+    return flask.jsonify({
         "suggestions": [suggestion.to_dict() for suggestion in suggestions]
     })

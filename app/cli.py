@@ -8,6 +8,13 @@ import os
 
 
 def _save_states(n_state):
+    """Saves n states to database
+
+    Saves n number states to database from spreadsheet file
+
+    Args:
+        n_state (int): number of states to save to the database
+    """
     GEOCODES_PATH = os.path.join(
         os.getcwd(), "static/files/geocodes/all-geocodes-v2016.xlsx")
 
@@ -42,14 +49,22 @@ def _save_states(n_state):
 
 
 def register(app):
+    """Registers cli commands and groups
+
+    Args:
+        app: app instance
+    """
 
     @app.cli.group()
     def geocodes():
-        """ state, counties, places and consolidated cities commands """
+        """Geocodes commands group"""
         pass
 
+    #TODO: break function
     @geocodes.command()
     def save_in_database():
+        """Saves states and it's locations into the database"""
+
         GEOCODES_PATH = os.path.join(
             os.getcwd(), "static/files/geocodes/all-geocodes-v2016.xlsx")
         print("MESSAGE:", " starting processing of file " + GEOCODES_PATH)
