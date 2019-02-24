@@ -40,7 +40,7 @@ def get_location_requirement(location, package_name, base_endpoint, entity,
                              **endpoint_args):
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get(
-        "per_page", current_app.config["PER_PAGE"], type=int)
+        "per_page", current_app.config["LOCATIONS_PER_PAGE"], type=int)
 
     search = request.args.get("search", "", type=str)
 

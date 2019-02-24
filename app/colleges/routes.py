@@ -554,7 +554,7 @@ def get_college_states(college):
             page (int) (optional): Page number in paginated resource, defaults 
             to one.
             per_page (int) (optional): Number of items to retrieve per page, 
-            defaults to configuration constant STATES_PER_PAGE.
+            defaults to configuration constant LOCATIONS_PER_PAGE.
             search (string) (optional): Search query keyword, defaults to "".
     
     Responses:
@@ -596,7 +596,7 @@ def get_college_states(college):
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College, "public_id")
 def post_college_states(college):
-    """adds state to college.
+    """adds states to college.
 
     POST:
         Params:
@@ -613,8 +613,7 @@ def post_college_states(college):
     
     Responses:
         201:
-            State successfully created and added to college. 
-            Returns scholarship public id.
+            States successfully added to college. Returns message.
 
             Produces:
                 Application/json.
@@ -653,12 +652,10 @@ def delete_college_states(college):
             Example::
             ["FIPS 1", "FIPS 2"]
 
-                See state model.
-
     
     Responses:
         200:
-            States successfully delete from database. Returns message.
+            States successfully deleted from database. Returns message.
 
             Produces:
                 Application/json.
@@ -723,6 +720,40 @@ def get_college_counties(college):
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College, "public_id")
 def post_college_counties(college):
+    """adds counties to college.
+
+    POST:
+        Params:
+            public_id (string) (required): public id of college.
+
+        Consumes:
+            Application/json.
+        
+        Request Body:
+            List of state FIPS.
+        
+        Example::
+            ["FIPS 1", "FIPS 2"]
+    
+    Responses:
+        201:
+            Counties successfully added to college. Returns message.
+
+            Produces:
+                Application/json.
+        
+        400:
+            Empty json object. Returns message "no data provided".
+
+            produces:
+                Application/json.
+        422:
+            Some or all of the fields are invalid. Returns error of 
+            invalid fields.
+
+            produces:
+                Application/json.
+    """
     return utils.post_location_requirement(county_model.County, college)
 
 
@@ -730,6 +761,29 @@ def post_college_counties(college):
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College, "public_id")
 def delete_college_counties(college):
+    """Removes counties from college.
+
+    DELETE:
+        Params:
+            public_id (string) (required): public id of college.
+        
+        Consumes:
+            Application/json.
+        
+        Request body:
+            List of state FIPS.
+
+            Example::
+                ["FIPS 1", "FIPS 2"]
+
+    
+    Responses:
+        200:
+            Counties successfully delete from database. Returns message.
+
+            Produces:
+                Application/json.
+    """
     return utils.delete_location_requirement(county_model.County, college)
 
 
@@ -748,7 +802,7 @@ def get_college_places(college):
             page (int) (optional): Page number in paginated resource, defaults 
             to one.
             per_page (int) (optional): Number of items to retrieve per page, 
-            defaults to configuration constant PLACES_PER_PAGE.
+            defaults to configuration constant LOCATIONS_PER_PAGE.
             search (string) (optional): Search query keyword, defaults to "".
     
     Responses:
@@ -790,6 +844,40 @@ def get_college_places(college):
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College, "public_id")
 def post_college_places(college):
+    """adds places to college.
+
+    POST:
+        Params:
+            public_id (string) (required): public id of college.
+
+        Consumes:
+            Application/json.
+        
+        Request Body:
+            List of state FIPS.
+        
+        Example::
+            ["FIPS 1", "FIPS 2"]
+    
+    Responses:
+        201:
+            Places successfully added to college. Returns message.
+
+            Produces:
+                Application/json.
+        
+        400:
+            Empty json object. Returns message "no data provided".
+
+            produces:
+                Application/json.
+        422:
+            Some or all of the fields are invalid. Returns error of 
+            invalid fields.
+
+            produces:
+                Application/json.
+    """
     return utils.post_location_requirement(place_model.Place, college)
 
 
@@ -797,6 +885,29 @@ def post_college_places(college):
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College, "public_id")
 def delete_college_places(college):
+    """Removes places from college.
+
+    DELETE:
+        Params:
+            public_id (string) (required): public id of college.
+        
+        Consumes:
+            Application/json.
+        
+        Request body:
+            List of state FIPS.
+
+            Example::
+                ["FIPS 1", "FIPS 2"]
+
+    
+    Responses:
+        200:
+            Places successfully deleted from database. Returns message.
+
+            Produces:
+                Application/json.
+    """
     return utils.delete_location_requirement(place_model.Place, college)
 
 
@@ -807,16 +918,16 @@ def delete_college_places(college):
 def get_college_consolidated_cities(college):
     """Gets college's consolidated cities in database
 
-    Retrieves paginated list of all college's consolidated cities from database or 
-    college's consolidated cities that contains the search request parameter if 
-    defined.
+    Retrieves paginated list of all college's consolidated cities from database 
+    or college's consolidated cities that contains the search request parameter 
+    if defined.
 
     GET:
         Request params:
             page (int) (optional): Page number in paginated resource, defaults 
             to one.
             per_page (int) (optional): Number of items to retrieve per page, 
-            defaults to configuration constant CONSOLIDATED_CITIES_PER_PAGE.
+            defaults to configuration constant LOCATIONS_PER_PAGE.
             search (string) (optional): Search query keyword, defaults to "".
     
     Responses:
@@ -859,6 +970,40 @@ def get_college_consolidated_cities(college):
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College, "public_id")
 def post_college_consolidated_cities(college):
+    """adds consolidated cities to college.
+
+    POST:
+        Params:
+            public_id (string) (required): public id of college.
+
+        Consumes:
+            Application/json.
+        
+        Request Body:
+            List of state FIPS.
+        
+        Example::
+            ["FIPS 1", "FIPS 2"]
+    
+    Responses:
+        201:
+            Consolidated cities successfully added to college. Returns message.
+
+            Produces:
+                Application/json.
+        
+        400:
+            Empty json object. Returns message "no data provided".
+
+            produces:
+                Application/json.
+        422:
+            Some or all of the fields are invalid. Returns error of 
+            invalid fields.
+
+            produces:
+                Application/json.
+    """
     return utils.post_location_requirement(
         consolidated_city_model.ConsolidatedCity, college)
 
@@ -868,6 +1013,29 @@ def post_college_consolidated_cities(college):
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College, "public_id")
 def delete_college_consolidated_cities(college):
+    """Removes consolidated cities from college.
+
+    DELETE:
+        Params:
+            public_id (string) (required): public id of college.
+        
+        Consumes:
+            Application/json.
+        
+        Request body:
+            List of state FIPS.
+
+            Example::
+                ["FIPS 1", "FIPS 2"]
+    
+    Responses:
+        200:
+            Consolidated cities successfully deleted from database. 
+            Returns message.
+
+            Produces:
+                Application/json.
+    """
     return utils.delete_location_requirement(
         consolidated_city_model.ConsolidatedCity, college)
 
@@ -877,6 +1045,47 @@ def delete_college_consolidated_cities(college):
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College, "public_id")
 def get_college_states_blacklist(college):
+    """Gets college's states blacklist in database
+
+    Retrieves paginated list of all college's states blacklist from database or 
+    college's states blacklist that contains the search request parameter if 
+    defined.
+
+    GET:
+        Request params:
+            page (int) (optional): Page number in paginated resource, defaults 
+            to one.
+            per_page (int) (optional): Number of items to retrieve per page, 
+            defaults to configuration constant LOCATIONS_PER_PAGE.
+            search (string) (optional): Search query keyword, defaults to "".
+    
+    Responses:
+        200:
+            Successfully retrieves items from database. Returns paginated list
+            of states blacklist.
+
+            produces:
+                Application/json.
+
+            Example::
+                return {
+                    "items": [list of states blacklist],
+                    "_meta": {
+                        "page": 1,
+                        "per_page": 5,
+                        "total_pages": 15,
+                        "total_items": 72 
+                    },
+                    "_links": {
+                        "self": {
+                            "url": self_url,
+                            "params": request parameters,
+                        },
+                        "next": next page's url or None if there's no page,
+                        "prev": previous page's url or None if there's no page,
+                    }
+                }
+    """
     return utils.get_locations_blacklist(
         state_model.State,
         "colleges",
@@ -890,6 +1099,40 @@ def get_college_states_blacklist(college):
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College, "public_id")
 def post_college_states_blacklist(college):
+    """adds states blacklist to college.
+
+    POST:
+        Params:
+            public_id (string) (required): public id of college.
+
+        Consumes:
+            Application/json.
+        
+        Request Body:
+            List of state FIPS.
+        
+        Example::
+            ["FIPS 1", "FIPS 2"]
+    
+    Responses:
+        201:
+            States blacklist successfully added to college. Returns message.
+
+            Produces:
+                Application/json.
+        
+        400:
+            Empty json object. Returns message "no data provided".
+
+            produces:
+                Application/json.
+        422:
+            Some or all of the fields are invalid. Returns error of 
+            invalid fields.
+
+            produces:
+                Application/json.
+    """
     return utils.post_locations_blacklist(state_model.State, college)
 
 
@@ -898,6 +1141,28 @@ def post_college_states_blacklist(college):
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College, "public_id")
 def delete_college_states_blacklist(college):
+    """Removes states blacklist from college.
+
+    DELETE:
+        Params:
+            public_id (string) (required): public id of college.
+        
+        Consumes:
+            Application/json.
+        
+        Request body:
+            List of state FIPS.
+
+            Example::
+                ["FIPS 1", "FIPS 2"]
+    
+    Responses:
+        200:
+            States blacklist successfully deleted from database. Returns message.
+
+            Produces:
+                Application/json.
+    """
     return utils.delete_locations_blacklist(state_model.State, college)
 
 
@@ -906,6 +1171,47 @@ def delete_college_states_blacklist(college):
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College, "public_id")
 def get_college_counties_blacklist(college):
+    """Gets college's counties blacklist in database
+
+    Retrieves paginated list of all college's counties blacklist from database or 
+    college's counties blacklist that contains the search request parameter if 
+    defined.
+
+    GET:
+        Request params:
+            page (int) (optional): Page number in paginated resource, defaults 
+            to one.
+            per_page (int) (optional): Number of items to retrieve per page, 
+            defaults to configuration constant LOCATIONS_PER_PAGE.
+            search (string) (optional): Search query keyword, defaults to "".
+    
+    Responses:
+        200:
+            Successfully retrieves items from database. Returns paginated list
+            of counties blacklist.
+
+            produces:
+                Application/json.
+
+            Example::
+                return {
+                    "items": [list of counties blacklist],
+                    "_meta": {
+                        "page": 1,
+                        "per_page": 5,
+                        "total_pages": 15,
+                        "total_items": 72 
+                    },
+                    "_links": {
+                        "self": {
+                            "url": self_url,
+                            "params": request parameters,
+                        },
+                        "next": next page's url or None if there's no page,
+                        "prev": previous page's url or None if there's no page,
+                    }
+                }
+    """
     return utils.get_locations_blacklist(
         county_model.County,
         "colleges",
@@ -919,6 +1225,40 @@ def get_college_counties_blacklist(college):
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College, "public_id")
 def post_college_counties_blacklist(college):
+    """adds counties blacklist to college.
+
+    POST:
+        Params:
+            public_id (string) (required): public id of college.
+
+        Consumes:
+            Application/json.
+        
+        Request Body:
+            List of state FIPS.
+        
+        Example::
+            ["FIPS 1", "FIPS 2"]
+    
+    Responses:
+        201:
+            Counties blacklist successfully added to college. Returns message.
+
+            Produces:
+                Application/json.
+        
+        400:
+            Empty json object. Returns message "no data provided".
+
+            produces:
+                Application/json.
+        422:
+            Some or all of the fields are invalid. Returns error of 
+            invalid fields.
+
+            produces:
+                Application/json.
+    """
     return utils.post_locations_blacklist(county_model.County, college)
 
 
@@ -927,6 +1267,29 @@ def post_college_counties_blacklist(college):
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College, "public_id")
 def delete_college_counties_blacklist(college):
+    """Removes counties blacklist from college.
+
+    DELETE:
+        Params:
+            public_id (string) (required): public id of college.
+        
+        Consumes:
+            Application/json.
+        
+        Request body:
+            List of state FIPS.
+
+            Example::
+                ["FIPS 1", "FIPS 2"]
+    
+    Responses:
+        200:
+            Counties blacklist successfully deleted from database. 
+            Returns message.
+
+            Produces:
+                Application/json.
+    """
     return utils.delete_locations_blacklist(county_model.County, college)
 
 
@@ -935,6 +1298,47 @@ def delete_college_counties_blacklist(college):
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College, "public_id")
 def get_college_places_blacklist(college):
+    """Gets college's places blacklist in database
+
+    Retrieves paginated list of all college's places blacklist from database or 
+    college's places blacklist that contains the search request parameter if 
+    defined.
+
+    GET:
+        Request params:
+            page (int) (optional): Page number in paginated resource, defaults 
+            to one.
+            per_page (int) (optional): Number of items to retrieve per page, 
+            defaults to configuration constant LOCATIONS_PER_PAGE.
+            search (string) (optional): Search query keyword, defaults to "".
+    
+    Responses:
+        200:
+            Successfully retrieves items from database. Returns paginated list
+            of places blacklist.
+
+            produces:
+                Application/json.
+
+            Example::
+                return {
+                    "items": [list of places blacklist],
+                    "_meta": {
+                        "page": 1,
+                        "per_page": 5,
+                        "total_pages": 15,
+                        "total_items": 72 
+                    },
+                    "_links": {
+                        "self": {
+                            "url": self_url,
+                            "params": request parameters,
+                        },
+                        "next": next page's url or None if there's no page,
+                        "prev": previous page's url or None if there's no page,
+                    }
+                }
+    """
     return utils.get_locations_blacklist(
         place_model.Place,
         "colleges",
@@ -948,6 +1352,40 @@ def get_college_places_blacklist(college):
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College, "public_id")
 def post_college_places_blacklist(college):
+    """adds places blacklist to college.
+
+    POST:
+        Params:
+            public_id (string) (required): public id of college.
+
+        Consumes:
+            Application/json.
+        
+        Request Body:
+            List of state FIPS.
+        
+        Example::
+            ["FIPS 1", "FIPS 2"]
+    
+    Responses:
+        201:
+            Places blacklist successfully added to college. Returns message.
+
+            Produces:
+                Application/json.
+        
+        400:
+            Empty json object. Returns message "no data provided".
+
+            produces:
+                Application/json.
+        422:
+            Some or all of the fields are invalid. Returns error of 
+            invalid fields.
+
+            produces:
+                Application/json.
+    """
     return utils.post_locations_blacklist(place_model.Place, college)
 
 
@@ -956,6 +1394,28 @@ def post_college_places_blacklist(college):
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College, "public_id")
 def delete_college_places_blacklist(college):
+    """Removes places blacklist from college.
+
+    DELETE:
+        Params:
+            public_id (string) (required): public id of college.
+        
+        Consumes:
+            Application/json.
+        
+        Request body:
+            List of state FIPS.
+
+            Example::
+                ["FIPS 1", "FIPS 2"]
+    
+    Responses:
+        200:
+            Places blacklist successfully deleted from database. Returns message.
+
+            Produces:
+                Application/json.
+    """
     return utils.delete_locations_blacklist(place_model.Place, college)
 
 
@@ -964,6 +1424,47 @@ def delete_college_places_blacklist(college):
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College, "public_id")
 def get_college_consolidated_cities_blacklist(college):
+    """Gets college's consolidated cities blacklist in database
+
+    Retrieves paginated list of all college's consolidated cities blacklist 
+    from database or college's consolidated cities blacklist that contains the 
+    search request parameter if defined.
+
+    GET:
+        Request params:
+            page (int) (optional): Page number in paginated resource, defaults 
+            to one.
+            per_page (int) (optional): Number of items to retrieve per page, 
+            defaults to configuration constant LOCATIONS_PER_PAGE.
+            search (string) (optional): Search query keyword, defaults to "".
+    
+    Responses:
+        200:
+            Successfully retrieves items from database. Returns paginated list
+            of consolidated cities blacklist.
+
+            produces:
+                Application/json.
+
+            Example::
+                return {
+                    "items": [list of consolidated cities blacklist],
+                    "_meta": {
+                        "page": 1,
+                        "per_page": 5,
+                        "total_pages": 15,
+                        "total_items": 72 
+                    },
+                    "_links": {
+                        "self": {
+                            "url": self_url,
+                            "params": request parameters,
+                        },
+                        "next": next page's url or None if there's no page,
+                        "prev": previous page's url or None if there's no page,
+                    }
+                }
+    """
     return utils.get_locations_blacklist(
         consolidated_city_model.ConsolidatedCity,
         "colleges",
@@ -977,6 +1478,41 @@ def get_college_consolidated_cities_blacklist(college):
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College, "public_id")
 def post_college_consolidated_cities_blacklist(college):
+    """adds consolidated cities blacklist to college.
+
+    POST:
+        Params:
+            public_id (string) (required): public id of college.
+
+        Consumes:
+            Application/json.
+        
+        Request Body:
+            List of state FIPS.
+        
+        Example::
+            ["FIPS 1", "FIPS 2"]
+    
+    Responses:
+        201:
+            Consolidated cities blacklist successfully added to college. 
+            Returns message.
+
+            Produces:
+                Application/json.
+        
+        400:
+            Empty json object. Returns message "no data provided".
+
+            produces:
+                Application/json.
+        422:
+            Some or all of the fields are invalid. Returns error of 
+            invalid fields.
+
+            produces:
+                Application/json.
+    """
     return utils.post_locations_blacklist(
         consolidated_city_model.ConsolidatedCity, college)
 
@@ -986,6 +1522,29 @@ def post_college_consolidated_cities_blacklist(college):
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College, "public_id")
 def delete_college_consolidated_cities_blacklist(college):
+    """Removes consolidated cities blacklist from college.
+
+    DELETE:
+        Params:
+            public_id (string) (required): public id of college.
+        
+        Consumes:
+            Application/json.
+        
+        Request body:
+            List of state FIPS.
+
+            Example::
+                ["FIPS 1", "FIPS 2"]
+    
+    Responses:
+        200:
+            Consolidated cities blacklist successfully deleted from database. 
+            Returns message.
+
+            Produces:
+                Application/json.
+    """
     return utils.delete_locations_blacklist(
         consolidated_city_model.ConsolidatedCity, college)
 
@@ -993,9 +1552,23 @@ def delete_college_consolidated_cities_blacklist(college):
 @colleges_module.bp.route("/majors_suggestions/<string:query>")
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 def majors_suggestions(query):
+    """Returns majors suggestions
+
+    Retrieves majors suggestions where the major's name contains the query 
+    keyword.
+
+    GET:
+        Params:
+            query (string) (required): Query keyword.
+    
+    Responses:
+        200:
+            Returns majors list.
+
+            Produces:
+                Application/json.
+    """
     suggestions = major_model.Major.query.filter(
         major_model.Major.name.like(f"%{query}%")).limit(5).all()
 
-    return flask.jsonify({
-        "suggestions": [suggestion.to_dict() for suggestion in suggestions]
-    })
+    return flask.jsonify([suggestion.to_dict() for suggestion in suggestions])
