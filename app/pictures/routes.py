@@ -1,128 +1,226 @@
 import os
 
-from flask import current_app, request, send_from_directory, jsonify
-from marshmallow import ValidationError
+import flask
+import marshmallow
 
-from app import db, photos
-from app.common.utils import generate_public_id
-from app.models.college import College
-from app.models.picture import Picture
-from app.security.utils import user_role, ADMINISTRATOR, MODERATOR, BASIC
-
-from . import bp
-
-
-@bp.route("/<string:picture_id>")
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-def get_picture(picture_id):
-    picture = Picture.first(public_id=picture_id)
-
-    if picture is None:
-        return jsonify({'message': 'no picture found'}), 404
-
-    return jsonify(picture.to_dict())
+import app
+from app import pictures as pictures_module
+from app import security
+from app.models import college as college_model
+from app.models import picture as picture_model
+from app import utils
 
 
-@bp.route("/<string:picture_id>", methods=["PATCH"])
-@user_role([ADMINISTRATOR, BASIC])
-def patch_picture(picture_id):
-    picture = Picture.first(public_id=picture_id)
+@pictures_module.bp.route("/<string:public_id>")
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(picture_model.Picture, "public_id")
+def get_picture(picture):
+    """Gets picture.
 
-    if picture is None:
-        return jsonify({'message': 'no picture found'}), 404
+    Retrieves single picture from database.
 
-    data = request.get_json()
+    GET:
+        Params:
+            public_id (string) (required): public id of picture.
+    
+    Responses:
+        200:
+            Successfully retieves picture. Returns picture.
+
+            produces:
+                Application/json.
+        
+        404:
+            College not found, returns message.
+
+            produces:
+                Application/json.
+    """
+    return flask.jsonify(picture.to_dict())
+
+
+@pictures_module.bp.route("/<string:public_id>", methods=["PATCH"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(picture_model.Picture, "public_id")
+def patch_picture(picture):
+    """Edits picture.
+
+    Modifies picture model.
+
+    PATCH:
+        Params:
+            public_id (string) (required): public id of picture.
+
+        Consumes:
+            Application/json.
+        
+        Request Body:
+            Dictionary of editable picture fields.
+        
+        Example::
+            {
+                "type": "example picture name"
+            }
+    
+    Responses:
+        200:
+            Picture successfully modified. Returns message.
+
+            Produces:
+                Application/json.
+        
+        400:
+            Empty json object. Returns message "no data provided".
+
+            produces:
+                Application/json.
+        404:
+            Picture not found, returns message.
+
+            produces:
+                Application/json.
+        422:
+            some or all of the fields are invalid. Returns error of 
+            invalid fields.
+
+            produces:
+                Application/json.
+    """
+    data = flask.request.get_json()
 
     if not data:
-        return jsonify({"message": "no data found"}), 422
+        return flask.jsonify({"message": "no data provided"}), 400
 
+    #TODO: create photo schema to validate fields like type, where it should
+    #       only take the values logo and campus.
     if "type" in data and data["type"] == "logo":
         college_logo = picture.college.pictures.filter_by(type="logo").first()
 
         if college_logo is not None:
-            college_logo.update({'type': 'campus'})
+            college_logo.update({"type": "campus"})
 
     picture.update({"type": data["type"]})
-    db.session.commit()
-    return jsonify(data)
+    app.db.session.commit()
+    return flask.jsonify(data)
 
 
-@bp.route("/<string:picture_id>", methods=["DELETE"])
-@user_role([ADMINISTRATOR, BASIC])
-def delete_picture(picture_id):
-    picture = Picture.query.filter_by(public_id=picture_id).first()
+@pictures_module.bp.route("/<string:public_id>", methods=["DELETE"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(picture_model.Picture, "public_id")
+def delete_picture(picture):
+    """Deletes picture.
 
-    if picture is None:
-        return jsonify({'message': 'no picture found'}), 404
+    Deletes picture from database.
 
-    db.session.delete(picture)
-    db.session.commit()
-    return jsonify({'message': 'picture deleted'})
+    DELETE:
+        Params:
+            public_id (string) (required): public id of picture.
+    
+    Responses:
+        200:
+            Picture successfully deleted from database. Return message.
 
+            Produces:
+                Application/json.
+        404:
+            Picture not found, returns message.
 
-@bp.route("/colleges/<string:college_id>")
-@bp.route("")
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-def get_pictures(college_id=None):
-    if college_id is not None:
-        college = College.query.filter_by(public_id=college_id).first()
-        if college is None:
-            return jsonify({'message': 'College not found'}), 404
-
-        resources = college.pictures.all()
-
-        data = {'pictures': [item.to_dict() for item in resources]}
-
-        return jsonify(data)
-
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get(
-        'per_page', current_app.config['COLLEGES_PER_PAGE'], type=int)
-
-    data = Picture.to_collection_dict(Picture.query, page, per_page,
-                                      'pictures.get_pictures')
-
-    return jsonify(data)
+            produces:
+                Application/json.
+    """
+    app.db.session.delete(picture)
+    app.db.session.commit()
+    return flask.jsonify({"message": "picture deleted"})
 
 
-@bp.route("/colleges/<string:college_id>", methods=["POST"])
-@user_role([ADMINISTRATOR, BASIC])
-def post_picture(college_id):
+@pictures_module.bp.route("")
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+def get_pictures():
+    """Gets pictures in database
 
-    if 'picture' not in request.files:
-        return jsonify({'message': 'file missing'}), 404
+    Retrieves paginated list of all pictures from database.
 
-    college = College.query.filter_by(public_id=college_id).first()
+    GET:
+        Request params:
+            page (int) (optional): Page number in paginated resource, defaults 
+            to one.
+            per_page (int) (optional): Number of items to retrieve per page, 
+            defaults to configuration constant PER_PAGE.
+            search (string) (optional): Search query keyword, defaults to "".
+    
+    Responses:
+        200:
+            Successfully retrieves items from database. Returns paginated list
+            of pictures.
 
-    if college is None:
-        return jsonify({'message': 'college not found'}), 404
+            produces:
+                Application/json.
 
-    filename = photos.save(request.files['picture'])
-    data = request.get_json() or {}
-    if 'type' not in data:
-        data['type'] = 'campus'
+            Example::
+                return {
+                    "items": [list of pictures],
+                    "_meta": {
+                        "page": 1,
+                        "per_page": 5,
+                        "total_pages": 15,
+                        "total_items": 72 
+                    },
+                    "_links": {
+                        "self": {
+                            "url": self_url,
+                            "params": request parameters,
+                        },
+                        "next": next page"s url or None if there"s no page,
+                        "prev": previous page"s url or None if there"s no page,
+                    }
+                }
+    """
+    page = flask.request.args.get("page", 1, type=int)
+    per_page = flask.request.args.get(
+        "per_page", flask.current_app.config["PER_PAGE"], type=int)
 
-    picture = Picture(
-        public_id=generate_public_id(), name=filename, college=college, **data)
-    db.session.add(picture)
-    db.session.commit()
+    data = picture_model.Picture.to_collection_dict(
+        picture_model.Picture.query, page, per_page, "pictures.get_pictures")
 
-    return jsonify(picture.public_id)
+    return flask.jsonify(data)
 
 
-@bp.route("", methods=["DELETE"])
-@user_role([ADMINISTRATOR, BASIC])
+@pictures_module.bp.route("", methods=["DELETE"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def delete_pictures():
-    data = request.get_json() or {}
+    """Deletes pictures.
 
-    if not data or "pictures" not in data:
-        return jsonify({"message": "no pictures id given"}), 422
+    Deletes pictures from database.
 
-    pictures = Picture.query.filter(Picture.public_id.in_(
-        data['pictures'])).all()
+    DELETE:
+        Consumes:
+            Application/json.
+        
+        Request Body:
+            list of pictures public ids.
+    
+    Responses:
+        200:
+            Pictures successfully deleted from database. Returns message.
+
+            Produces:
+                Application/json.
+        400:
+            No picture ids given, returns message.
+
+            produces:
+                Application/json.
+    """
+    data = flask.request.get_json() or {}
+
+    if not data:
+        return flask.jsonify({"message": "no data provided"}), 400
+
+    pictures = picture_model.Picture.query.filter(
+        picture_model.Picture.public_id.in_(data)).all()
 
     for picture in pictures:
         picture.delete()
-    db.session.commit()
+    app.db.session.commit()
 
-    return jsonify({'message': 'Pictures deleted'})
+    return flask.jsonify({"message": "pictures deleted"})

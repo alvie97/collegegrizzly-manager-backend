@@ -4,11 +4,13 @@ from .common.base_mixin import BaseMixin
 from app import db, photos
 from datetime import datetime
 import os
+from app.utils import generate_public_id
 
 
 class Picture(PaginatedAPIMixin, BaseMixin, DateAudit, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    public_id = db.Column(db.String(50), unique=True)
+    public_id = db.Column(
+        db.String(50), unique=True, default=generate_public_id)
     name = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -19,7 +21,7 @@ class Picture(PaginatedAPIMixin, BaseMixin, DateAudit, db.Model):
     ATTR_FIELDS = ["type"]
 
     def __repr__(self):
-        return "<Picture {}>".format(self.name)
+        return f"<Picture {self.name}>"
 
     def delete(self):
         try:
@@ -39,11 +41,3 @@ class Picture(PaginatedAPIMixin, BaseMixin, DateAudit, db.Model):
             "audit_dates": self.audit_dates(),
             "type": self.type
         }
-
-    # TODO: see if BaseMixin can be used here
-    def update(self, data):
-        for field in self.ATTR_FIELDS:
-            if field in data:
-                setattr(
-                    self, field,
-                    data[field].lower() if field == "type" else data[field])

@@ -5,6 +5,7 @@ import app
 from app import colleges as colleges_module
 from app import security
 from app import utils
+from app.models import picture as picture_model
 from app.models import college as college_model
 from app.models import consolidated_city as consolidated_city_model
 from app.models import county as county_model
@@ -236,7 +237,7 @@ def patch_college(college):
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College, "public_id")
 def delete_college(college):
-    """ Deletes college.
+    """Deletes college.
 
     Deletes college from database.
 
@@ -246,7 +247,7 @@ def delete_college(college):
     
     Responses:
         200:
-            College successfully delete from database. Return message.
+            College successfully deleted from database. Return message.
 
             Produces:
                 Application/json.
@@ -1733,3 +1734,123 @@ def majors_suggestions(query):
         major_model.Major.name.like(f"%{query}%")).limit(5).all()
 
     return flask.jsonify([suggestion.to_dict() for suggestion in suggestions])
+
+
+@colleges_module.bp.route("/<string:public_id/pictures")
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(college_model.College, "public_id")
+def get_pictures(college):
+    """Gets college's pictures in database
+
+    Retrieves paginated list of all college's pictures from database.
+
+    GET:
+        Request params:
+            page (int) (optional): Page number in paginated resource, defaults 
+            to one.
+            per_page (int) (optional): Number of items to retrieve per page, 
+            defaults to configuration constant PER_PAGE.
+            search (string) (optional): Search query keyword, defaults to "".
+    
+    Responses:
+        200:
+            Successfully retrieves items from database. Returns paginated list
+            of colleges.
+
+            produces:
+                Application/json.
+
+            Example::
+                return {
+                    "items": [list of pictures],
+                    "_meta": {
+                        "page": 1,
+                        "per_page": 5,
+                        "total_pages": 15,
+                        "total_items": 72 
+                    },
+                    "_links": {
+                        "self": {
+                            "url": self_url,
+                            "params": request parameters,
+                        },
+                        "next": next page's url or None if there's no page,
+                        "prev": previous page's url or None if there's no page,
+                    }
+                }
+        404:
+            College not found, returns message.
+
+            produces:
+                Application/json.
+    """
+    resources = college.pictures.all()
+
+    data = [item.to_dict() for item in resources]
+
+    return flask.jsonify(data)
+
+
+@colleges_module.bp.route("/<string:public_id>/pictures", methods=["POST"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(college_model.College, "public_id")
+def post_picture(college):
+    """Creates and adds picture to college.
+
+    POST:
+        Params:
+            public_id (string) (required): public id of college.
+        
+        Consumes:
+            image/png
+            image/jpeg
+        
+        Request Body:
+            Picture file
+        
+        Request Body:
+            Dictionary of editable picture fields. name field is required.
+
+        Consumes:
+            Application/json.
+        
+        Example::
+            {
+                "name": "example picture name"
+            }
+    
+    Responses:
+        201:
+            Scholarship successfully created and added to college. 
+            Returns picture public id.
+
+            Produces:
+                Application/json.
+        
+        400:
+            Empty json object. Returns message "no data provided".
+
+            produces:
+                Application/json.
+        404:
+            College or file not found, returns message.
+
+            produces:
+                Application/json.
+    """
+    if "picture" not in flask.request.files:
+        return flask.jsonify({"message": "file missing"}), 404
+
+    filename = app.photos.save(flask.request.files["picture"])
+    data = flask.request.get_json() or {}
+
+    if "type" not in data:
+        data["type"] = "campus"
+    else:
+        data["type"] = data["type"].lower()
+
+    picture = picture_model.Picture(name=filename, college=college, **data)
+    app.db.session.add(picture)
+    app.db.session.commit()
+
+    return flask.jsonify(picture.public_id)
