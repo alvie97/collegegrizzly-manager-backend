@@ -160,8 +160,14 @@ def get_college(college):
 
             produces:
                 Application/json.
+        
+        404:
+            College not found, returns message.
+
+            produces:
+                Application/json.
     """
-    return flask.jsonify({"college": college.to_dict()})
+    return flask.jsonify(college.to_dict())
 
 
 @colleges_module.bp.route("/<string:public_id>", methods=["PATCH"])
@@ -196,6 +202,11 @@ def patch_college(college):
         
         400:
             Empty json object. Returns message "no data provided".
+
+            produces:
+                Application/json.
+        404:
+            College not found, returns message.
 
             produces:
                 Application/json.
@@ -238,6 +249,11 @@ def delete_college(college):
             College successfully delete from database. Return message.
 
             Produces:
+                Application/json.
+        404:
+            College not found, returns message.
+
+            produces:
                 Application/json.
     """
     college.delete()
@@ -290,6 +306,11 @@ def get_college_scholarships(college):
                         "prev": previous page's url or None if there's no page,
                     }
                 }
+        404:
+            College not found, returns message.
+
+            produces:
+                Application/json.
     """
 
     page = flask.request.args.get("page", 1, type=int)
@@ -347,6 +368,11 @@ def post_college_scholarship(college):
         
         400:
             Empty json object. Returns message "no data provided".
+
+            produces:
+                Application/json.
+        404:
+            College not found, returns message.
 
             produces:
                 Application/json.
@@ -420,6 +446,11 @@ def get_college_majors(college):
                         "prev": previous page's url or None if there's no page,
                     }
                 }
+        404:
+            College not found, returns message.
+
+            produces:
+                Application/json.
     """
     return flask.jsonify({"majors": college.get_majors()})
 
@@ -454,6 +485,11 @@ def post_college_majors(college):
         
         400:
             Empty json object. Returns message "no data provided".
+
+            produces:
+                Application/json.
+        404:
+            College not found, returns message.
 
             produces:
                 Application/json.
@@ -517,6 +553,11 @@ def delete_college_majors(college):
             Majors successfully delete from database. Returns message.
 
             Produces:
+                Application/json.
+        404:
+            College not found, returns message.
+
+            produces:
                 Application/json.
     """
     data = flask.request.get_json() or {}
@@ -583,6 +624,11 @@ def get_college_states(college):
                         "prev": previous page's url or None if there's no page,
                     }
                 }
+        404:
+            College not found, returns message.
+
+            produces:
+                Application/json.
     """
     return utils.get_location_requirement(
         state_model.State,
@@ -623,6 +669,11 @@ def post_college_states(college):
 
             produces:
                 Application/json.
+        404:
+            College not found, returns message.
+
+            produces:
+                Application/json.
         422:
             Some or all of the fields are invalid. Returns error of 
             invalid fields.
@@ -658,6 +709,11 @@ def delete_college_states(college):
             States successfully deleted from database. Returns message.
 
             Produces:
+                Application/json.
+        404:
+            College not found, returns message.
+
+            produces:
                 Application/json.
     """
     return utils.delete_location_requirement(state_model.State, college)
@@ -707,6 +763,11 @@ def get_college_counties(college):
                         "prev": previous page's url or None if there's no page,
                     }
                 }
+        404:
+            College not found, returns message.
+
+            produces:
+                Application/json.
     """
     return utils.get_location_requirement(
         county_model.County,
@@ -747,6 +808,11 @@ def post_college_counties(college):
 
             produces:
                 Application/json.
+        404:
+            College not found, returns message.
+
+            produces:
+                Application/json.
         422:
             Some or all of the fields are invalid. Returns error of 
             invalid fields.
@@ -782,6 +848,11 @@ def delete_college_counties(college):
             Counties successfully delete from database. Returns message.
 
             Produces:
+                Application/json.
+        404:
+            College not found, returns message.
+
+            produces:
                 Application/json.
     """
     return utils.delete_location_requirement(county_model.County, college)
@@ -831,6 +902,11 @@ def get_college_places(college):
                         "prev": previous page's url or None if there's no page,
                     }
                 }
+        404:
+            College not found, returns message.
+
+            produces:
+                Application/json.
     """
     return utils.get_location_requirement(
         place_model.Place,
@@ -871,6 +947,11 @@ def post_college_places(college):
 
             produces:
                 Application/json.
+        404:
+            College not found, returns message.
+
+            produces:
+                Application/json.
         422:
             Some or all of the fields are invalid. Returns error of 
             invalid fields.
@@ -906,6 +987,11 @@ def delete_college_places(college):
             Places successfully deleted from database. Returns message.
 
             Produces:
+                Application/json.
+        404:
+            College not found, returns message.
+
+            produces:
                 Application/json.
     """
     return utils.delete_location_requirement(place_model.Place, college)
@@ -956,6 +1042,11 @@ def get_college_consolidated_cities(college):
                         "prev": previous page's url or None if there's no page,
                     }
                 }
+        404:
+            College not found, returns message.
+
+            produces:
+                Application/json.
     """
     return utils.get_location_requirement(
         consolidated_city_model.ConsolidatedCity,
@@ -997,6 +1088,11 @@ def post_college_consolidated_cities(college):
 
             produces:
                 Application/json.
+        404:
+            College not found, returns message.
+
+            produces:
+                Application/json.
         422:
             Some or all of the fields are invalid. Returns error of 
             invalid fields.
@@ -1034,6 +1130,11 @@ def delete_college_consolidated_cities(college):
             Returns message.
 
             Produces:
+                Application/json.
+        404:
+            College not found, returns message.
+
+            produces:
                 Application/json.
     """
     return utils.delete_location_requirement(
@@ -1085,6 +1186,11 @@ def get_college_states_blacklist(college):
                         "prev": previous page's url or None if there's no page,
                     }
                 }
+        404:
+            College not found, returns message.
+
+            produces:
+                Application/json.
     """
     return utils.get_locations_blacklist(
         state_model.State,
@@ -1126,6 +1232,11 @@ def post_college_states_blacklist(college):
 
             produces:
                 Application/json.
+        404:
+            College not found, returns message.
+
+            produces:
+                Application/json.
         422:
             Some or all of the fields are invalid. Returns error of 
             invalid fields.
@@ -1161,6 +1272,11 @@ def delete_college_states_blacklist(college):
             States blacklist successfully deleted from database. Returns message.
 
             Produces:
+                Application/json.
+        404:
+            College not found, returns message.
+
+            produces:
                 Application/json.
     """
     return utils.delete_locations_blacklist(state_model.State, college)
@@ -1211,6 +1327,11 @@ def get_college_counties_blacklist(college):
                         "prev": previous page's url or None if there's no page,
                     }
                 }
+        404:
+            College not found, returns message.
+
+            produces:
+                Application/json.
     """
     return utils.get_locations_blacklist(
         county_model.County,
@@ -1252,6 +1373,11 @@ def post_college_counties_blacklist(college):
 
             produces:
                 Application/json.
+        404:
+            College not found, returns message.
+
+            produces:
+                Application/json.
         422:
             Some or all of the fields are invalid. Returns error of 
             invalid fields.
@@ -1288,6 +1414,11 @@ def delete_college_counties_blacklist(college):
             Returns message.
 
             Produces:
+                Application/json.
+        404:
+            College not found, returns message.
+
+            produces:
                 Application/json.
     """
     return utils.delete_locations_blacklist(county_model.County, college)
@@ -1338,6 +1469,11 @@ def get_college_places_blacklist(college):
                         "prev": previous page's url or None if there's no page,
                     }
                 }
+        404:
+            College not found, returns message.
+
+            produces:
+                Application/json.
     """
     return utils.get_locations_blacklist(
         place_model.Place,
@@ -1379,6 +1515,11 @@ def post_college_places_blacklist(college):
 
             produces:
                 Application/json.
+        404:
+            College not found, returns message.
+
+            produces:
+                Application/json.
         422:
             Some or all of the fields are invalid. Returns error of 
             invalid fields.
@@ -1414,6 +1555,11 @@ def delete_college_places_blacklist(college):
             Places blacklist successfully deleted from database. Returns message.
 
             Produces:
+                Application/json.
+        404:
+            College not found, returns message.
+
+            produces:
                 Application/json.
     """
     return utils.delete_locations_blacklist(place_model.Place, college)
@@ -1464,6 +1610,11 @@ def get_college_consolidated_cities_blacklist(college):
                         "prev": previous page's url or None if there's no page,
                     }
                 }
+        404:
+            College not found, returns message.
+
+            produces:
+                Application/json.
     """
     return utils.get_locations_blacklist(
         consolidated_city_model.ConsolidatedCity,
@@ -1506,6 +1657,11 @@ def post_college_consolidated_cities_blacklist(college):
 
             produces:
                 Application/json.
+        404:
+            College not found, returns message.
+
+            produces:
+                Application/json.
         422:
             Some or all of the fields are invalid. Returns error of 
             invalid fields.
@@ -1543,6 +1699,11 @@ def delete_college_consolidated_cities_blacklist(college):
             Returns message.
 
             Produces:
+                Application/json.
+        404:
+            College not found, returns message.
+
+            produces:
                 Application/json.
     """
     return utils.delete_locations_blacklist(

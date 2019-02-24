@@ -1,180 +1,485 @@
-from flask import request, jsonify, current_app
+import flask
 
-from app.models.consolidated_city import ConsolidatedCity as CC
-from app.models.county import County
-from app.models.place import Place
-from app.models.state import State
-from app.security.utils import user_role, ADMINISTRATOR, MODERATOR, BASIC
+from app.models import consolidated_city as consolidated_city_model
+from app.models import county as county_model
+from app.models import place as place_model
+from app.models import state as state_model
+from app import utils
+from app import security
 
-from . import bp
+from app import locations
 
 
-# TODO: change lazy to dynamic for pagination
-@bp.route("/states")
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
+@locations.bp.route("/states")
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_states():
-    per_page = request.args.get(
-        "per_page", current_app.config["PER_PAGE"], type=int)
-    page = request.args.get("page", 1, type=int)
+    """Gets states in database
 
-    search = request.args.get("search", "", type=str)
+    Retrieves paginated list of all states from database or states that 
+    contains the search request parameter if defined.
+
+    GET:
+        Request params:
+            page (int) (optional): Page number in paginated resource, defaults 
+            to one.
+            per_page (int) (optional): Number of items to retrieve per page, 
+            defaults to configuration constant LOCATIONS_PER_PAGE.
+            search (string) (optional): Search query keyword, defaults to "".
+    
+    Responses:
+        200:
+            Successfully retrieves items from database. Returns paginated list
+            of states.
+
+            produces:
+                Application/json.
+
+            Example::
+                return {
+                    "items": [list of states],
+                    "_meta": {
+                        "page": 1,
+                        "per_page": 5,
+                        "total_pages": 15,
+                        "total_items": 72 
+                    },
+                    "_links": {
+                        "self": {
+                            "url": self_url,
+                            "params": request parameters,
+                        },
+                        "next": next page's url or None if there's no page,
+                        "prev": previous page's url or None if there's no page,
+                    }
+                }
+    """
+    per_page = flask.request.args.get(
+        "per_page", flask.current_app.config["PER_PAGE"], type=int)
+    page = flask.request.args.get("page", 1, type=int)
+
+    search = flask.request.args.get("search", "", type=str)
 
     if search:
-        query = State.query.filter(State.name.like("%{}%".format(search)))
-        data = State.to_collection_dict(
+        query = state_model.State.query.filter(
+            state_model.State.name.like("%{}%".format(search)))
+        data = state_model.State.to_collection_dict(
             query, page, per_page, "locations.get_states", search=search)
     else:
-        query = State.query
-        data = State.to_collection_dict(query, page, per_page,
-                                        "locations.get_states")
+        query = state_model.State.query
+        data = state_model.State.to_collection_dict(query, page, per_page,
+                                                    "locations.get_states")
 
-    return jsonify({"states": data})
-
-
-@bp.route("/states/<string:fips_code>")
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-def get_state(fips_code):
-
-    state = State.query.filter_by(fips_code=fips_code).first()
-
-    if state is not None:
-        return jsonify({"state": state.to_dict()})
-
-    return jsonify({"message": "state not found"}), 404
+    return flask.jsonify(data)
 
 
-@bp.route("/states/<string:state_fips>/counties")
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-def get_state_counties(state_fips):
-    per_page = request.args.get(
-        "per_page", current_app.config["PER_PAGE"], type=int)
-    page = request.args.get("page", 1, type=int)
+@locations.bp.route("/states/<string:fips_code>")
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(state_model.State, "fips_code")
+def get_state(state):
+    """Gets state.
 
-    state = State.query.filter_by(fips_code=state_fips).first()
+    Retrieves single state from database.
 
-    if state is None:
-        return jsonify({"message": "state not found"}), 404
+    GET:
+        Params:
+            public_id (string) (required): public id of state.
+    
+    Responses:
+        200:
+            Successfully retieves state. Returns state.
+
+            produces:
+                Application/json.
+        
+        404:
+            State not found, returns message.
+
+            produces:
+                Application/json.
+    """
+    return flask.jsonify(state.to_dict())
+
+
+@locations.bp.route("/states/<string:state_fips>/counties")
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(state_model.State, "fips_code")
+def get_state_counties(state):
+    """Gets state's counties in database
+
+    Retrieves paginated list of all state's counties from database or 
+    state's counties that contains the search request parameter if 
+    defined.
+
+    GET:
+        Request params:
+            page (int) (optional): Page number in paginated resource, defaults 
+            to one.
+            per_page (int) (optional): Number of items to retrieve per page, 
+            defaults to configuration constant LOCATIONS_PER_PAGE.
+            search (string) (optional): Search query keyword, defaults to "".
+    
+    Responses:
+        200:
+            Successfully retrieves items from database. Returns paginated list
+            of states.
+
+            produces:
+                Application/json.
+
+            Example::
+                return {
+                    "items": [list of counties],
+                    "_meta": {
+                        "page": 1,
+                        "per_page": 5,
+                        "total_pages": 15,
+                        "total_items": 72 
+                    },
+                    "_links": {
+                        "self": {
+                            "url": self_url,
+                            "params": request parameters,
+                        },
+                        "next": next page's url or None if there's no page,
+                        "prev": previous page's url or None if there's no page,
+                    }
+                }
+        404:
+            State not found, returns message.
+
+            produces:
+                Application/json.
+    """
+    per_page = flask.request.args.get(
+        "per_page", flask.current_app.config["PER_PAGE"], type=int)
+    page = flask.request.args.get("page", 1, type=int)
+
     counties = state.counties
 
-    return jsonify({
-        "counties":
-        County.to_collection_dict(
+    return flask.jsonify(
+        county_model.County.to_collection_dict(
             counties,
             page,
             per_page,
             "locations.get_state_counties",
-            state_fips=state_fips)
-    })
+            state_fips=state.fips_code))
 
 
-@bp.route("/states/<string:state_fips>/places")
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-def get_state_places(state_fips=None):
-    per_page = request.args.get(
-        "per_page", current_app.config["PER_PAGE"], type=int)
-    page = request.args.get("page", 1, type=int)
+@locations.bp.route("/states/<string:state_fips>/places")
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(state_model.State, "fips_code")
+def get_state_places(state):
+    """Gets state's places in database
 
-    state = State.query.filter_by(fips_code=state_fips).first()
-    if state is None:
-        return jsonify({"message": "state not found"}), 404
+    Retrieves paginated list of all state's places from database or 
+    state's places that contains the search request parameter if 
+    defined.
+
+    GET:
+        Request params:
+            page (int) (optional): Page number in paginated resource, defaults 
+            to one.
+            per_page (int) (optional): Number of items to retrieve per page, 
+            defaults to configuration constant LOCATIONS_PER_PAGE.
+            search (string) (optional): Search query keyword, defaults to "".
+    
+    Responses:
+        200:
+            Successfully retrieves items from database. Returns paginated list
+            of states.
+
+            produces:
+                Application/json.
+
+            Example::
+                return {
+                    "items": [list of places],
+                    "_meta": {
+                        "page": 1,
+                        "per_page": 5,
+                        "total_pages": 15,
+                        "total_items": 72 
+                    },
+                    "_links": {
+                        "self": {
+                            "url": self_url,
+                            "params": request parameters,
+                        },
+                        "next": next page's url or None if there's no page,
+                        "prev": previous page's url or None if there's no page,
+                    }
+                }
+        404:
+            State not found, returns message.
+
+            produces:
+                Application/json.
+    """
+    per_page = flask.request.args.get(
+        "per_page", flask.current_app.config["PER_PAGE"], type=int)
+    page = flask.request.args.get("page", 1, type=int)
+
     places = state.places
-    return jsonify({
-        "places":
-        Place.to_collection_dict(
+    return flask.jsonify(
+        place_model.Place.to_collection_dict(
             places,
             page,
             per_page,
             "locations.get_state_places",
-            state_fips=state_fips)
-    })
+            state_fips=state.fips_code))
 
 
-@bp.route("/states/<string:state_fips>/consolidated_cities")
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-def get_state_consolidated_cities(state_fips):
-    per_page = request.args.get(
-        "per_page", current_app.config["PER_PAGE"], type=int)
-    page = request.args.get("page", 1, type=int)
+@locations.bp.route("/states/<string:state_fips>/consolidated_cities")
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(state_model.State, "fips_code")
+def get_state_consolidated_cities(state):
+    """Gets state's consolidated cities in database
 
-    state = State.query.filter_by(fips_code=state_fips).first()
+    Retrieves paginated list of all state's consolidated cities from database or 
+    state's consolidated cities that contains the search request parameter if 
+    defined.
 
-    if state is None:
-        return jsonify({"message": "state not found"}), 404
+    GET:
+        Request params:
+            page (int) (optional): Page number in paginated resource, defaults 
+            to one.
+            per_page (int) (optional): Number of items to retrieve per page, 
+            defaults to configuration constant LOCATIONS_PER_PAGE.
+            search (string) (optional): Search query keyword, defaults to "".
+    
+    Responses:
+        200:
+            Successfully retrieves items from database. Returns paginated list
+            of states.
+
+            produces:
+                Application/json.
+
+            Example::
+                return {
+                    "items": [list of consolidated cities],
+                    "_meta": {
+                        "page": 1,
+                        "per_page": 5,
+                        "total_pages": 15,
+                        "total_items": 72 
+                    },
+                    "_links": {
+                        "self": {
+                            "url": self_url,
+                            "params": request parameters,
+                        },
+                        "next": next page's url or None if there's no page,
+                        "prev": previous page's url or None if there's no page,
+                    }
+                }
+        404:
+            State not found, returns message.
+
+            produces:
+                Application/json.
+    """
+    per_page = flask.request.args.get(
+        "per_page", flask.current_app.config["PER_PAGE"], type=int)
+    page = flask.request.args.get("page", 1, type=int)
+
     consolidated_cities = state.consolidated_cities
 
-    return jsonify({
-        "consolidated_cities":
-        CC.to_collection_dict(
+    return flask.jsonify(
+        consolidated_city_model.ConsolidatedCity.to_collection_dict(
             consolidated_cities,
             page,
             per_page,
             "locations.get_state_consolidated_cities",
-            state_fips=state_fips)
-    })
+            state_fips=state.fips_code))
 
 
-@bp.route("/counties")
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
+@locations.bp.route("/counties")
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_counties():
-    per_page = request.args.get(
-        "per_page", current_app.config["PER_PAGE"], type=int)
-    page = request.args.get("page", 1, type=int)
+    """Gets counties in database
 
-    search = request.args.get("search", "", type=str)
+    Retrieves paginated list of all counties from database or counties that 
+    contains the search request parameter if defined.
+
+    GET:
+        Request params:
+            page (int) (optional): Page number in paginated resource, defaults 
+            to one.
+            per_page (int) (optional): Number of items to retrieve per page, 
+            defaults to configuration constant LOCATIONS_PER_PAGE.
+            search (string) (optional): Search query keyword, defaults to "".
+    
+    Responses:
+        200:
+            Successfully retrieves items from database. Returns paginated list
+            of counties.
+
+            produces:
+                Application/json.
+
+            Example::
+                return {
+                    "items": [list of counties],
+                    "_meta": {
+                        "page": 1,
+                        "per_page": 5,
+                        "total_pages": 15,
+                        "total_items": 72 
+                    },
+                    "_links": {
+                        "self": {
+                            "url": self_url,
+                            "params": request parameters,
+                        },
+                        "next": next page's url or None if there's no page,
+                        "prev": previous page's url or None if there's no page,
+                    }
+                }
+    """
+    per_page = flask.request.args.get(
+        "per_page", flask.current_app.config["PER_PAGE"], type=int)
+    page = flask.request.args.get("page", 1, type=int)
+
+    search = flask.request.args.get("search", "", type=str)
 
     if search:
-        query = County.query.filter(County.name.like("%{}%".format(search)))
-        data = County.to_collection_dict(
+        query = county_model.County.query.filter(
+            county_model.County.name.like("%{}%".format(search)))
+        data = county_model.County.to_collection_dict(
             query, page, per_page, "locations.get_counties", search=search)
     else:
-        query = County.query
-        data = County.to_collection_dict(query, page, per_page,
-                                         "locations.get_counties")
+        query = county_model.County.query
+        data = county_model.County.to_collection_dict(
+            query, page, per_page, "locations.get_counties")
 
-    return jsonify({"counties": data})
+    return flask.jsonify(data)
 
 
-@bp.route("/places")
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
+@locations.bp.route("/places")
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_places():
-    per_page = request.args.get(
-        "per_page", current_app.config["PER_PAGE"], type=int)
-    page = request.args.get("page", 1, type=int)
+    """Gets places in database
 
-    search = request.args.get("search", "", type=str)
+    Retrieves paginated list of all places from database or places that 
+    contains the search request parameter if defined.
+
+    GET:
+        Request params:
+            page (int) (optional): Page number in paginated resource, defaults 
+            to one.
+            per_page (int) (optional): Number of items to retrieve per page, 
+            defaults to configuration constant LOCATIONS_PER_PAGE.
+            search (string) (optional): Search query keyword, defaults to "".
+    
+    Responses:
+        200:
+            Successfully retrieves items from database. Returns paginated list
+            of places.
+
+            produces:
+                Application/json.
+
+            Example::
+                return {
+                    "items": [list of places],
+                    "_meta": {
+                        "page": 1,
+                        "per_page": 5,
+                        "total_pages": 15,
+                        "total_items": 72 
+                    },
+                    "_links": {
+                        "self": {
+                            "url": self_url,
+                            "params": request parameters,
+                        },
+                        "next": next page's url or None if there's no page,
+                        "prev": previous page's url or None if there's no page,
+                    }
+                }
+    """
+    per_page = flask.request.args.get(
+        "per_page", flask.current_app.config["PER_PAGE"], type=int)
+    page = flask.request.args.get("page", 1, type=int)
+
+    search = flask.request.args.get("search", "", type=str)
 
     if search:
-        query = Place.query.filter(Place.name.like("%{}%".format(search)))
-        data = Place.to_collection_dict(
+        query = place_model.Place.query.filter(
+            place_model.Place.name.like("%{}%".format(search)))
+        data = place_model.Place.to_collection_dict(
             query, page, per_page, "locations.get_places", search=search)
     else:
-        query = Place.query
-        data = Place.to_collection_dict(query, page, per_page,
-                                        "locations.get_places")
+        query = place_model.Place.query
+        data = place_model.Place.to_collection_dict(query, page, per_page,
+                                                    "locations.get_places")
 
-    return jsonify({"places": data})
+    return flask.jsonify(data)
 
 
-@bp.route("/consolidated_cities")
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
+@locations.bp.route("/consolidated_cities")
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_consolidated_cities():
-    per_page = request.args.get(
-        "per_page", current_app.config["PER_PAGE"], type=int)
-    page = request.args.get("page", 1, type=int)
+    """Gets consolidated cities in database
 
-    search = request.args.get("search", "", type=str)
+    Retrieves paginated list of all consolidated cities from database or 
+    consolidated cities that contains the search request parameter if defined.
+
+    GET:
+        Request params:
+            page (int) (optional): Page number in paginated resource, defaults 
+            to one.
+            per_page (int) (optional): Number of items to retrieve per page, 
+            defaults to configuration constant LOCATIONS_PER_PAGE.
+            search (string) (optional): Search query keyword, defaults to "".
+    
+    Responses:
+        200:
+            Successfully retrieves items from database. Returns paginated list
+            of consolidated cities.
+
+            produces:
+                Application/json.
+
+            Example::
+                return {
+                    "items": [list of consolidated cities],
+                    "_meta": {
+                        "page": 1,
+                        "per_page": 5,
+                        "total_pages": 15,
+                        "total_items": 72 
+                    },
+                    "_links": {
+                        "self": {
+                            "url": self_url,
+                            "params": request parameters,
+                        },
+                        "next": next page's url or None if there's no page,
+                        "prev": previous page's url or None if there's no page,
+                    }
+                }
+    """
+    per_page = flask.request.args.get(
+        "per_page", flask.current_app.config["PER_PAGE"], type=int)
+    page = flask.request.args.get("page", 1, type=int)
+
+    search = flask.request.args.get("search", "", type=str)
 
     if search:
-        query = CC.query.filter(CC.name.like("%{}%".format(search)))
-        data = CC.to_collection_dict(
+        query = consolidated_city_model.ConsolidatedCity.query.filter(
+            consolidated_city_model.ConsolidatedCity.name.like(
+                "%{}%".format(search)))
+        data = consolidated_city_model.ConsolidatedCity.to_collection_dict(
             query,
             page,
             per_page,
             "locations.get_consolidated_cities",
             search=search)
     else:
-        query = CC.query
-        data = CC.to_collection_dict(query, page, per_page,
-                                     "locations.get_consolidated_cities")
+        query = consolidated_city_model.ConsolidatedCity.query
+        data = consolidated_city_model.ConsolidatedCity.to_collection_dict(
+            query, page, per_page, "locations.get_consolidated_cities")
 
-    return jsonify({"consolidated_cities": data})
+    return flask.jsonify(data)

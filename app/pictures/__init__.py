@@ -1,4 +1,9 @@
-from flask import Blueprint
-bp = Blueprint("pictures", __name__)
+"""Handles pictures
+
+Attributes:
+    bp: Flask Blueprint.
+"""
+import flask
+bp = flask.Blueprint("pictures", __name__)
 
 from . import routes
