@@ -11,6 +11,7 @@ def generate_public_id():
     return str(uuid4()).replace('-', '')
 
 
+#TODO: add param for url param name.
 def get_entity(entity, search_key):
 
     def get_entity_decorator(f):
@@ -63,10 +64,10 @@ def get_location_requirement(location, package_name, base_endpoint, entity,
 def post_location_requirement(location, entity):
     data = request.get_json() or {}
 
-    if not data or "location_fips" not in data:
+    if not data:
         return jsonify({"message": "No data provided"}), 400
 
-    for location_fips in data["location_fips"]:
+    for location_fips in data:
         location_to_add = location.query.filter_by(
             fips_code=location_fips).first()
 
@@ -84,10 +85,10 @@ def post_location_requirement(location, entity):
 def delete_location_requirement(location, entity):
     data = request.get_json() or {}
 
-    if not data or "location_fips" not in data:
+    if not data:
         return jsonify({"message": "No data provided"}), 400
 
-    for location_fips in data["location_fips"]:
+    for location_fips in data:
         location_to_delete = location.query.filter_by(
             fips_code=location_fips).first()
 

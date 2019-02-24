@@ -25,6 +25,46 @@ scholarship_schema = scholarship_schema.ScholarshipSchema()
 @colleges_module.bp.route("/", methods=["GET"], strict_slashes=False)
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_colleges():
+    """Gets colleges in database
+
+    Retrieves paginated list of all colleges from database or colleges that 
+    contains the search request parameter if defined.
+
+    GET:
+        Request params:
+            page (int) (optional): Page number in paginated resource, defaults 
+            to one.
+            per_page (int) (optional): Number of items to retrieve per page, 
+            defaults to configuration constant COLLEGE_PER_PAGE.
+            search (string) (optional): Search query keyword, defaults to "".
+    
+    Responses:
+        200:
+            Successfully retrieves items from database. Returns paginated list
+            of colleges.
+
+            produces:
+                Application/json.
+
+            Example::
+                return {
+                    "items": [list of colleges],
+                    "_meta": {
+                        "page": 1,
+                        "per_page": 5,
+                        "total_pages": 15,
+                        "total_items": 72 
+                    },
+                    "_links": {
+                        "self": {
+                            "url": self_url,
+                            "params": request parameters,
+                        },
+                        "next": next page's url or None if there's no page,
+                        "prev": previous page's url or None if there's no page,
+                    }
+                }
+    """
     page = flask.request.args.get("page", 1, type=int)
     per_page = flask.request.args.get(
         "per_page", flask.current_app.config["COLLEGES_PER_PAGE"], type=int)
@@ -45,9 +85,47 @@ def get_colleges():
     return flask.jsonify(data)
 
 
+#TODO: Return college url instead of college public id.
 @colleges_module.bp.route("/", methods=["POST"], strict_slashes=False)
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 def post_college():
+    """Creates college.
+
+    Creates, validates and adds college to database.
+
+    Post:
+        Consumes:
+            Application/json.
+        Request body:
+            Editable colleges fields. See college model.
+        
+            Example::
+                {
+                    "name": "example name"
+                }
+    Responses:
+        201:
+            Successfully created college. Returns college public id.
+
+            produces:
+                Application/json.
+
+            Example::
+                {
+                    "college_id": uuid string without dashes
+                }
+        400:
+            Empty json object. Returns message "no data provided".
+
+            produces:
+                Application/json.
+        422:
+            some or all of the fields are invalid. Returns error of 
+            invalid fields.
+
+            produces:
+                Application/json.
+    """
     data = flask.request.get_json() or {}
 
     if not data:
@@ -61,13 +139,28 @@ def post_college():
     app.db.session.add(college)
     app.db.session.commit()
 
-    return flask.jsonify({"college_id": college.public_id})
+    return flask.jsonify({"college_id": college.public_id}), 201
 
 
 @colleges_module.bp.route("/<string:public_id>", methods=["GET"])
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College, "public_id")
 def get_college(college):
+    """Gets college.
+
+    Retrieves single college from database.
+
+    GET:
+        Params:
+            public_id (string) (required): public id of college.
+    
+    Responses:
+        200:
+            Successfully retieves college. Returns college.
+
+            produces:
+                Application/json.
+    """
     return flask.jsonify({"college": college.to_dict()})
 
 
@@ -75,6 +168,44 @@ def get_college(college):
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College, "public_id")
 def patch_college(college):
+    """Edits college.
+
+    Modifies college model.
+
+    PATCH:
+        Params:
+            public_id (string) (required): public id of college.
+
+        Consumes:
+            Application/json.
+        
+        Request Body:
+            Dictionary of editable college fields.
+        
+        Example::
+            {
+                "name": "example college name"
+            }
+    
+    Responses:
+        200:
+            College successfully modified. Returns message.
+
+            Produces:
+                Application/json.
+        
+        400:
+            Empty json object. Returns message "no data provided".
+
+            produces:
+                Application/json.
+        422:
+            some or all of the fields are invalid. Returns error of 
+            invalid fields.
+
+            produces:
+                Application/json.
+    """
     data = flask.request.get_json() or {}
 
     if not data:
@@ -87,13 +218,28 @@ def patch_college(college):
 
     college.update(data)
     app.db.session.commit()
-    return flask.jsonify("college saved successfully")
+    return flask.jsonify({"message": "college saved successfully"})
 
 
 @colleges_module.bp.route("/<string:public_id>", methods=["DELETE"])
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College, "public_id")
 def delete_college(college):
+    """ Deletes college.
+
+    Deletes college from database.
+
+    DELETE:
+        Params:
+            public_id (string) (required): public id of college.
+    
+    Responses:
+        200:
+            College successfully delete from database. Return message.
+
+            Produces:
+                Application/json.
+    """
     college.delete()
     app.db.session.commit()
 
@@ -104,6 +250,47 @@ def delete_college(college):
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College, "public_id")
 def get_college_scholarships(college):
+    """Gets college's scholarships in database
+
+    Retrieves paginated list of all college's scholarships from database or 
+    college's scholarships that contains the search request parameter if 
+    defined.
+
+    GET:
+        Request params:
+            page (int) (optional): Page number in paginated resource, defaults 
+            to one.
+            per_page (int) (optional): Number of items to retrieve per page, 
+            defaults to configuration constant SCHOLARSHIPS_PER_PAGE.
+            search (string) (optional): Search query keyword, defaults to "".
+    
+    Responses:
+        200:
+            Successfully retrieves items from database. Returns paginated list
+            of colleges.
+
+            produces:
+                Application/json.
+
+            Example::
+                return {
+                    "items": [list of scholarships],
+                    "_meta": {
+                        "page": 1,
+                        "per_page": 5,
+                        "total_pages": 15,
+                        "total_items": 72 
+                    },
+                    "_links": {
+                        "self": {
+                            "url": self_url,
+                            "params": request parameters,
+                        },
+                        "next": next page's url or None if there's no page,
+                        "prev": previous page's url or None if there's no page,
+                    }
+                }
+    """
 
     page = flask.request.args.get("page", 1, type=int)
     per_page = flask.request.args.get(
@@ -133,6 +320,43 @@ def get_college_scholarships(college):
 @colleges_module.bp.route("/<string:public_id>/scholarships", methods=["POST"])
 @utils.get_entity(college_model.College, "public_id")
 def post_college_scholarship(college):
+    """Creates and adds scholarship to college.
+
+    POST:
+        Params:
+            public_id (string) (required): public id of college.
+
+        Consumes:
+            Application/json.
+        
+        Request Body:
+            Dictionary of editable scholarship fields.
+        
+        Example::
+            {
+                "name": "example scholarship name"
+            }
+    
+    Responses:
+        201:
+            Scholarship successfully created and added to college. 
+            Returns scholarship public id.
+
+            Produces:
+                Application/json.
+        
+        400:
+            Empty json object. Returns message "no data provided".
+
+            produces:
+                Application/json.
+        422:
+            some or all of the fields are invalid. Returns error of 
+            invalid fields.
+
+            produces:
+                Application/json.
+    """
     data = flask.request.get_json()
 
     if not data:
@@ -149,19 +373,97 @@ def post_college_scholarship(college):
     app.db.session.add(scholarship)
     app.db.session.commit()
 
-    return flask.jsonify({"scholarship_id": scholarship.public_id})
+    return flask.jsonify({"scholarship_id": scholarship.public_id}), 201
 
 
 @colleges_module.bp.route("/<string:public_id>/majors", methods=["GET"])
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College, "public_id")
 def get_college_majors(college):
+    """Gets college's majors in database
+
+    Retrieves paginated list of all college's majors from database or 
+    college's majors that contains the search request parameter if 
+    defined.
+
+    GET:
+        Request params:
+            page (int) (optional): Page number in paginated resource, defaults 
+            to one.
+            per_page (int) (optional): Number of items to retrieve per page, 
+            defaults to configuration constant MAJORS_PER_PAGE.
+            search (string) (optional): Search query keyword, defaults to "".
+    
+    Responses:
+        200:
+            Successfully retrieves items from database. Returns paginated list
+            of majors.
+
+            produces:
+                Application/json.
+
+            Example::
+                return {
+                    "items": [list of majors],
+                    "_meta": {
+                        "page": 1,
+                        "per_page": 5,
+                        "total_pages": 15,
+                        "total_items": 72 
+                    },
+                    "_links": {
+                        "self": {
+                            "url": self_url,
+                            "params": request parameters,
+                        },
+                        "next": next page's url or None if there's no page,
+                        "prev": previous page's url or None if there's no page,
+                    }
+                }
+    """
     return flask.jsonify({"majors": college.get_majors()})
 
 
 @colleges_module.bp.route("/<string:public_id>/majors", methods=["POST"])
 @utils.get_entity(college_model.College, "public_id")
 def post_college_majors(college):
+    """Creates and adds major to college.
+
+    POST:
+        Params:
+            public_id (string) (required): public id of college.
+
+        Consumes:
+            Application/json.
+        
+        Request Body:
+            Dictionary of editable major fields.
+        
+        Example::
+            {
+                "name": "example major name"
+            }
+    
+    Responses:
+        201:
+            Major successfully created and added to college. 
+            Returns scholarship public id.
+
+            Produces:
+                Application/json.
+        
+        400:
+            Empty json object. Returns message "no data provided".
+
+            produces:
+                Application/json.
+        422:
+            Some or all of the fields are invalid. Returns error of 
+            invalid fields.
+
+            produces:
+                Application/json.
+    """
     data = flask.request.get_json() or {}
 
     if not data or "majors" not in data:
@@ -183,18 +485,46 @@ def post_college_majors(college):
         college.add_major(major_to_add)
 
     app.db.session.commit()
-    return flask.jsonify({"message": "majors added"})
+    return flask.jsonify({"message": "majors added"}), 201
 
 
 @colleges_module.bp.route("/<string:public_id>/majors", methods=["DELETE"])
 @utils.get_entity(college_model.College, "public_id")
 def delete_college_majors(college):
+    """Removes majors from college.
+
+    DELETE:
+        Params:
+            public_id (string) (required): public id of college.
+        
+        Consumes:
+            Application/json.
+        
+        Request body:
+            List of majors to remove.
+
+            Example::
+                [
+                    {major 1},
+                    {major 2}
+                ]
+
+                See major model.
+
+    
+    Responses:
+        200:
+            Majors successfully delete from database. Returns message.
+
+            Produces:
+                Application/json.
+    """
     data = flask.request.get_json() or {}
 
-    if not data or "majors" not in data:
+    if not data:
         return flask.jsonify({"message": "no data provided"}), 400
 
-    for major in data["majors"]:
+    for major in data:
         major_to_remove = college.majors.filter_by(name=major).first()
 
         if major_to_remove is None:
@@ -213,6 +543,47 @@ def delete_college_majors(college):
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College, "public_id")
 def get_college_states(college):
+    """Gets college's states in database
+
+    Retrieves paginated list of all college's states from database or 
+    college's states that contains the search request parameter if 
+    defined.
+
+    GET:
+        Request params:
+            page (int) (optional): Page number in paginated resource, defaults 
+            to one.
+            per_page (int) (optional): Number of items to retrieve per page, 
+            defaults to configuration constant STATES_PER_PAGE.
+            search (string) (optional): Search query keyword, defaults to "".
+    
+    Responses:
+        200:
+            Successfully retrieves items from database. Returns paginated list
+            of states.
+
+            produces:
+                Application/json.
+
+            Example::
+                return {
+                    "items": [list of states],
+                    "_meta": {
+                        "page": 1,
+                        "per_page": 5,
+                        "total_pages": 15,
+                        "total_items": 72 
+                    },
+                    "_links": {
+                        "self": {
+                            "url": self_url,
+                            "params": request parameters,
+                        },
+                        "next": next page's url or None if there's no page,
+                        "prev": previous page's url or None if there's no page,
+                    }
+                }
+    """
     return utils.get_location_requirement(
         state_model.State,
         "colleges",
@@ -225,6 +596,41 @@ def get_college_states(college):
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College, "public_id")
 def post_college_states(college):
+    """adds state to college.
+
+    POST:
+        Params:
+            public_id (string) (required): public id of college.
+
+        Consumes:
+            Application/json.
+        
+        Request Body:
+            List of state FIPS.
+        
+        Example::
+            ["FIPS 1", "FIPS 2"]
+    
+    Responses:
+        201:
+            State successfully created and added to college. 
+            Returns scholarship public id.
+
+            Produces:
+                Application/json.
+        
+        400:
+            Empty json object. Returns message "no data provided".
+
+            produces:
+                Application/json.
+        422:
+            Some or all of the fields are invalid. Returns error of 
+            invalid fields.
+
+            produces:
+                Application/json.
+    """
     return utils.post_location_requirement(state_model.State, college)
 
 
@@ -232,6 +638,31 @@ def post_college_states(college):
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College, "public_id")
 def delete_college_states(college):
+    """Removes states from college.
+
+    DELETE:
+        Params:
+            public_id (string) (required): public id of college.
+        
+        Consumes:
+            Application/json.
+        
+        Request body:
+            List of state FIPS.
+
+            Example::
+            ["FIPS 1", "FIPS 2"]
+
+                See state model.
+
+    
+    Responses:
+        200:
+            States successfully delete from database. Returns message.
+
+            Produces:
+                Application/json.
+    """
     return utils.delete_location_requirement(state_model.State, college)
 
 
@@ -239,6 +670,47 @@ def delete_college_states(college):
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College, "public_id")
 def get_college_counties(college):
+    """Gets college's counties in database
+
+    Retrieves paginated list of all college's counties from database or 
+    college's counties that contains the search request parameter if 
+    defined.
+
+    GET:
+        Request params:
+            page (int) (optional): Page number in paginated resource, defaults 
+            to one.
+            per_page (int) (optional): Number of items to retrieve per page, 
+            defaults to configuration constant COUNTIESS_PER_PAGE.
+            search (string) (optional): Search query keyword, defaults to "".
+    
+    Responses:
+        200:
+            Successfully retrieves items from database. Returns paginated list
+            of counties.
+
+            produces:
+                Application/json.
+
+            Example::
+                return {
+                    "items": [list of counties],
+                    "_meta": {
+                        "page": 1,
+                        "per_page": 5,
+                        "total_pages": 15,
+                        "total_items": 72 
+                    },
+                    "_links": {
+                        "self": {
+                            "url": self_url,
+                            "params": request parameters,
+                        },
+                        "next": next page's url or None if there's no page,
+                        "prev": previous page's url or None if there's no page,
+                    }
+                }
+    """
     return utils.get_location_requirement(
         county_model.County,
         "colleges",
@@ -265,6 +737,47 @@ def delete_college_counties(college):
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College, "public_id")
 def get_college_places(college):
+    """Gets college's places in database
+
+    Retrieves paginated list of all college's places from database or 
+    college's places that contains the search request parameter if 
+    defined.
+
+    GET:
+        Request params:
+            page (int) (optional): Page number in paginated resource, defaults 
+            to one.
+            per_page (int) (optional): Number of items to retrieve per page, 
+            defaults to configuration constant PLACES_PER_PAGE.
+            search (string) (optional): Search query keyword, defaults to "".
+    
+    Responses:
+        200:
+            Successfully retrieves items from database. Returns paginated list
+            of places.
+
+            produces:
+                Application/json.
+
+            Example::
+                return {
+                    "items": [list of places],
+                    "_meta": {
+                        "page": 1,
+                        "per_page": 5,
+                        "total_pages": 15,
+                        "total_items": 72 
+                    },
+                    "_links": {
+                        "self": {
+                            "url": self_url,
+                            "params": request parameters,
+                        },
+                        "next": next page's url or None if there's no page,
+                        "prev": previous page's url or None if there's no page,
+                    }
+                }
+    """
     return utils.get_location_requirement(
         place_model.Place,
         "colleges",
@@ -292,6 +805,47 @@ def delete_college_places(college):
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College, "public_id")
 def get_college_consolidated_cities(college):
+    """Gets college's consolidated cities in database
+
+    Retrieves paginated list of all college's consolidated cities from database or 
+    college's consolidated cities that contains the search request parameter if 
+    defined.
+
+    GET:
+        Request params:
+            page (int) (optional): Page number in paginated resource, defaults 
+            to one.
+            per_page (int) (optional): Number of items to retrieve per page, 
+            defaults to configuration constant CONSOLIDATED_CITIES_PER_PAGE.
+            search (string) (optional): Search query keyword, defaults to "".
+    
+    Responses:
+        200:
+            Successfully retrieves items from database. Returns paginated list
+            of consolidated cities.
+
+            produces:
+                Application/json.
+
+            Example::
+                return {
+                    "items": [list of consolidated cities],
+                    "_meta": {
+                        "page": 1,
+                        "per_page": 5,
+                        "total_pages": 15,
+                        "total_items": 72 
+                    },
+                    "_links": {
+                        "self": {
+                            "url": self_url,
+                            "params": request parameters,
+                        },
+                        "next": next page's url or None if there's no page,
+                        "prev": previous page's url or None if there's no page,
+                    }
+                }
+    """
     return utils.get_location_requirement(
         consolidated_city_model.ConsolidatedCity,
         "colleges",
