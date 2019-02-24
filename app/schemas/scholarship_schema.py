@@ -1,5 +1,6 @@
-from marshmallow import fields, Schema, validates, ValidationError
 import re
+
+from marshmallow import Schema, ValidationError, fields, validates
 
 
 class ScholarshipSchema(Schema):

@@ -1,5 +1,6 @@
+from marshmallow import Schema, ValidationError, fields, post_load, validates
+
 from app.models.major import Major
-from marshmallow import Schema, fields, validates, ValidationError, post_load
 
 
 class MajorSchema(Schema):

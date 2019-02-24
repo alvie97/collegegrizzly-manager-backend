@@ -1,8 +1,8 @@
 from flask import g
 
+from app import db
 from app.models.user import User
 from helpers import get_cookie
-from app import db
 
 
 def test_login(app, client):

@@ -1,7 +1,8 @@
+from marshmallow import Schema, ValidationError, fields, post_load, validates
+
 from app.common.utils import generate_public_id
 from app.models.user import User
-from marshmallow import (fields, Schema, validates, ValidationError, post_load)
-from security.utils import ADMINISTRATOR, MODERATOR, BASIC
+from security.utils import ADMINISTRATOR, BASIC, MODERATOR
 
 
 class CollegeSchema(Schema):

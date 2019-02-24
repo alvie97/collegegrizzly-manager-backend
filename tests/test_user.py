@@ -1,5 +1,5 @@
-from app.models.user import User
 from app import db
+from app.models.user import User
 
 url = "/api/users"
 

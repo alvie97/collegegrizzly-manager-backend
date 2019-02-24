@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from flask import current_app, jsonify, request
 
 from app import db
@@ -6,11 +8,9 @@ from app.models.submission import Submission
 from app.models.user import User
 from app.security.utils import (ADMINISTRATOR, BASIC, get_current_user,
                                 user_role)
-from app.common.utils import get_entity
+from app.utils import get_entity
 
 from . import bp
-
-from datetime import datetime
 
 
 @bp.route("/submit/<string:public_id>", methods=["POST"])

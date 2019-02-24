@@ -1,14 +1,15 @@
-from .common.base_mixin import BaseMixin
-from .common.date_audit import DateAudit
-from .common.location_mixin import LocationMixin
-from .common.location_blacklist_mixin import LocationBlacklistMixin
-from .common.paginated_api_mixin import PaginatedAPIMixin
-from .program import Program
-from .relationship_tables import (scholarship_program, scholarships_needed)
-from app.common.utils import generate_public_id
+from flask import url_for
 
 from app import db
-from flask import url_for
+from app.common.utils import generate_public_id
+
+from .common.base_mixin import BaseMixin
+from .common.date_audit import DateAudit
+from .common.location_blacklist_mixin import LocationBlacklistMixin
+from .common.location_mixin import LocationMixin
+from .common.paginated_api_mixin import PaginatedAPIMixin
+from .program import Program
+from .relationship_tables import scholarship_program, scholarships_needed
 
 
 class Scholarship(PaginatedAPIMixin, LocationMixin, LocationBlacklistMixin,

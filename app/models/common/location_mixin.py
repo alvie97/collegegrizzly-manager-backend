@@ -1,13 +1,16 @@
-from flask import url_for
-from app import db
-from sqlalchemy.orm.query import Query as SqlalchemyQuery
 from typing import Tuple
+
+from flask import url_for
+from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.orm.query import Query as SqlalchemyQuery
+
+from app import db
+from app.common.errors import LocationEntityError
+
 from ..consolidated_city import ConsolidatedCity
 from ..county import County
 from ..place import Place
 from ..state import State
-from sqlalchemy.ext.declarative import declared_attr
-from app.common.errors import LocationEntityError
 
 
 class LocationMixin(object):

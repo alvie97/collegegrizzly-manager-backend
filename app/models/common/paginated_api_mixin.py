@@ -1,7 +1,8 @@
-from flask import url_for
-from typing import Optional, Any
-from flask_sqlalchemy.model import Model as SqlalchemyModel
+from typing import Any, Optional
 from urllib import parse
+
+from flask import url_for
+from flask_sqlalchemy.model import Model as SqlalchemyModel
 
 
 class PaginatedAPIMixin(object):

@@ -1,11 +1,13 @@
 from flask import url_for
+from sqlalchemy.ext.declarative import declared_attr
+
 from app import db
+from app.common.errors import LocationEntityError
+
 from ..consolidated_city import ConsolidatedCity
 from ..county import County
 from ..place import Place
 from ..state import State
-from sqlalchemy.ext.declarative import declared_attr
-from app.common.errors import LocationEntityError
 
 # TODO: review and improve blacklist, and possibly location_mixin
 

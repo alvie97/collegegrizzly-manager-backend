@@ -2,14 +2,15 @@
 # admins can't change other administrators
 #TODO: add user schema validation
 
-from . import bp
+from flask import current_app, jsonify, request
+from sqlalchemy import and_, not_
+
 from app import db
-from app.security.utils import user_role, ADMINISTRATOR
-from flask import request, jsonify, current_app
 from app.common.utils import get_entity
 from app.models.user import User
-from app.security.utils import get_current_user
-from sqlalchemy import not_, and_
+from app.security.utils import ADMINISTRATOR, get_current_user, user_role
+
+from . import bp
 
 
 @bp.route("/", methods=["POST"], strict_slashes=False)

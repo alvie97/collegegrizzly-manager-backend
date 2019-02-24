@@ -1,5 +1,6 @@
+from marshmallow import Schema, ValidationError, fields, post_load, validates
+
 from app.models.college import College
-from marshmallow import (fields, Schema, validates, ValidationError, post_load)
 
 
 class CollegeSchema(Schema):

@@ -1,8 +1,9 @@
-from app.common.utils import generate_public_id
-from app import db
-from app.models.college import College
 from decimal import Decimal
+
+from app import db
 from app.cli import _save_states
+from app.utils import generate_public_id
+from app.models.college import College
 
 url = "/api/colleges"
 

@@ -1,5 +1,6 @@
-from .common.base_mixin import BaseMixin
 from app import db
+
+from .common.base_mixin import BaseMixin
 
 
 class Program(db.Model, BaseMixin):

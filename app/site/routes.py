@@ -1,6 +1,8 @@
-from . import bp
-from flask import render_template, make_response
+from flask import make_response, render_template
+
 from app.security.csrf import generate_csrf_token, set_csrf_token_cookies
+
+from . import bp
 
 
 @bp.route("/")

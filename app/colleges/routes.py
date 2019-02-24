@@ -3,13 +3,12 @@ import marshmallow
 
 import app
 from app import colleges as colleges_module
-from app import security
-from app import utils
-from app.models import picture as picture_model
+from app import security, utils
 from app.models import college as college_model
 from app.models import consolidated_city as consolidated_city_model
 from app.models import county as county_model
 from app.models import major as major_model
+from app.models import picture as picture_model
 from app.models import place as place_model
 from app.models import scholarship as scholarship_model
 from app.models import state as state_model

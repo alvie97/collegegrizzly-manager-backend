@@ -1,6 +1,7 @@
 from app import db
-from .common.date_audit import DateAudit
+
 from .common.base_mixin import BaseMixin
+from .common.date_audit import DateAudit
 
 
 class CollegeDetails(db.Model, DateAudit, BaseMixin):

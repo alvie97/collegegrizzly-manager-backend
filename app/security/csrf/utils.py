@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
-from uuid import uuid4
 from functools import wraps
+from uuid import uuid4
 
-from flask import request, jsonify, current_app
+from flask import current_app, jsonify, request
 
 
 def generate_csrf_token():

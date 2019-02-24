@@ -1,9 +1,10 @@
 from functools import wraps
 from uuid import uuid4
 
-from flask import jsonify, request, current_app
+from flask import current_app, jsonify, request
 
 from app import db
+
 from .errors import LocationEntityError
 
 

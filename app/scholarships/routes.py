@@ -1,135 +1,131 @@
-from flask import current_app, request, jsonify
-from marshmallow import ValidationError
+import flask
+import marshmallow
 
-from app import db
-from app.models.college import College
-from app.models.program import Program
-from app.models.scholarship import Scholarship
-from app.models.state import State
-from app.models.county import County
-from app.models.place import Place
-from app.models.consolidated_city import ConsolidatedCity
-from app.schemas.program_schema import ProgramSchema
-from app.schemas.scholarship_schema import ScholarshipSchema
-from app.common.utils import (
-    generate_public_id, get_entity, get_location_requirement,
-    post_location_requirement, delete_location_requirement,
-    get_locations_blacklist, post_locations_blacklist,
-    delete_locations_blacklist, get_first)
-from app.security.utils import user_role, ADMINISTRATOR, MODERATOR, BASIC
+import app
+from app import scholarships as scholarships_module
+from app import security, utils
+from app.models import college as college_model
+from app.models import consolidated_city as consolidated_city_model
+from app.models import county as county_model
+from app.models import place as place_model
+from app.models import program as program_model
+from app.models import scholarship as scholarship_model
+from app.models import state as state_model
+from app.schemas import program_schema, scholarship_schema
 
-from . import bp
-
-scholarship_schema = ScholarshipSchema()
-program_schema = ProgramSchema()
+scholarship_schema = scholarship_schema.ScholarshipSchema()
+program_schema = program_schema.ProgramSchema()
 
 
-@bp.route("/", methods=["GET"], strict_slashes=False)
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
+@scholarships_module.bp.route("/", methods=["GET"], strict_slashes=False)
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_scholarships():
-    page = request.args.get("page", 1, type=int)
-    per_page = request.args.get(
-        "per_page", current_app.config["SCHOLARSHIPS_PER_PAGE"], type=int)
+    page = flask.request.args.get("page", 1, type=int)
+    per_page = flask.request.args.get(
+        "per_page",
+        flask.current_app.config["SCHOLARSHIPS_PER_PAGE"],
+        type=int)
 
-    search = request.args.get("search", "", type=str)
+    search = flask.request.args.get("search", "", type=str)
 
     if search:
-        query = Scholarship.query.filter(
-            Scholarship.name.like("%{}%".format(search)))
+        query = scholarship_model.Scholarship.query.filter(
+            scholarship_model.Scholarship.name.like("%{}%".format(search)))
 
-        data = Scholarship.to_collection_dict(
+        data = scholarship_model.Scholarship.to_collection_dict(
             query,
             page,
             per_page,
             "scholarships.get_scholarships",
             search=search)
     else:
-        query = Scholarship.query
-        data = Scholarship.to_collection_dict(query, page, per_page,
-                                              "scholarships.get_scholarships")
+        query = scholarship_model.Scholarship.query
+        data = scholarship_model.Scholarship.to_collection_dict(
+            query, page, per_page, "scholarships.get_scholarships")
 
-    return jsonify(data)
+    return flask.jsonify(data)
 
 
-@bp.route("/<string:public_id>")
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(Scholarship, "public_id")
+@scholarships_module.bp.route("/<string:public_id>")
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def get_scholarship(scholarship):
 
-    return jsonify({"scholarship": scholarship.to_dict()})
+    return flask.jsonify({"scholarship": scholarship.to_dict()})
 
 
-@bp.route("/<string:public_id>", methods=["PATCH"])
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(Scholarship, "public_id")
+@scholarships_module.bp.route("/<string:public_id>", methods=["PATCH"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def patch_scholarship(scholarship):
-    data = request.get_json()
+    data = flask.request.get_json()
 
     if not data:
-        return jsonify({"message": "no data provided"}), 400
+        return flask.jsonify({"message": "no data provided"}), 400
 
     try:
         scholarship_schema.load(data, partial=True)
-    except ValidationError as err:
-        return jsonify(err.messages), 422
+    except marshmallow.ValidationError as err:
+        return flask.jsonify(err.messages), 422
 
     scholarship.update(data)
-    db.session.commit()
-    return jsonify("Scholarship saved successfully")
+    app.db.session.commit()
+    return flask.jsonify("scholarship_model.Scholarship saved successfully")
 
 
-@bp.route("/<string:public_id>", methods=["DELETE"])
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(Scholarship, "public_id")
+@scholarships_module.bp.route("/<string:public_id>", methods=["DELETE"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def delete_scholarship(scholarship):
 
-    db.session.delete(scholarship)
-    db.session.commit()
-    return jsonify({"message": "scholarship deleted"})
+    app.db.session.delete(scholarship)
+    app.db.session.commit()
+    return flask.jsonify({"message": "scholarship deleted"})
 
 
-@bp.route("/<string:public_id>/programs")
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(Scholarship, "public_id")
+@scholarships_module.bp.route("/<string:public_id>/programs")
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def get_scholarship_programs(scholarship):
-    return jsonify({"programs": scholarship.get_programs()})
+    return flask.jsonify({"programs": scholarship.get_programs()})
 
 
-@bp.route("/<string:public_id>/programs", methods=["POST"])
-@get_entity(Scholarship, "public_id")
+@scholarships_module.bp.route("/<string:public_id>/programs", methods=["POST"])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def post_scholarship_programs(scholarship):
-    program = request.get_json() or {}
+    program = flask.request.get_json() or {}
 
     if not program:
-        return jsonify({"message": "no data provided"}), 400
+        return flask.jsonify({"message": "no data provided"}), 400
 
     try:
         program_schema.load(program)
-    except ValidationError as err:
-        return jsonify(err.messages), 422
+    except marshmallow.ValidationError as err:
+        return flask.jsonify(err.messages), 422
 
-    program_to_add = Program.first(
+    program_to_add = program_model.Program.first(
         name=program["name"],
         round_qualification=program["round_qualification"])
 
     if program_to_add is None:
-        program_to_add = Program(**program)
-        db.session.add(program_to_add)
+        program_to_add = program_model.Program(**program)
+        app.db.session.add(program_to_add)
 
     scholarship.add_program(program_to_add)
 
-    db.session.commit()
-    return jsonify({"message": "programs added"})
+    app.db.session.commit()
+    return flask.jsonify({"message": "programs added"})
 
 
-@bp.route("/<string:public_id>/programs", methods=["DELETE"])
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(Scholarship, "public_id")
+@scholarships_module.bp.route(
+    "/<string:public_id>/programs", methods=["DELETE"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def delete_scholarship_programs(scholarship):
-    data = request.get_json() or {}
+    data = flask.request.get_json() or {}
 
     if not data or "programs" not in data:
-        return jsonify({"message": "no data provided"}), 400
+        return flask.jsonify({"message": "no data provided"}), 400
 
     for program in data["programs"]:
 
@@ -140,50 +136,54 @@ def delete_scholarship_programs(scholarship):
         if program_to_remove is not None:
             scholarship.remove_program(program_to_remove)
 
-    db.session.commit()
-    return jsonify({"message": "programs removed"})
+    app.db.session.commit()
+    return flask.jsonify({"message": "programs removed"})
 
 
-@bp.route("/programs_suggestions/name/<string:query>")
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
+@scholarships_module.bp.route("/programs_suggestions/name/<string:query>")
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def programs_suggestions_name(query):
-    suggestions = Program.query.filter(
-        Program.name.like(f"%{query}%")).limit(5).all()
+    suggestions = program_model.Program.query.filter(
+        program_model.Program.name.like(f"%{query}%")).limit(5).all()
 
-    return jsonify({
+    return flask.jsonify({
         "suggestions": [suggestion.to_dict() for suggestion in suggestions]
     })
 
 
-@bp.route("/programs_suggestions/round_qualification/<string:query>")
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
+@scholarships_module.bp.route(
+    "/programs_suggestions/round_qualification/<string:query>")
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def programs_suggestions_round(query):
-    suggestions = Program.query.filter(
-        Program.round_qualification.like(f"%{query}%")).limit(5).all()
+    suggestions = program_model.Program.query.filter(
+        program_model.Program.round_qualification.like(f"%{query}%")).limit(
+            5).all()
 
-    return jsonify({
+    return flask.jsonify({
         "suggestions": [suggestion.to_dict() for suggestion in suggestions]
     })
 
 
-@bp.route("/<string:public_id>/scholarships_needed")
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(Scholarship, "public_id")
+@scholarships_module.bp.route("/<string:public_id>/scholarships_needed")
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def get(scholarship):
 
-    return jsonify({
-        "scholarships_needed": scholarship.get_scholarships_needed()
+    return flask.jsonify({
+        "scholarships_needed":
+        scholarship.get_scholarships_needed()
     })
 
 
-@bp.route("/<string:public_id>/scholarships_needed", methods=["POST"])
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(Scholarship, "public_id")
+@scholarships_module.bp.route(
+    "/<string:public_id>/scholarships_needed", methods=["POST"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def post(scholarship):
-    data = request.get_json() or {}
+    data = flask.request.get_json() or {}
 
     if not data or "scholarships_needed" not in data:
-        return jsonify({"message": "no data provided"}), 400
+        return flask.jsonify({"message": "no data provided"}), 400
 
     college = scholarship.college
 
@@ -197,18 +197,19 @@ def post(scholarship):
         if scholarship_to_add is not None:
             scholarship.add_needed_scholarship(scholarship_to_add)
 
-    db.session.commit()
-    return jsonify({"message": "needed scholarships added"})
+    app.db.session.commit()
+    return flask.jsonify({"message": "needed scholarships added"})
 
 
-@bp.route("/<string:public_id>/scholarships_needed", methods=["DELETE"])
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(Scholarship, "public_id")
+@scholarships_module.bp.route(
+    "/<string:public_id>/scholarships_needed", methods=["DELETE"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def delete(scholarship):
-    data = request.get_json() or {}
+    data = flask.request.get_json() or {}
 
     if not data or "scholarships_needed" not in data:
-        return jsonify({"message": "no data provided"}), 400
+        return flask.jsonify({"message": "no data provided"}), 400
 
     for scholarship_needed in data["scholarships_needed"]:
         scholarship_to_remove = scholarship.scholarships_needed.filter_by(
@@ -217,224 +218,242 @@ def delete(scholarship):
         if scholarship_to_remove is not None:
             scholarship.remove_needed_scholarship(scholarship_to_remove)
 
-    db.session.commit()
-    return jsonify({"message": "needed scholarships removed"})
+    app.db.session.commit()
+    return flask.jsonify({"message": "needed scholarships removed"})
 
 
-@bp.route("/<string:public_id>/states", methods=["GET"])
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(Scholarship, "public_id")
+@scholarships_module.bp.route("/<string:public_id>/states", methods=["GET"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def get_scholarship_states(scholarship):
 
-    return get_location_requirement(
-        State,
+    return utils.get_location_requirement(
+        state_model.State,
         "scholarships",
         "scholarship",
         scholarship,
         public_id=scholarship.public_id)
 
 
-@bp.route("/<string:public_id>/states", methods=["POST"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "public_id")
+@scholarships_module.bp.route("/<string:public_id>/states", methods=["POST"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def post_scholarship_states(scholarship):
-    return post_location_requirement(State, scholarship)
+    return utils.post_location_requirement(state_model.State, scholarship)
 
 
-@bp.route("/<string:public_id>/states", methods=["DELETE"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "public_id")
+@scholarships_module.bp.route("/<string:public_id>/states", methods=["DELETE"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def delete_scholarship_states(scholarship):
-    return delete_location_requirement(State, scholarship)
+    return utils.delete_location_requirement(state_model.State, scholarship)
 
 
-@bp.route("/<string:public_id>/counties", methods=["GET"])
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(Scholarship, "public_id")
+@scholarships_module.bp.route("/<string:public_id>/counties", methods=["GET"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def get_scholarship_counties(scholarship):
 
-    return get_location_requirement(
-        County,
+    return utils.get_location_requirement(
+        county_model.County,
         "scholarships",
         "scholarship",
         scholarship,
         public_id=scholarship.public_id)
 
 
-@bp.route("/<string:public_id>/counties", methods=["POST"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "public_id")
+@scholarships_module.bp.route("/<string:public_id>/counties", methods=["POST"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def post_scholarship_counties(scholarship):
-    return post_location_requirement(County, scholarship)
+    return utils.post_location_requirement(county_model.County, scholarship)
 
 
-@bp.route("/<string:public_id>/counties", methods=["DELETE"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "public_id")
+@scholarships_module.bp.route(
+    "/<string:public_id>/counties", methods=["DELETE"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def delete_scholarship_counties(scholarship):
-    return delete_location_requirement(County, scholarship)
+    return utils.delete_location_requirement(county_model.County, scholarship)
 
 
-@bp.route("/<string:public_id>/places", methods=["GET"])
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(Scholarship, "public_id")
+@scholarships_module.bp.route("/<string:public_id>/places", methods=["GET"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def get_scholarship_places(scholarship):
 
-    return get_location_requirement(
-        Place,
+    return utils.get_location_requirement(
+        place_model.Place,
         "scholarships",
         "scholarship",
         scholarship,
         public_id=scholarship.public_id)
 
 
-@bp.route("/<string:public_id>/places", methods=["POST"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "public_id")
+@scholarships_module.bp.route("/<string:public_id>/places", methods=["POST"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def post_scholarship_places(scholarship):
-    return post_location_requirement(Place, scholarship)
+    return utils.post_location_requirement(place_model.Place, scholarship)
 
 
-@bp.route("/<string:public_id>/places", methods=["DELETE"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "public_id")
+@scholarships_module.bp.route("/<string:public_id>/places", methods=["DELETE"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def delete_scholarship_places(scholarship):
-    return delete_location_requirement(Place, scholarship)
+    return utils.delete_location_requirement(place_model.Place, scholarship)
 
 
-@bp.route("/<string:public_id>/consolidated_cities", methods=["GET"])
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(Scholarship, "public_id")
+@scholarships_module.bp.route(
+    "/<string:public_id>/consolidated_cities", methods=["GET"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def get_scholarship_consolidated_cities(scholarship):
 
-    return get_location_requirement(
-        ConsolidatedCity,
+    return utils.get_location_requirement(
+        consolidated_city_model.ConsolidatedCity,
         "scholarships",
         "scholarship",
         scholarship,
         public_id=scholarship.public_id)
 
 
-@bp.route("/<string:public_id>/consolidated_cities", methods=["POST"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "public_id")
+@scholarships_module.bp.route(
+    "/<string:public_id>/consolidated_cities", methods=["POST"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def post_scholarship_consolidated_cities(scholarship):
-    return post_location_requirement(ConsolidatedCity, scholarship)
+    return utils.post_location_requirement(
+        consolidated_city_model.ConsolidatedCity, scholarship)
 
 
-@bp.route("/<string:public_id>/consolidated_cities", methods=["DELETE"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "public_id")
+@scholarships_module.bp.route(
+    "/<string:public_id>/consolidated_cities", methods=["DELETE"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def delete_scholarship_consolidated_cities(scholarship):
-    return delete_location_requirement(ConsolidatedCity, scholarship)
+    return utils.delete_location_requirement(
+        consolidated_city_model.ConsolidatedCity, scholarship)
 
 
-@bp.route("/<string:public_id>/blacklist/states", methods=["GET"])
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(Scholarship, "public_id")
+@scholarships_module.bp.route(
+    "/<string:public_id>/blacklist/states", methods=["GET"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def get_scholarship_states_blacklist(scholarship):
 
-    return get_locations_blacklist(
-        State,
+    return utils.get_locations_blacklist(
+        state_model.State,
         "scholarships",
         "scholarship",
         scholarship,
         public_id=scholarship.public_id)
 
 
-@bp.route("/<string:public_id>/blacklist/states", methods=["POST"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "public_id")
+@scholarships_module.bp.route(
+    "/<string:public_id>/blacklist/states", methods=["POST"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def post_scholarship_states_blacklist(scholarship):
-    return post_locations_blacklist(State, scholarship)
+    return utils.post_locations_blacklist(state_model.State, scholarship)
 
 
-@bp.route("/<string:public_id>/blacklist/states", methods=["DELETE"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "public_id")
+@scholarships_module.bp.route(
+    "/<string:public_id>/blacklist/states", methods=["DELETE"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def delete_scholarship_states_blacklist(scholarship):
-    return delete_locations_blacklist(State, scholarship)
+    return utils.delete_locations_blacklist(state_model.State, scholarship)
 
 
-@bp.route("/<string:public_id>/blacklist/counties", methods=["GET"])
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(Scholarship, "public_id")
+@scholarships_module.bp.route(
+    "/<string:public_id>/blacklist/counties", methods=["GET"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def get_scholarship_counties_blacklist(scholarship):
 
-    return get_locations_blacklist(
-        County,
+    return utils.get_locations_blacklist(
+        county_model.County,
         "scholarships",
         "scholarship",
         scholarship,
         public_id=scholarship.public_id)
 
 
-@bp.route("/<string:public_id>/blacklist/counties", methods=["POST"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "public_id")
+@scholarships_module.bp.route(
+    "/<string:public_id>/blacklist/counties", methods=["POST"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def post_scholarship_counties_blacklist(scholarship):
-    return post_locations_blacklist(County, scholarship)
+    return utils.post_locations_blacklist(county_model.County, scholarship)
 
 
-@bp.route("/<string:public_id>/blacklist/counties", methods=["DELETE"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "public_id")
+@scholarships_module.bp.route(
+    "/<string:public_id>/blacklist/counties", methods=["DELETE"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def delete_scholarship_counties_blacklist(scholarship):
-    return delete_locations_blacklist(County, scholarship)
+    return utils.delete_locations_blacklist(county_model.County, scholarship)
 
 
-@bp.route("/<string:public_id>/blacklist/places", methods=["GET"])
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "public_id")
+@scholarships_module.bp.route(
+    "/<string:public_id>/blacklist/places", methods=["GET"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def get_scholarship_places_blacklist(scholarship):
 
-    return get_locations_blacklist(
-        Place,
+    return utils.get_locations_blacklist(
+        place_model.Place,
         "scholarships",
         "scholarship",
         scholarship,
         public_id=scholarship.public_id)
 
 
-@bp.route("/<string:public_id>/blacklist/places", methods=["POST"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "public_id")
+@scholarships_module.bp.route(
+    "/<string:public_id>/blacklist/places", methods=["POST"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def post_scholarship_places_blacklist(scholarship):
-    return post_locations_blacklist(Place, scholarship)
+    return utils.post_locations_blacklist(place_model.Place, scholarship)
 
 
-@bp.route("/<string:public_id>/blacklist/places", methods=["DELETE"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "public_id")
+@scholarships_module.bp.route(
+    "/<string:public_id>/blacklist/places", methods=["DELETE"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def delete_scholarship_places_blacklist(scholarship):
-    return delete_locations_blacklist(Place, scholarship)
+    return utils.delete_locations_blacklist(place_model.Place, scholarship)
 
 
-@bp.route("/<string:public_id>/blacklist/consolidated_cities", methods=["GET"])
-@user_role([ADMINISTRATOR, MODERATOR, BASIC])
-@get_entity(Scholarship, "public_id")
+@scholarships_module.bp.route(
+    "/<string:public_id>/blacklist/consolidated_cities", methods=["GET"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def get_scholarship_consolidated_cities_blacklist(scholarship):
 
-    return get_locations_blacklist(
-        ConsolidatedCity,
+    return utils.get_locations_blacklist(
+        consolidated_city_model.ConsolidatedCity,
         "scholarships",
         "scholarship",
         scholarship,
         public_id=scholarship.public_id)
 
 
-@bp.route(
+@scholarships_module.bp.route(
     "/<string:public_id>/blacklist/consolidated_cities", methods=["POST"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "public_id")
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def post_scholarship_consolidated_cities_blacklist(scholarship):
-    return post_locations_blacklist(ConsolidatedCity, scholarship)
+    return utils.post_locations_blacklist(
+        consolidated_city_model.ConsolidatedCity, scholarship)
 
 
-@bp.route(
+@scholarships_module.bp.route(
     "/<string:public_id>/blacklist/consolidated_cities", methods=["DELETE"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(Scholarship, "public_id")
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(scholarship_model.Scholarship, "public_id")
 def delete_scholarship_consolidated_cities_blacklist(scholarship):
-    return delete_locations_blacklist(ConsolidatedCity, scholarship)
+    return utils.delete_locations_blacklist(
+        consolidated_city_model.ConsolidatedCity, scholarship)

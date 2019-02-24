@@ -1,13 +1,10 @@
 import flask
 
+from app import locations, security, utils
 from app.models import consolidated_city as consolidated_city_model
 from app.models import county as county_model
 from app.models import place as place_model
 from app.models import state as state_model
-from app import utils
-from app import security
-
-from app import locations
 
 
 @locations.bp.route("/states")

@@ -1,10 +1,12 @@
-from .common.paginated_api_mixin import PaginatedAPIMixin
-from .common.date_audit import DateAudit
-from .common.base_mixin import BaseMixin
-from app import db, photos
-from datetime import datetime
 import os
+from datetime import datetime
+
+from app import db, photos
 from app.utils import generate_public_id
+
+from .common.base_mixin import BaseMixin
+from .common.date_audit import DateAudit
+from .common.paginated_api_mixin import PaginatedAPIMixin
 
 
 class Picture(PaginatedAPIMixin, BaseMixin, DateAudit, db.Model):

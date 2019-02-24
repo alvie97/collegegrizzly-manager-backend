@@ -5,10 +5,9 @@ import marshmallow
 
 import app
 from app import pictures as pictures_module
-from app import security
+from app import security, utils
 from app.models import college as college_model
 from app.models import picture as picture_model
-from app import utils
 
 
 @pictures_module.bp.route("/<string:public_id>")

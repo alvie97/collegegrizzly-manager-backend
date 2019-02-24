@@ -1,11 +1,11 @@
 # TODO: add tests for state counties, places and consolidated cities
+from app.cli import _save_states
 from app.models.college import College
 from app.models.consolidated_city import ConsolidatedCity
 from app.models.county import County
 from app.models.place import Place
 from app.models.scholarship import Scholarship
 from app.models.state import State
-from app.cli import _save_states
 
 url = "/api/locations"
 

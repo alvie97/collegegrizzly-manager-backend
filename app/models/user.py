@@ -1,12 +1,14 @@
-from .common.paginated_api_mixin import PaginatedAPIMixin
-from .common.base_mixin import BaseMixin
-from .common.date_audit import DateAudit
+from datetime import datetime
+from hashlib import md5
+
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from app import db
 from app.common.utils import generate_public_id
-from datetime import datetime
-from hashlib import md5
-from werkzeug.security import generate_password_hash, check_password_hash
+
+from .common.base_mixin import BaseMixin
+from .common.date_audit import DateAudit
+from .common.paginated_api_mixin import PaginatedAPIMixin
 
 
 class User(PaginatedAPIMixin, BaseMixin, DateAudit, db.Model):

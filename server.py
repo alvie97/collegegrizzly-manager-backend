@@ -1,20 +1,19 @@
-from app import create_app
+from app import cli, create_app, db
+from app.models.college import College
+from app.models.college_details import CollegeDetails
+from app.models.consolidated_city import ConsolidatedCity
+from app.models.county import County
+from app.models.major import Major
+from app.models.place import Place
+from app.models.program import Program
+from app.models.refresh_token import RefreshToken
+from app.models.scholarship import Scholarship
+from app.models.scholarship_details import ScholarshipDetails
+from app.models.state import State
+from app.models.submission import Submission
+from app.models.user import User
 
 app = create_app()
-
-from app import cli, db
-from app.models.user import User
-from app.models.college import College
-from app.models.scholarship import Scholarship
-from app.models.major import Major
-from app.models.program import Program
-from app.models.state import State
-from app.models.county import County
-from app.models.place import Place
-from app.models.consolidated_city import ConsolidatedCity
-from app.models.refresh_token import RefreshToken
-from app.models.college_details import CollegeDetails
-from app.models.scholarship_details import ScholarshipDetails
 
 cli.register(app)
 
@@ -34,5 +33,6 @@ def make_shell_context():
         "User": User,
         "RefreshToken": RefreshToken,
         "CollegeDetails": CollegeDetails,
-        "ScholarshipDetails": ScholarshipDetails
+        "ScholarshipDetails": ScholarshipDetails,
+        "Submission": Submission
     }

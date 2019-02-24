@@ -1,7 +1,9 @@
-from .common.paginated_api_mixin import PaginatedAPIMixin
-from .common.base_mixin import BaseMixin
-from app import db
 from flask import url_for
+
+from app import db
+
+from .common.base_mixin import BaseMixin
+from .common.paginated_api_mixin import PaginatedAPIMixin
 
 
 class State(db.Model, PaginatedAPIMixin, BaseMixin):

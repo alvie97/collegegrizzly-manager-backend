@@ -2,13 +2,10 @@ import flask
 import sqlalchemy
 
 import app
+from app import auth, security
 from app.models import refresh_token
 from app.models import user as user_model
-from app import auth
-
-from app import security
-from app.security import token_auth
-from app.security import csrf
+from app.security import csrf, token_auth
 
 
 @auth.bp.route("/login", methods=["POST", "GET"])

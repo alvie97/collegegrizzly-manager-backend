@@ -1,7 +1,9 @@
-from .token_auth.utils import get_access_token_from_cookie, decode_jwt
 from functools import wraps
-from flask import jsonify, current_app
+
 import jwt
+from flask import current_app, jsonify
+
+from .token_auth.utils import decode_jwt, get_access_token_from_cookie
 
 ADMINISTRATOR = "administrator"
 MODERATOR = "moderator"

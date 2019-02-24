@@ -1,14 +1,14 @@
-from datetime import datetime, timedelta
-from uuid import uuid4
-from functools import wraps
 import base64
+from datetime import datetime, timedelta
+from functools import wraps
+from uuid import uuid4
 
 import jwt
-from flask import current_app, g, request, jsonify, make_response
+from flask import current_app, g, jsonify, make_response, request
 from sqlalchemy import and_
 
-from app.models.refresh_token import RefreshToken
 from app import db
+from app.models.refresh_token import RefreshToken
 from app.security.csrf import clear_csrf_token_cookies
 
 

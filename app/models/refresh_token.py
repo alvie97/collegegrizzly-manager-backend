@@ -1,10 +1,11 @@
 from datetime import datetime, timedelta
 
+from flask import current_app
+
 from app import db
-from .common.base_mixin import BaseMixin
 from config import Config
 
-from flask import current_app
+from .common.base_mixin import BaseMixin
 
 
 class RefreshToken(db.Model, BaseMixin):
