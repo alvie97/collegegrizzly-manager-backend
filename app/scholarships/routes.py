@@ -167,7 +167,7 @@ def programs_suggestions_round(query):
 @scholarships_module.bp.route("/<string:public_id>/scholarships_needed")
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(scholarship_model.Scholarship, "public_id")
-def get(scholarship):
+def get_scholarships_needed(scholarship):
 
     return flask.jsonify({
         "scholarships_needed":
@@ -179,7 +179,7 @@ def get(scholarship):
     "/<string:public_id>/scholarships_needed", methods=["POST"])
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(scholarship_model.Scholarship, "public_id")
-def post(scholarship):
+def post_scholarships_needed(scholarship):
     data = flask.request.get_json() or {}
 
     if not data or "scholarships_needed" not in data:
@@ -205,7 +205,7 @@ def post(scholarship):
     "/<string:public_id>/scholarships_needed", methods=["DELETE"])
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(scholarship_model.Scholarship, "public_id")
-def delete(scholarship):
+def delete_scholarships_needed(scholarship):
     data = flask.request.get_json() or {}
 
     if not data or "scholarships_needed" not in data:
