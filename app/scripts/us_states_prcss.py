@@ -2,6 +2,42 @@ from openpyxl import load_workbook
 
 
 def process_fips_codes(filepath):
+    """Processes fips codes from xslx file
+
+    Reads fips codes from xslx file and returns dictionary of states and its
+    corresponding counties, places and consolidated cities.
+
+    Args:
+        filepath (string) (required): Path of the xslx file.
+    
+    Returns:
+        Dictionary of states with corresponding counties, places and 
+        consolidated cities.
+
+        Example::
+            {
+                "01": {
+                    "name": "Alabama",
+                    "counties": {
+                        "01: {
+                            "name": "Alabama county",
+                            "subdivisions:" {}
+                        }
+                    },
+                    "places": {
+                        "01": {
+                            "name": "Alabama place"
+                        }
+                    },
+                    "consolidated_cities": {
+                        "01": {
+                            "name": "Alabama consolidated city"
+                        }
+                    }
+                }
+            }
+        
+    """
 
     STATE_CODE = 1
     COUNTY_CODE = 2
@@ -60,12 +96,23 @@ def process_fips_codes(filepath):
 
 
 def get_consolidated_cities(states):
+    """Prints consolidated cities of states to console.
+
+    Args:
+        states (dict) (required): Dictionary of states.
+    """
     for state_code, state in states.items():
         for city_code, city in state["consolidated_cities"].items():
             print("city: {} located in state: {}".format(city, state["name"]))
 
 
 def get_counties_of(state_name, states):
+    """Prints counties of state to console.
+
+    Args:
+        state_name (string) (required): Name of state to print.
+        states (dict) (required): Dictionary of states.
+    """
     for state_code, state in states.items():
         if state["name"] == state_name:
             for county_code, county in state["counties"].items():

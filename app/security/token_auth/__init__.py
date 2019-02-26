@@ -1,3 +1,5 @@
+"""Handles token authentication"""
+
 from .utils import (encode_jwt, decode_jwt, create_access_token,
                     create_refresh_token, set_access_token_cookie,
                     set_refresh_token_cookie, get_access_token_from_cookie,

@@ -1,3 +1,6 @@
+#TODO: change program model, instead of having various programs with the same
+# name and different round qualifications, make it so that theres only one
+# program with different round qualifications.
 from app import db
 
 from .common.base_mixin import BaseMixin

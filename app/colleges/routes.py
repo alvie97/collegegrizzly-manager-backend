@@ -176,8 +176,6 @@ def get_college(college):
 def patch_college(college):
     """Edits college.
 
-    Modifies college model.
-
     PATCH:
         Params:
             public_id (string) (required): public id of college.
@@ -541,12 +539,9 @@ def delete_college_majors(college):
 
             Example::
                 [
-                    {major 1},
-                    {major 2}
+                    "major name 1",
+                    "major name 2"
                 ]
-
-                See major model.
-
     
     Responses:
         200:

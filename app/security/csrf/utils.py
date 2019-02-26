@@ -6,15 +6,19 @@ from flask import current_app, jsonify, request
 
 
 def generate_csrf_token():
-    """
-    Generates csrf token and returns it
-    """
+    """ Generates csrf token and returns it """
 
     return str(uuid4())
 
 
 def validate_csrf_token():
-    """validate if CSRF cookie and header are valid and equal"""
+    """validates csrf token.
+
+    Validates if CSRF cookie and header are valid and equal.
+
+    Returns:
+        bool: True if it's valid, False if not.
+    """
 
     try:
         cookie_csrf_token = request.cookies[current_app.
@@ -34,11 +38,11 @@ def validate_csrf_token():
 
 
 def set_csrf_token_cookies(response, csrf_token):
-    """
-    Sets CSRF token to cookies
+    """Sets CSRF token to cookies.
 
-    :param response: response object
-    :param csrf_token: csrf token string
+    Args:
+        response (Obj) (required): response object
+        csrf_token: csrf token string.
     """
     response.set_cookie(
         current_app.config["CSRF_COOKIE_NAME"],
@@ -57,6 +61,12 @@ def set_csrf_token_cookies(response, csrf_token):
 
 
 def csrf_token_required(f):
+    """Validates csrf token cookie and header, decorator.
+
+    Response:
+        obj: Flask response, a message and a 401 code if validation fails.
+        f: if validation passes.
+    """
 
     @wraps(f)
     def f_wrapper(*args, **kwargs):
@@ -70,10 +80,10 @@ def csrf_token_required(f):
 
 
 def clear_csrf_token_cookies(response):
-    """
-    Clears csrf token cookies
+    """Clears csrf token cookies.
 
-    :param response: Flask response object
+    Args:
+        response (obj) (required): Flask response object
     """
 
     csrf_cookie_name = current_app.config["CSRF_COOKIE_NAME"]
