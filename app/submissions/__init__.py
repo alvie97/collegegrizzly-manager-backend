@@ -1,3 +1,4 @@
+"""Handles all submissions"""
 from flask import Blueprint, g
 
 from app.security.csrf import csrf_token_required

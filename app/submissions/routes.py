@@ -1,136 +1,230 @@
-from datetime import datetime
-
-from flask import current_app, jsonify, request
-
-from app import db
-from app.models.college import College
-from app.models.submission import Submission
-from app.models.user import User
-from app.security.utils import (ADMINISTRATOR, BASIC, get_current_user,
-                                user_role)
-from app.utils import get_entity
-
-from . import bp
+import datetime
+import flask
+import app
+from app.models import college as college_model
+from app.models import User as user_model
+from app.models import submission as submission_model
+from app import security
+from app import utils
+from app import submissions
 
 
-@bp.route("/submit/<string:public_id>", methods=["POST"])
-@user_role([ADMINISTRATOR, BASIC])
-@get_entity(College, "public_id")
+@submissions.bp.route("/submit/<string:public_id>", methods=["POST"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+@utils.get_entity(college_model.College, "public_id")
 def submit(college):
+    """Creates submission.
+
+    POST:
+    Responses:
+        422:
+            Returns message if college doesn't exist.
+
+            Produces:
+                Application/json.
+        
+        200:
+            Returns message if success.
+            Produces:
+                Application/json.
+    """
 
     pending_submissions = college.submissions.filter_by(
         status="pending").first()
 
     if pending_submissions is not None:
-        return jsonify({
+        return flask.jsonify({
             "message":
             f"college '{college.name}' has pending submissions"
         }), 422
 
-    user_id = int(get_current_user())
+    user_id = int(security.get_current_user())
 
-    user = User.get(user_id)
+    user = user_model.User.get(user_id)
 
-    submission = Submission(
+    submission = submission_model.Submission(
         college_name=college.name,
         submitted_by=user.username,
         college=college,
         user=user)
 
-    db.session.add(submission)
-    db.session.commit()
+    app.db.session.add(submission)
+    app.db.session.commit()
 
-    return jsonify({"message": "submission successful"})
+    return flask.jsonify({"message": "submission successful"})
 
 
-@bp.route("/", methods=["GET"], strict_slashes=False)
-@user_role([ADMINISTRATOR])
+@submissions.bp.route("/", strict_slashes=False)
+@security.user_role([security.ADMINISTRATOR])
 def get_submissions():
-    page = request.args.get("page", 1, type=int)
-    per_page = request.args.get(
-        "per_page", current_app.config["SUBMISSIONS_PER_PAGE"], type=int)
+    """Gets submissions in database
 
-    return jsonify({
+    Retrieves paginated list of all submissions from database.
+
+    GET:
+        Request params:
+            page (int) (optional): Page number in paginated resource, defaults 
+            to one.
+            per_page (int) (optional): Number of items to retrieve per page, 
+            defaults to configuration constant COLLEGE_PER_PAGE.
+            search (string) (optional): Search query keyword, defaults to "".
+    
+    Responses:
+        200:
+            Successfully retrieves items from database. Returns paginated list
+            of submissions. See PaginatedAPIMixin class.
+
+            produces:
+                Application/json. 
+    """
+    page = flask.request.args.get("page", 1, type=int)
+    per_page = flask.request.args.get(
+        "per_page", flask.current_app.config["SUBMISSIONS_PER_PAGE"], type=int)
+
+    return flask.jsonify({
         "submissions":
-        Submission.to_collection_dict(Submission.query, page, per_page,
-                                      "submissions.get_submissions")
+        submission_model.Submission.to_collection_dict(
+            submission_model.Submission.query, page, per_page,
+            "submissions.get_submissions")
     })
 
 
-@bp.route("/assign_submission/<string:public_id>", methods=["POST"])
-@user_role([ADMINISTRATOR])
-@get_entity(Submission, "public_id")
+@submissions.bp.route(
+    "/assign_submission/<string:public_id>", methods=["POST"])
+@security.user_role([security.ADMINISTRATOR])
+@utils.get_entity(submission_model.Submission, "public_id")
 def assign_submission(submission):
+    """Assigns submission to user.
+
+    POST:
+    Responses:
+        404:
+            Returns message if submission not found.
+            Produces:
+                Application/json.
+        422:
+            Returns message if submission is already assigned.
+            Produces:
+                Application/json.
+        200:
+            Returns success message.
+            Produces:
+                Application/json.
+    """
 
     if submission.assigned_to is not None:
-        return jsonify({"message": "submission already assigned"}), 422
+        return flask.jsonify({"message": "submission already assigned"}), 422
 
-    user_id = int(get_current_user())
-    user = User.get(user_id)
+    user_id = int(security.get_current_user())
+    user = user_model.User.get(user_id)
 
     submission.assigned_to = user.username
-    db.session.commit()
+    app.db.session.commit()
 
-    return jsonify({"message": "submission assigned successfully"})
+    return flask.jsonify({"message": "submission assigned successfully"})
 
 
-@bp.route("/<string:public_id>/approve", methods=["POST"])
-@user_role([ADMINISTRATOR])
-@get_entity(Submission, "public_id")
+@submissions.bp.route("/<string:public_id>/approve", methods=["POST"])
+@security.user_role([security.ADMINISTRATOR])
+@utils.get_entity(submission_model.Submission, "public_id")
 def approve_submission(submission):
+    """Approves submission.
 
-    user_id = int(get_current_user())
-    user = User.get(user_id)
+    POST:
+    Responses:
+        403:
+            Returns message if submission was not assigned to the user.
+            Produces:
+                Application/json.
+        404:
+            Returns message if submission was not found.
+            Produces:
+                Application/json.
+        422:
+            Returns message if submission was already reviewed.
+            Produces:
+                Application/json.
+        200:
+            Returns success message.
+            Produces:
+                Application/json.
+    """
+
+    user_id = int(security.get_current_user())
+    user = user_model.User.get(user_id)
 
     if user is None or user.username != submission.assigned_to:
-        return jsonify({
-            "message": "this submission was not assigned to you"
+        return flask.jsonify({
+            "message":
+            "this submission was not assigned to you"
         }), 403
 
     if submission.status != "pending":
-        return jsonify({
+        return flask.jsonify({
             "message":
             "submission already reviewed by an administrator"
         }), 422
 
     submission.status = "approved"
-    submission.reviewed_at = datetime.utcnow()
+    submission.reviewed_at = datetime.datetime.utcnow()
 
-    db.session.commit()
+    app.db.session.commit()
 
-    return jsonify({"message": "submission approved"})
+    return flask.jsonify({"message": "submission approved"})
 
 
-@bp.route("/<string:public_id>/decline", methods=["POST"])
-@user_role([ADMINISTRATOR])
-@get_entity(Submission, "public_id")
+@submissions.bp.route("/<string:public_id>/decline", methods=["POST"])
+@security.user_role([security.ADMINISTRATOR])
+@utils.get_entity(submission_model.Submission, "public_id")
 def decline_submission(submission):
+    """Declines submission.
 
-    user_id = int(get_current_user())
-    user = User.get(user_id)
+    POST:
+    Responses:
+        403:
+            Returns message if submission was not assigned to the user.
+            Produces:
+                Application/json.
+        404:
+            Returns message if submission was not found.
+            Produces:
+                Application/json.
+        422:
+            Returns message if submission was already reviewed.
+            Produces:
+                Application/json.
+        200:
+            Returns success message.
+            Produces:
+                Application/json.
+    """
+    user_id = int(security.get_current_user())
+    user = user_model.User.get(user_id)
 
     if user is None or user.username != submission.assigned_to:
-        return jsonify({
-            "message": "this submission was not assigned to you"
+        return flask.jsonify({
+            "message":
+            "this submission was not assigned to you"
         }), 403
 
     if submission.status != "pending":
-        return jsonify({
+        return flask.jsonify({
             "message":
             "submission already reviewed by an administrator"
         }), 422
 
-    data = request.get_json() or {}
+    data = flask.request.get_json() or {}
 
     if "declination_message" not in data or not data["declination_message"]:
-        return jsonify({
-            "message": "A reason for declination must be stated"
+        return flask.jsonify({
+            "message":
+            "A reason for declination must be stated"
         }), 422
 
     submission.status = "declined"
-    submission.reviewed_at = datetime.utcnow()
+    submission.reviewed_at = datetime.datetime.utcnow()
     submission.observation = data["declination_message"]
 
-    db.session.commit()
+    app.db.session.commit()
 
-    return jsonify({"message": "submission declined"})
+    return flask.jsonify({"message": "submission declined"})
