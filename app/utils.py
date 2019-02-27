@@ -169,9 +169,3 @@ def delete_locations_blacklist(location, entity):
 
     db.session.commit()
     return jsonify({"message": "Locations removed"})
-
-
-def get_first(func, array):
-    for item in array:
-        if func(item):
-            return item

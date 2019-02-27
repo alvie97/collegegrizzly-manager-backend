@@ -1,14 +1,13 @@
-from datetime import datetime, timedelta
-from functools import wraps
-from uuid import uuid4
-
-from flask import current_app, jsonify, request
+import datetime
+import functools
+import uuid
+import flask
 
 
 def generate_csrf_token():
     """ Generates csrf token and returns it """
 
-    return str(uuid4())
+    return str(uuid.uuid4())
 
 
 def validate_csrf_token():
@@ -21,10 +20,10 @@ def validate_csrf_token():
     """
 
     try:
-        cookie_csrf_token = request.cookies[current_app.
-                                            config["CSRF_COOKIE_NAME"]]
-        header_csrf_token = request.headers[current_app.
-                                            config["CSRF_HEADER_NAME"]]
+        cookie_csrf_token = flask.request.cookies[flask.current_app.
+                                                  config["CSRF_COOKIE_NAME"]]
+        header_csrf_token = flask.request.headers[flask.current_app.
+                                                  config["CSRF_HEADER_NAME"]]
     except KeyError:
         return False
 
@@ -45,19 +44,19 @@ def set_csrf_token_cookies(response, csrf_token):
         csrf_token: csrf token string.
     """
     response.set_cookie(
-        current_app.config["CSRF_COOKIE_NAME"],
+        flask.current_app.config["CSRF_COOKIE_NAME"],
         csrf_token,
-        secure=current_app.config["SECURE_TOKEN_COOKIES"],
+        secure=flask.current_app.config["SECURE_TOKEN_COOKIES"],
         httponly=True,
-        expires=datetime.utcnow() +
-        current_app.config["REFRESH_TOKEN_DURATION"])
+        expires=datetime.datetime.utcnow() +
+        flask.current_app.config["REFRESH_TOKEN_DURATION"])
 
     response.set_cookie(
-        current_app.config["CSRF_HEADER_NAME"],
+        flask.current_app.config["CSRF_HEADER_NAME"],
         csrf_token,
-        secure=current_app.config["SECURE_TOKEN_COOKIES"],
-        expires=datetime.utcnow() +
-        current_app.config["REFRESH_TOKEN_DURATION"])
+        secure=flask.current_app.config["SECURE_TOKEN_COOKIES"],
+        expires=datetime.datetime.utcnow() +
+        flask.current_app.config["REFRESH_TOKEN_DURATION"])
 
 
 def csrf_token_required(f):
@@ -68,11 +67,11 @@ def csrf_token_required(f):
         f: if validation passes.
     """
 
-    @wraps(f)
+    @functools.wraps(f)
     def f_wrapper(*args, **kwargs):
 
         if not validate_csrf_token():
-            return jsonify({"message": "unauthorized"}), 401
+            return flask.jsonify({"message": "unauthorized"}), 401
 
         return f(*args, **kwargs)
 
@@ -86,9 +85,9 @@ def clear_csrf_token_cookies(response):
         response (obj) (required): Flask response object
     """
 
-    csrf_cookie_name = current_app.config["CSRF_COOKIE_NAME"]
-    csrf_header_name = current_app.config["CSRF_HEADER_NAME"]
-    secure_token_cookies = current_app.config["SECURE_TOKEN_COOKIES"]
+    csrf_cookie_name = flask.current_app.config["CSRF_COOKIE_NAME"]
+    csrf_header_name = flask.current_app.config["CSRF_HEADER_NAME"]
+    secure_token_cookies = flask.current_app.config["SECURE_TOKEN_COOKIES"]
 
     response.set_cookie(
         csrf_cookie_name,

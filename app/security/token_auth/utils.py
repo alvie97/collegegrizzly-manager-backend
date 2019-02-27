@@ -1,27 +1,28 @@
 import base64
-from datetime import datetime, timedelta
-from functools import wraps
-from uuid import uuid4
-
+import datetime
+import functools
+import uuid
 import jwt
-from flask import current_app, g, jsonify, make_response, request
-from sqlalchemy import and_
+import flask
+import sqlalchemy
 
-from app import db
-from app.models.refresh_token import RefreshToken
-from app.security.csrf import clear_csrf_token_cookies
+import app
+from app.models import refresh_token as refresh_token_model
+from app.security import csrf
 
 
 def encode_jwt(secret, algorithm, duration, additional_claims=None):
-    """
-    encodes (utf-8) JWT
+    """Encodes (utf-8) JWT.
 
-    :param secret: key used to sign the token.
-    :param algorithm: algorithm to sign the token.
-    :param duration: time until the token expires. Parameter is a timedelta
-    :param additional_claims: any other claims to provide to the token.
+    Args:
+        secret (string) (required): key used to sign the token.
+        algorithm (string) (required): algorithm to sign the token.
+        duration (:obj datetime.timedelta): time until the token expires.
+        additional_claims (dict): any additional claims to provide to the token.
+    Returns:
+        String: encoded jwt string (utf-8)
     """
-    now = datetime.utcnow()
+    now = datetime.datetime.utcnow()
 
     claims = {"iat": now, "exp": now + duration}
 
@@ -32,13 +33,15 @@ def encode_jwt(secret, algorithm, duration, additional_claims=None):
 
 
 def decode_jwt(token, secret, algorithm, options=None):
-    """
-    Decodes JWT and validates if its valid
+    """Decodes JWT and validates if its valid.
 
-    :param token: JWT to decode
-    :param secret: secret used to verify signature
-    :param algorithm: algorithm used to sign JWT
-    :returns jwt claims
+    Args:
+        token (string) (required): JWT to decode.
+        secret (string) (required): secret used to verify signature.
+        algorithm (string) (required): algorithm used to sign JWT.
+        options (dict) (optional): jwt options dictionary.
+    Returns:
+        dict: jwt claims.
     """
     if options is not None:
         return jwt.decode(
@@ -48,91 +51,96 @@ def decode_jwt(token, secret, algorithm, options=None):
 
 
 def create_access_token(user_id, user_claims=None):
-    """
-    Creates access token
+    """Creates access token.
 
-    :param user_id: id of user who owns this token. can be any identifier like
-                    a username, email, uuid, etc.
-    :param user_claims: additional claims to encode in jwt.
-    :returns encoded jwt string
+    Args:
+        user_id (integer) (required): id of user who owns this token. 
+            can be any identifier like a username, email, uuid, etc.
+        user_claims (dict) (optional): additional claims to encode in jwt.
+    Returns:
+        string: encoded jwt string (utf-8).
     """
 
-    jti = str(uuid4())
+    jti = str(uuid.uuid4())
     jwt_claims = {"user_id": user_id, "jti": jti}
 
     if user_claims is not None:
         user_claims.update(jwt_claims)
         jwt_claims = user_claims
 
-    return encode_jwt(
-        current_app.config["JWT_SECRET"], current_app.config["JWT_ALGORITHM"],
-        current_app.config["ACCESS_TOKEN_DURATION"], jwt_claims), jti
+    return encode_jwt(flask.current_app.config["JWT_SECRET"],
+                      flask.current_app.config["JWT_ALGORITHM"],
+                      flask.current_app.config["ACCESS_TOKEN_DURATION"],
+                      jwt_claims), jti
 
 
 def create_refresh_token(user_id, jti):
-    """
+    """Creates refresh token.
+
     Creates refresh token, adds to database session, commit should be handled 
     outside function.
 
-    :param user_id: user id
-    :param jti: access token jti
-    :returns refresh token string
+    Args:
+        user_id (int) (required): user id.
+        jti (string) (required): access token jti.
+    Returns:
+        string: refresh token string
     """
 
-    token = str(uuid4())
+    token = str(uuid.uuid4())
 
-    refresh_token = RefreshToken(
+    refresh_token = refresh_token_model.RefreshToken(
         token=token, user_id=user_id, access_token_jti=jti)
 
-    db.session.add(refresh_token)
-    db.session.commit()
+    app.db.session.add(refresh_token)
+    app.db.session.commit()
 
     return refresh_token.token
 
 
 def set_access_token_cookie(response, access_token):
-    """
-    Sets access token in cookie
+    """Sets access token in cookie.
 
-    :param response: flask response object
-    :param access_token: access token
+    Args:
+        response (obj) (required): flask response object
+        access_token (string) (required): access token
     """
 
-    now = datetime.utcnow()
+    now = datetime.datetime.utcnow()
 
     response.set_cookie(
-        current_app.config["ACCESS_TOKEN_COOKIE_NAME"],
+        flask.current_app.config["ACCESS_TOKEN_COOKIE_NAME"],
         access_token,
-        secure=current_app.config["SECURE_TOKEN_COOKIES"],
-        expires=now + current_app.config["REFRESH_TOKEN_DURATION"],
+        secure=flask.current_app.config["SECURE_TOKEN_COOKIES"],
+        expires=now + flask.current_app.config["REFRESH_TOKEN_DURATION"],
         httponly=True)
 
 
 def set_refresh_token_cookie(response, refresh_token):
-    """
-    Sets refresh token in cookie
+    """Sets refresh token in cookie.
 
-    :param response: flask response object
-    :param refresh_token: refresh token
+    Args:
+        response (ob) (required): flask response object
+        refresh_token (string) (required): refresh token
     """
 
-    now = datetime.utcnow()
+    now = datetime.datetime.utcnow()
 
     response.set_cookie(
-        current_app.config["REFRESH_TOKEN_COOKIE_NAME"],
+        flask.current_app.config["REFRESH_TOKEN_COOKIE_NAME"],
         refresh_token,
-        secure=current_app.config["SECURE_TOKEN_COOKIES"],
-        expires=now + current_app.config["REFRESH_TOKEN_DURATION"],
+        secure=flask.current_app.config["SECURE_TOKEN_COOKIES"],
+        expires=now + flask.current_app.config["REFRESH_TOKEN_DURATION"],
         httponly=True)
 
 
 def set_token_cookies(response, user_id, user_role):
-    """
-    Sets both token cookies
+    """Sets both token cookies
 
-    :param respones: Flask response object
-    :param user_id: user id to attatch to session
-    :param user_role: role of the user
+    Args:
+        respone (obj) (required): Flask response object
+        user_id (integer) (required): user id to attatch to session
+        user_role (string) (required): role of the user
     """
 
     access_token, jti = create_access_token(
@@ -145,37 +153,33 @@ def set_token_cookies(response, user_id, user_role):
 
 
 def get_access_token_from_cookie():
-    """
-    Returns access token from the cookie
-    """
+    """Returns access token from the cookie"""
 
-    access_token = request.cookies[current_app.
-                                   config["ACCESS_TOKEN_COOKIE_NAME"]]
+    access_token = flask.request.cookies[flask.current_app.
+                                         config["ACCESS_TOKEN_COOKIE_NAME"]]
 
     return access_token
 
 
 def get_refresh_token_from_cookie():
-    """
-    Returns refresh token from the cookie
-    """
+    """Returns refresh token from the cookie"""
 
-    refresh_token = request.cookies[current_app.
-                                    config["REFRESH_TOKEN_COOKIE_NAME"]]
+    refresh_token = flask.request.cookies[flask.current_app.
+                                          config["REFRESH_TOKEN_COOKIE_NAME"]]
 
     return refresh_token
 
 
 def clear_token_cookies(response):
-    """
-    clears both token cookies
+    """Clears both token cookies.
 
-    :param response: Flask response object
+    Args:
+        response (obj) (required): Flask response object
     """
 
-    access_cookie_name = current_app.config["ACCESS_TOKEN_COOKIE_NAME"]
-    refresh_cookie_name = current_app.config["REFRESH_TOKEN_COOKIE_NAME"]
-    secure_token_cookies = current_app.config["SECURE_TOKEN_COOKIES"]
+    access_cookie_name = flask.current_app.config["ACCESS_TOKEN_COOKIE_NAME"]
+    refresh_cookie_name = flask.current_app.config["REFRESH_TOKEN_COOKIE_NAME"]
+    secure_token_cookies = flask.current_app.config["SECURE_TOKEN_COOKIES"]
 
     response.set_cookie(
         access_cookie_name,
@@ -192,78 +196,85 @@ def clear_token_cookies(response):
 
 
 def revoke_user_tokens(user_id):
+    """Revokes all user refresh tokens.
+
+    Args:
+        user_id (integer) (required): id of the user.
     """
-    Revokes all user refresh tokens
 
-    :param user_id: id of the user
-    """
+    stmt = refresh_token_model.RefreshToken.__table__.update().where(
+        sqlalchemy.and_(
+            refresh_token_model.RefreshToken.__table__.c.user_id == user_id,
+            refresh_token_model.RefreshToken.__table__.c.expires_at >
+            datetime.datetime.utcnow(), refresh_token_model.RefreshToken.
+            __table__.c.revoked == False)).values(revoked=True)
 
-    stmt = RefreshToken.__table__.update().where(
-        and_(RefreshToken.__table__.c.user_id == user_id,
-             RefreshToken.__table__.c.expires_at > datetime.utcnow(),
-             RefreshToken.__table__.c.revoked == False)).values(revoked=True)
-
-    db.session.execute(stmt)
+    app.db.session.execute(stmt)
 
 
 def revoke_token(cls, token):
-    """
-    Revoke single token
-    :param token: token object to be revoked
+    """Revoke single token
+
+    Args:
+        token (obj: RefreshToken): token object to be revoked
     """
 
     if token.is_valid():
         token.revoked = True
 
-    db.session.commit()
+    app.db.session.commit()
 
 
 # TODO: refactor, divide decorator
 def authentication_required(f):
-    """
-    Checks access token validity
+    """Checks access token validity.
+    
+        Returns:
+            Obj Flask response: returns message and 401 if tokens are not valid.
+            f: if tokens are valid.
     """
 
-    @wraps(f)
+    @functools.wraps(f)
     def f_wrapper(*args, **kwargs):
 
         try:
             access_token = get_access_token_from_cookie()
         except KeyError:
-            response = make_response(
-                jsonify({
+            response = flask.make_response(
+                flask.jsonify({
                     "message": "invalid token"
                 }), 401)
             clear_token_cookies(response)
-            clear_csrf_token_cookies(response)
+            csrf.clear_csrf_token_cookies(response)
 
             return response
 
         try:
-            g.jwt_claims = decode_jwt(access_token,
-                                      current_app.config["JWT_SECRET"],
-                                      current_app.config["JWT_ALGORITHM"])
+            flask.g.jwt_claims = decode_jwt(
+                access_token, flask.current_app.config["JWT_SECRET"],
+                flask.current_app.config["JWT_ALGORITHM"])
         except jwt.exceptions.ExpiredSignatureError:
 
             try:
                 refresh_token = get_refresh_token_from_cookie()
             except KeyError:
-                response = make_response(
-                    jsonify({
+                response = flask.make_response(
+                    flask.jsonify({
                         "message": "invalid token"
                     }), 401)
                 clear_token_cookies(response)
-                clear_csrf_token_cookies(response)
+                csrf.clear_csrf_token_cookies(response)
 
                 return response
 
-            refresh_token = RefreshToken.first(token=refresh_token)
+            refresh_token = refresh_token_model.RefreshToken.first(
+                token=refresh_token)
 
             if refresh_token is not None and refresh_token.is_valid():
                 jwt_claims = decode_jwt(
                     access_token,
-                    current_app.config["JWT_SECRET"],
-                    current_app.config["JWT_ALGORITHM"],
+                    flask.current_app.config["JWT_SECRET"],
+                    flask.current_app.config["JWT_ALGORITHM"],
                     options={"verify_exp": False})
 
                 if not refresh_token.is_jti_valid(jwt_claims["jti"]):
@@ -271,39 +282,39 @@ def authentication_required(f):
                     # jwt secret has been compromised
 
                     revoke_user_tokens(refresh_token.user_id)
-                    db.session.commit()
-                    response = make_response(
-                        jsonify({
+                    app.db.session.commit()
+                    response = flask.make_response(
+                        flask.jsonify({
                             "message": "invalid token"
                         }), 401)
                     clear_token_cookies(response)
-                    clear_csrf_token_cookies(response)
+                    csrf.clear_csrf_token_cookies(response)
 
                     return response
 
                 new_access_token, new_jti = create_access_token(
                     jwt_claims["user_id"], jwt_claims)
                 refresh_token.access_token_jti = new_jti
-                db.session.commit()
+                app.db.session.commit()
 
-                g.new_access_token = new_access_token
+                flask.g.new_access_token = new_access_token
                 return f(*args, **kwargs)
 
-            response = make_response(
-                jsonify({
+            response = flask.make_response(
+                flask.jsonify({
                     "message": "invalid token"
                 }), 401)
             clear_token_cookies(response)
-            clear_csrf_token_cookies(response)
+            csrf.clear_csrf_token_cookies(response)
 
             return response
         except jwt.exceptions.InvalidTokenError:
-            response = make_response(
-                jsonify({
+            response = flask.make_response(
+                flask.jsonify({
                     "message": "invalid token"
                 }), 401)
             clear_token_cookies(response)
-            clear_csrf_token_cookies(response)
+            csrf.clear_csrf_token_cookies(response)
 
             return response
 
