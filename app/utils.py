@@ -1,34 +1,47 @@
-from functools import wraps
-from uuid import uuid4
-
-from flask import current_app, jsonify, request
-
-from app import db
-
-from .errors import LocationEntityError
+import functools
+import uuid
+import flask
+import app
+from app import errors
 
 
 def generate_public_id():
-    return str(uuid4()).replace('-', '')
+    """Generates public id
+    
+    Returns:
+        string: uuid without dashes.
+    """
+    return str(uuid.uuid4()).replace('-', '')
 
 
 #TODO: add param for url param name.
-def get_entity(entity, search_key):
+def get_entity(entity, search_key, uri_param_name="public_id"):
+    """Adds entity as argument to wrapped function.
+
+    Args:
+        entity (sqlalchemy.Model): database model.
+        search_key (string): database model property name.
+        uri_param_name (string) (optional): route param unique name.
+
+    Returns:
+        Obj (Flask response): if entity not found, returns message and 404 code.
+    """
 
     def get_entity_decorator(f):
 
-        @wraps(f)
+        @functools.wraps(f)
         def f_wrapper(*args, **kwargs):
-            search_arguments = {search_key: kwargs[search_key]}
+            search_arguments = {search_key: kwargs[uri_param_name]}
             entity_obj = entity.first(**search_arguments)
 
             if entity_obj is None:
-                return jsonify({
-                    "message": entity.__str_repr__ + " not found"
+                return flask.jsonify({
+                    "message":
+                    entity.__str_repr__ + " not found"
                 }), 404
 
             kwargs[entity.__str_repr__] = entity_obj
-            del kwargs[search_key]
+            del kwargs[uri_param_name]
 
             return f(*args, **kwargs)
 
@@ -39,11 +52,23 @@ def get_entity(entity, search_key):
 
 def get_location_requirement(location, package_name, base_endpoint, entity,
                              **endpoint_args):
-    page = request.args.get("page", 1, type=int)
-    per_page = request.args.get(
-        "per_page", current_app.config["LOCATIONS_PER_PAGE"], type=int)
+    """Gets location requirement.
 
-    search = request.args.get("search", "", type=str)
+    Args:
+        location (Obj): location database model.
+        package_name (string): name of the package.
+        base_endpoint (string): uri base.
+        entity (obj): entity database model.
+        **endpoint_args: arguments for url_for.
+
+    Returns:
+        Obj (Flask response): paginated list of the location requirement.
+    """
+    page = flask.request.args.get("page", 1, type=int)
+    per_page = flask.request.args.get(
+        "per_page", flask.current_app.config["LOCATIONS_PER_PAGE"], type=int)
+
+    search = flask.request.args.get("search", "", type=str)
 
     try:
         if search:
@@ -55,18 +80,27 @@ def get_location_requirement(location, package_name, base_endpoint, entity,
                 location, package_name, base_endpoint, page, per_page,
                 **endpoint_args)
 
-    except LocationEntityError as err:
-        print("LocationEntityError:", err)
-        return jsonify({"message": "Error ocurred"}), 500
+    except errors.LocationEntityError as err:
+        print("errors.LocationEntityError:", err)
+        return flask.jsonify({"message": "Error ocurred"}), 500
 
-    return jsonify(locations)
+    return flask.jsonify(locations)
 
 
 def post_location_requirement(location, entity):
-    data = request.get_json() or {}
+    """Adds location requirement
+
+    Args:
+        location (obj): location database model.
+        entity (obj): entity database model.
+    Returns:
+        Obj (Flask response): returns message, 200 if successfull, 400 if no 
+            data provided and 500 if error.
+    """
+    data = flask.request.get_json() or {}
 
     if not data:
-        return jsonify({"message": "No data provided"}), 400
+        return flask.jsonify({"message": "No data provided"}), 400
 
     for location_fips in data:
         location_to_add = location.query.filter_by(
@@ -75,19 +109,28 @@ def post_location_requirement(location, entity):
         if location_to_add is not None:
             try:
                 entity.add_location(location_to_add)
-            except LocationEntityError as err:
-                print("LocationEntityError:", err)
-                return jsonify({"message": "Error ocurred"}), 500
+            except errors.LocationEntityError as err:
+                print("errors.LocationEntityError:", err)
+                return flask.jsonify({"message": "Error ocurred"}), 500
 
-    db.session.commit()
-    return jsonify({"message": "Locations added"})
+    app.db.session.commit()
+    return flask.jsonify({"message": "Locations added"})
 
 
 def delete_location_requirement(location, entity):
-    data = request.get_json() or {}
+    """Deletes location requirement.
+
+    Args:
+        location (obj): location database model.
+        entity (obj): entity database model.
+    Returns: 
+        Obj (Flask response): returns message, 200 if success, 400 if no data
+            provided and 500 if error.
+    """
+    data = flask.request.get_json() or {}
 
     if not data:
-        return jsonify({"message": "No data provided"}), 400
+        return flask.jsonify({"message": "No data provided"}), 400
 
     for location_fips in data:
         location_to_delete = location.query.filter_by(
@@ -96,21 +139,21 @@ def delete_location_requirement(location, entity):
         if location is not None:
             try:
                 entity.remove_location(location_to_delete)
-            except LocationEntityError as err:
-                print("LocationEntityError:", err)
-                return jsonify({"message": "Error ocurred"}), 500
+            except errors.LocationEntityError as err:
+                print("errors.LocationEntityError:", err)
+                return flask.jsonify({"message": "Error ocurred"}), 500
 
-    db.session.commit()
-    return jsonify({"message": "Locations removed"})
+    app.db.session.commit()
+    return flask.jsonify({"message": "Locations removed"})
 
 
 def get_locations_blacklist(location, package_name, base_endpoint, entity,
                             **endpoint_args):
-    page = request.args.get("page", 1, type=int)
-    per_page = request.args.get(
-        "per_page", current_app.config["PER_PAGE"], type=int)
+    page = flask.request.args.get("page", 1, type=int)
+    per_page = flask.request.args.get(
+        "per_page", flask.current_app.config["PER_PAGE"], type=int)
 
-    search = request.args.get("search", "", type=str)
+    search = flask.request.args.get("search", "", type=str)
 
     try:
         if search:
@@ -122,18 +165,18 @@ def get_locations_blacklist(location, package_name, base_endpoint, entity,
                 location, package_name, base_endpoint, page, per_page,
                 **endpoint_args)
 
-    except LocationEntityError as err:
-        print("LocationEntityError:", err)
-        return jsonify({"message": "Error ocurred"}), 500
+    except errors.LocationEntityError as err:
+        print("errors.LocationEntityError:", err)
+        return flask.jsonify({"message": "Error ocurred"}), 500
 
-    return jsonify(locations)
+    return flask.jsonify(locations)
 
 
 def post_locations_blacklist(location, entity):
-    data = request.get_json() or {}
+    data = flask.request.get_json() or {}
 
     if not data or "location_fips" not in data:
-        return jsonify({"message": "No data provided"}), 400
+        return flask.jsonify({"message": "No data provided"}), 400
 
     for location_fips in data["location_fips"]:
         location_to_add = location.query.filter_by(
@@ -142,19 +185,19 @@ def post_locations_blacklist(location, entity):
         if location_to_add is not None:
             try:
                 entity.add_location_to_blacklist(location_to_add)
-            except LocationEntityError as err:
-                print("LocationEntityError:", err)
-                return jsonify({"message": "Error ocurred"}), 500
+            except errors.LocationEntityError as err:
+                print("errors.LocationEntityError:", err)
+                return flask.jsonify({"message": "Error ocurred"}), 500
 
-    db.session.commit()
-    return jsonify({"message": "Locations added"})
+    app.db.session.commit()
+    return flask.jsonify({"message": "Locations added"})
 
 
 def delete_locations_blacklist(location, entity):
-    data = request.get_json() or {}
+    data = flask.request.get_json() or {}
 
     if not data or "location_fips" not in data:
-        return jsonify({"message": "No data provided"}), 400
+        return flask.jsonify({"message": "No data provided"}), 400
 
     for location_fips in data["location_fips"]:
         location_to_delete = location.query.filter_by(
@@ -163,9 +206,9 @@ def delete_locations_blacklist(location, entity):
         if location is not None:
             try:
                 entity.remove_location_from_blacklist(location_to_delete)
-            except LocationEntityError as err:
-                print("LocationEntityError:", err)
-                return jsonify({"message": "Error ocurred"}), 500
+            except errors.LocationEntityError as err:
+                print("errors.LocationEntityError:", err)
+                return flask.jsonify({"message": "Error ocurred"}), 500
 
-    db.session.commit()
-    return jsonify({"message": "Locations removed"})
+    app.db.session.commit()
+    return flask.jsonify({"message": "Locations removed"})
