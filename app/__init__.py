@@ -28,15 +28,15 @@ def create_app(config_class=config.Config):
     cors.init_app(app)
     flask_uploads.configure_uploads(app, photos)
 
-    from app import colleges
-    from app import scholarships
-    from app import locations
-    from app import files
-    from app import pictures
-    from app import users
     from app import auth
-    from app import submissions
     from app import site
+    from app.api import colleges
+    from app.api import scholarships
+    from app.api import locations
+    from app.api import files
+    from app.api import pictures
+    from app.api import users
+    from app.api import submissions
 
     app.register_blueprint(colleges.bp, url_prefix="/api/colleges")
     app.register_blueprint(scholarships.bp, url_prefix="/api/scholarships")
@@ -44,8 +44,8 @@ def create_app(config_class=config.Config):
     app.register_blueprint(files.bp, url_prefix="/api/files")
     app.register_blueprint(pictures.bp, url_prefix="/api/pictures")
     app.register_blueprint(users.bp, url_prefix="/api/users")
-    app.register_blueprint(auth.bp, url_prefix="/auth")
     app.register_blueprint(submissions.bp, url_prefix="/api/submissions")
+    app.register_blueprint(auth.bp, url_prefix="/auth")
     app.register_blueprint(site.bp)
 
     return app
