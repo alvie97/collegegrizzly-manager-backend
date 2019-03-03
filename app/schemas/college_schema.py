@@ -25,23 +25,3 @@ class CollegeSchema(Schema):
         if len(value) > 256:
             raise ValidationError(
                 "Name should not be longer than 256 characters")
-
-    @validates("unweighted_hs_gpa")
-    def validate_unweighted_hs_gpa(self, value):
-        if 0 < value > 4.0:
-            raise ValidationError("Unweighted high school GPA "
-                                  "must be between 0 and 4.0")
-
-    @validates("sat")
-    def validate_sat(self, value):
-        if 0 < value > 1600:
-            raise ValidationError("SAT score must be between 0 and 1600")
-
-    @validates("act")
-    def validate_act(self, value):
-        if 0 < value > 36:
-            raise ValidationError("ACT score must be between 0 and 36")
-
-    @post_load
-    def make_college(self, data):
-        return College(**data)

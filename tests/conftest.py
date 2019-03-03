@@ -4,9 +4,8 @@ import tempfile
 import pytest
 
 from app import create_app, db
-from app.common.utils import generate_public_id
+from app.utils import generate_public_id
 from app.models.college import College
-from app.models.scholarship import Scholarship
 from app.models.user import User
 from config import Config
 

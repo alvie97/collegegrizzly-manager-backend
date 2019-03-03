@@ -31,18 +31,10 @@ def create_app(config_class=config.Config):
     from app import auth
     from app import site
     from app.api import colleges
-    from app.api import scholarships
-    from app.api import locations
-    from app.api import files
-    from app.api import pictures
     from app.api import users
     from app.api import submissions
 
     app.register_blueprint(colleges.bp, url_prefix="/api/colleges")
-    app.register_blueprint(scholarships.bp, url_prefix="/api/scholarships")
-    app.register_blueprint(locations.bp, url_prefix="/api/locations")
-    app.register_blueprint(files.bp, url_prefix="/api/files")
-    app.register_blueprint(pictures.bp, url_prefix="/api/pictures")
     app.register_blueprint(users.bp, url_prefix="/api/users")
     app.register_blueprint(submissions.bp, url_prefix="/api/submissions")
     app.register_blueprint(auth.bp, url_prefix="/auth")

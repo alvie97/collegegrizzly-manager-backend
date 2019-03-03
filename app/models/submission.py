@@ -3,7 +3,7 @@ from datetime import datetime
 from flask import url_for
 
 from app import db
-from app.common.utils import generate_public_id
+from app.utils import generate_public_id
 
 from .common.base_mixin import BaseMixin
 from .common.date_audit import DateAudit

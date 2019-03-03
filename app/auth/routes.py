@@ -2,14 +2,15 @@ import flask
 import sqlalchemy
 
 import app
-from app import auth, security
+from app import auth
+from app.auth import utils as auth_utils
 from app.models import refresh_token
 from app.models import user as user_model
 from app.security import csrf, token_auth
 
 
 @auth.bp.route("/login", methods=["POST", "GET"])
-@auth.utils.user_not_logged
+@auth_utils.user_not_logged
 def login():
     """ Loggs user to the application.
 

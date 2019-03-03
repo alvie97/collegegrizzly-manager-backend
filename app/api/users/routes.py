@@ -6,7 +6,7 @@ from flask import current_app, jsonify, request
 from sqlalchemy import and_, not_
 
 from app import db
-from app.common.utils import get_entity
+from app.utils import get_entity
 from app.models.user import User
 from app.security.utils import ADMINISTRATOR, get_current_user, user_role
 

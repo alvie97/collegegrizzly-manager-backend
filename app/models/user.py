@@ -4,7 +4,7 @@ from hashlib import md5
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app import db
-from app.common.utils import generate_public_id
+from app.utils import generate_public_id
 
 from .common.base_mixin import BaseMixin
 from .common.date_audit import DateAudit

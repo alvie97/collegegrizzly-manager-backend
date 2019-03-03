@@ -5,9 +5,9 @@ from app.security.csrf import csrf_token_required
 from app.security.token_auth import (authentication_required,
                                      set_access_token_cookie)
 
-from . import routes
-
 bp = Blueprint("submissions", __name__)
+
+from . import routes
 
 
 @bp.before_request

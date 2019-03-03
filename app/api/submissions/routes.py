@@ -2,11 +2,11 @@ import datetime
 import flask
 import app
 from app.models import college as college_model
-from app.models import User as user_model
+from app.models import user as user_model
 from app.models import submission as submission_model
 from app import security
 from app import utils
-from app import submissions
+from app.api import submissions
 
 
 @submissions.bp.route("/submit/<string:public_id>", methods=["POST"])
