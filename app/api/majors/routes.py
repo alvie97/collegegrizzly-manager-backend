@@ -4,6 +4,7 @@ import app
 from app import utils
 from app.api import majors as majors_module
 from app.models import major as major_model
+from app.api import errors
 
 
 @majors_module.bp.route("/", strict_slashes=False)
@@ -48,3 +49,14 @@ def get_majors():
                                                     "majors.get_majors")
 
     return flask.jsonify(data)
+
+
+@majors_module.bp.route("/", methods=["POST"])
+def create_major():
+    """ Creates major
+    """
+
+    data = flask.request.get_json() or {}
+
+    if not data:
+        return errors.bad_request("no data provided")
