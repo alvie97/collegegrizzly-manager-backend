@@ -7,6 +7,8 @@ from app import utils
 from app.models.common import base_mixin
 from app.models.common import date_audit
 from app.models.common import paginated_api_mixin
+from app.models import association_tables
+from app.models import major as major_model
 
 
 class College(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
@@ -16,6 +18,8 @@ class College(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
     Attributes:
         id (Integer): model id.
         name (String): name of the college.
+        college_details (sqlalchemy.Model): college details.
+        majors (sqlachemy.Query): college majors
     """
     id = app.db.Column(app.db.Integer, primary_key=True)
     str_repr = "college"
@@ -25,12 +29,55 @@ class College(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
         backref="college",
         cascade="all, delete-orphan")
 
+    majors = app.db.relationship(
+        "Major",
+        secondary=association_tables.college_major,
+        lazy="dynamic",
+        backref=app.db.backref("colleges", lazy="dynamic"))
+
     ATTR_FIELDS = ["name"]
 
     def __repr__(self):
         return f"<College {self.college_details.name}>"
 
+    def has_major(self, major_id):
+        """checks if college has major.
+
+        Args:
+            self (class): college class.
+            major_id (integer): major id.
+        Returns:
+            Boolean: true if college has major, false otherwise.
+
+        """
+        return self.majors.filter(major_model.Major.id == major_id).count() > 0
+
+    def add_major(self, major):
+        """Adds major to college.
+
+        Args:
+            self (class): college class.
+            major (sqlalchemy.Model): major object.
+        """
+        if not self.has_major(major.id):
+            self.majors.append(major)
+
+    def remove_major(self, major):
+        """Removes major to college.
+
+        Args:
+            self (class): college class.
+            major (sqlalchemy.Model): major object.
+        """
+        if self.has_major(major.id):
+            self.majors.remove(major)
+
     def for_pagination(self):
+        """ Serializes model for pagination.
+
+        Returns:
+            Dict: returns serialized object for pagination.
+        """
         return {
             "name": self.college_details.name,
             "audit_dates": self.audit_dates(),
@@ -41,8 +88,15 @@ class College(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
         }
 
     def to_dict(self):
+        """ Serializes model.
+
+        Returns:
+            Dict: returns serialized object.
+        """
         return {
             "id": self.id,
             "details": self.college_details.to_dict(),
-            "links": {}
+            "links": {
+                "get_majors": flask.url_for("colleges.get_majors", id=self.id)
+            }
         }

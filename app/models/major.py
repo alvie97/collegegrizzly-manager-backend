@@ -31,9 +31,9 @@ class Major(app.db.Model, base_mixin.BaseMixin, date_audit.DateAudit,
         return {
             "id": self.id,
             "name": self.name,
-            # "links": {
-            #     "get_major": flask.url_for("majors.get_major", id=self.id)
-            # }
+            "links": {
+                "get_major": flask.url_for("majors.get_major", id=self.id)
+            }
         }
 
     def to_dict(self):
@@ -41,8 +41,8 @@ class Major(app.db.Model, base_mixin.BaseMixin, date_audit.DateAudit,
             "id": self.id,
             "name": self.name,
             "description": self.description,
-            # "links": {
-            #     "get_college": flask.url_for(
-            #         "majors.get_colleges", id=self.id),
-            # }
+            "links": {
+                "get_college": flask.url_for(
+                    "majors.get_colleges", id=self.id),
+            }
         }

@@ -1,4 +1,5 @@
 #TODO: use common errors from errors module
+#TODO: remove get_entity and use first_or_404 or get_or_404
 import flask
 import marshmallow
 
@@ -7,9 +8,11 @@ from app.api import colleges as colleges_module
 from app import security, utils
 from app.models import college as college_model
 from app.models import college_details as college_details_model
-from app.schemas import college_schema
+from app.models import major as major_model
+from app.schemas import college_schema as college_schema_class
+from app.api import errors
 
-college_schema = college_schema.CollegeSchema()
+college_schema = college_schema_class.CollegeSchema()
 
 
 @colleges_module.bp.route("/", methods=["GET"], strict_slashes=False)
@@ -242,3 +245,127 @@ def delete_college(college):
     app.db.session.commit()
 
     return flask.jsonify({"message": "college deleted"})
+
+
+# add majors
+@colleges_module.bp.route("/<int:id>/majors", methods=["POST"])
+def add_majors(id):
+    """Adds majors to college
+
+    POST:
+        params:
+            id (int): college id.
+        
+        Request body:
+            list of majors id.
+
+            consumes:
+                application/json.
+    
+    Returns:
+        200:
+            link to get college majors.
+
+            produces:
+                application/json.
+        404:
+            no college found
+
+            produces:
+                application/json.
+    """
+    data = flask.request.get_json()
+
+    if not data:
+        return errors.bad_request("no data provided")
+
+    college = college_model.College.query.get_or_404(id)
+
+    for major_id in data:
+        major = major_model.Major.get(major_id)
+
+        if major is not None:
+            college.add_major(major)
+
+    return flask.jsonify({
+        "majors": flask.url_for("colleges.get_majors", id=id)
+    })
+
+
+# read majors
+@colleges_module.bp.route("/<int:id>/majors")
+def get_majors(id):
+    """Gets college majors in database
+
+    Retrieves paginated list of all college majors from database.
+
+    GET:
+        Request params:
+            page (int) (optional): Page number in paginated resource, defaults 
+            to one.
+            per_page (int) (optional): Number of items to retrieve per page, 
+            defaults to configuration constant PER_PAGE.
+            search (string) (optional): Search query keyword, defaults to "".
+    
+    Responses:
+        200:
+            Successfully retrieves items from database. Returns paginated list
+            of colleges. See PaginatedAPIMixin.
+
+            produces:
+                Application/json.
+    """
+    college = college_model.College.query.get_or_404(id)
+
+    page = flask.request.args.get("page", 1, type=int)
+    per_page = flask.request.args.get(
+        "per_page", flask.current_app.config["PER_PAGE"], type=int)
+
+    return flask.jsonify(
+        major_model.Major.to_collection_dict(
+            college.majors, page, per_page, "colleges.get_majors", id=id))
+
+
+# remove majors
+@colleges_module.bp.route("/<int:id>/majors", methods=["DELETE"])
+def remove_majors(id):
+    """removes majors to college
+
+    DELETE:
+        params:
+            id (int): college id.
+        
+        Request body:
+            list of majors id.
+
+            consumes:
+                application/json.
+    
+    Returns:
+        200:
+            link to get college majors.
+
+            produces:
+                application/json.
+        404:
+            no college found
+
+            produces:
+                application/json.
+    """
+    data = flask.request.get_json()
+
+    if not data:
+        return errors.bad_request("no data provided")
+
+    college = college_model.College.query.get_or_404(id)
+
+    for major_id in data:
+        major = major_model.Major.get(major_id)
+
+        if major is not None:
+            college.remove_major(major)
+
+    return flask.jsonify({
+        "majors": flask.url_for("colleges.get_majors", id=id)
+    })

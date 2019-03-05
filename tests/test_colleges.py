@@ -4,7 +4,8 @@ import flask
 from app import db
 from app.utils import generate_public_id
 from app.models.college import College
-from app.models import college_details as college_details_model
+from app.models.college_details import CollegeDetails
+from app.models.major import Major
 
 url = "/api/colleges"
 
@@ -21,8 +22,7 @@ def test_get_colleges(app, client, auth):
 
             colleges_properties.append({"name": f"test college {i}"})
 
-            college_details = college_details_model.CollegeDetails(
-                **colleges_properties[i])
+            college_details = CollegeDetails(**colleges_properties[i])
             college = College(college_details=college_details)
             db.session.add(college)
 
@@ -47,6 +47,8 @@ def test_get_colleges(app, client, auth):
     data = response.get_json()
     colleges = data["items"]
 
+    assert len(colleges) > 0
+
     for college in colleges:
         assert college["name"].find("ge 2") != -1
 
@@ -67,7 +69,7 @@ def test_create_college(app, client, auth):
     response = client.get(college_url)
     response_data = response.get_json()
 
-    with app.app_context():
+    with app.test_request_context():
         college = College.get(response_data["id"])
 
         assert college is not None
@@ -82,7 +84,7 @@ def test_patch_college(app, client, auth):
     patch_data = {"name": "test patch college", "in_state_tuition": 1200}
 
     with app.app_context():
-        college_details = college_details_model.CollegeDetails(**patch_data)
+        college_details = CollegeDetails(**patch_data)
         college = College(college_details=college_details)
         db.session.add(college)
         db.session.commit()
@@ -110,7 +112,7 @@ def test_delete_college(app, client, auth):
     auth.login()
 
     with app.app_context():
-        college_details = college_details_model.CollegeDetails()
+        college_details = CollegeDetails()
         college = College(college_details=college_details)
         db.session.add(college)
         db.session.commit()
@@ -120,8 +122,49 @@ def test_delete_college(app, client, auth):
     client.delete(url + f"/{college_id}")
 
     with app.app_context():
-        college_details = college_details_model.CollegeDetails.get(
-            college_details_id)
+        college_details = CollegeDetails.get(college_details_id)
         college = College.get(college_id)
 
         assert college is None and college_details is None
+
+
+def test_college_majors(app, client, auth):
+    """ tests add, read and remove majors """
+    auth.login()
+
+    with app.app_context():
+        college_details = CollegeDetails(name="test college")
+        college = College(college_details=college_details)
+        db.session.add(college_details)
+        db.session.add(college)
+
+        for i in range(5):
+            db.session.add(Major(name=f"test major {i}"))
+
+        db.session.commit()
+
+        response = client.post(
+            url + f"/{college.id}/majors", json=[x for x in range(5)])
+
+        majors_url = response.get_json()["majors"]
+
+        response = client.get(majors_url)
+
+        majors = response.get_json()["items"]
+
+        for major in majors:
+            major_record = Major.get(major["id"])
+
+            assert major_record is not None
+
+        response = client.delete(
+            url + f"/{college.id}/majors", json=[x for x in range(3)])
+
+        majors_url = response.get_json()["majors"]
+
+        response = client.get(majors_url)
+
+        majors = response.get_json()["items"]
+
+        for major in majors:
+            assert major["id"] in [3, 4]
