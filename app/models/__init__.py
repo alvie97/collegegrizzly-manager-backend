@@ -1,2 +1,2 @@
 from . import (relationship_tables, college, refresh_token, user,
-               college_details, submission)
+               college_details, major, detail, submission)

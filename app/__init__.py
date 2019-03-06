@@ -34,11 +34,13 @@ def create_app(config_class=config.Config):
     from app.api import users
     from app.api import submissions
     from app.api import majors
+    from app.api import details
 
     app.register_blueprint(colleges.bp, url_prefix="/api/colleges")
     app.register_blueprint(majors.bp, url_prefix="/api/majors")
     app.register_blueprint(users.bp, url_prefix="/api/users")
     app.register_blueprint(submissions.bp, url_prefix="/api/submissions")
+    app.register_blueprint(details.bp, url_prefix="/api/details")
     app.register_blueprint(auth.bp, url_prefix="/auth")
     app.register_blueprint(site.bp)
 

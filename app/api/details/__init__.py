@@ -1,14 +1,15 @@
-"""Handles majors
+"""Handles details
+
+This module handles all related to details from creation to deletion.
 
 Attributes:
     bp: Flask blueprint
 """
-
 import flask
 from app.security import token_auth
 # from app.security import csrf
 
-bp = flask.Blueprint("majors", __name__)
+bp = flask.Blueprint("details", __name__)
 
 
 @bp.before_request
