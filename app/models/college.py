@@ -9,6 +9,7 @@ from app.models.common import date_audit
 from app.models.common import paginated_api_mixin
 from app.models import association_tables
 from app.models import major as major_model
+from app.models import college_details
 
 
 class College(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
@@ -28,6 +29,12 @@ class College(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
         uselist=False,
         backref="college",
         cascade="all, delete-orphan")
+
+    additional_details = app.db.relationship(
+        "Detail",
+        backref="college",
+        cascade="all, delete-orphan",
+        lazy="dynamic")
 
     majors = app.db.relationship(
         "Major",
@@ -71,6 +78,49 @@ class College(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
         """
         if self.has_major(major.id):
             self.majors.remove(major)
+
+    def get_additional_details(self):
+        """Retrives addtional college details.
+
+        Args:
+            self (class): college class.
+        Returns:
+            list: additional college details.
+        """
+        return [detail.to_dict() for detail in self.additional_details.all()]
+
+    def has_detail(self, detail_name):
+        """checks if college has additional detail.
+
+        Args:
+            self (class): college class.
+            detail_name (string): detail name.
+        Returns:
+            Boolean: true if college has major, false otherwise.
+
+        """
+        return detail_name not in college_details.CollegeDetails.ATTR_FIELDS \
+            and self.additional_details.filter_by(name=detail_name).count() > 0
+
+    def add_additional_detail(self, detail):
+        """Adds additional detail to college.
+
+        Args:
+            self (class): college class.
+            detail (sqlalchemy.Model): detail object.
+        """
+        if not self.has_detail(detail.name):
+            self.additional_details.append(detail)
+
+    def remove_additional_detail(self, detail):
+        """Removes additional detail to college.
+
+        Args:
+            self (class): college class.
+            detail (sqlalchemy.Model): detail object.
+        """
+        if self.has_detail(detail.name):
+            self.additional_details.remove(detail)
 
     def for_pagination(self):
         """ Serializes model for pagination.

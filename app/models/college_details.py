@@ -16,8 +16,6 @@ class CollegeDetails(app.db.Model, date_audit.DateAudit, base_mixin.BaseMixin):
     setting = app.db.Column(app.db.String(256), nullable=True)
     number_of_students = app.db.Column(app.db.Integer, nullable=True)
     college_id = app.db.Column(app.db.Integer, app.db.ForeignKey("college.id"))
-    details = app.db.relationship(
-        "Detail", backref="college_details", cascade="all, delete-orphan")
 
     str_repr = "college_details"
 

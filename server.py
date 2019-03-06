@@ -4,6 +4,8 @@ from app.models.college_details import CollegeDetails
 from app.models.refresh_token import RefreshToken
 from app.models.submission import Submission
 from app.models.user import User
+from app.models.major import Major
+from app.models.detail import Detail
 
 app = create_app()
 
@@ -18,5 +20,7 @@ def make_shell_context():
         "User": User,
         "RefreshToken": RefreshToken,
         "CollegeDetails": CollegeDetails,
-        "Submission": Submission
+        "Submission": Submission,
+        "Major": Major,
+        "Detail": Detail
     }

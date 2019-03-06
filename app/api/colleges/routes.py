@@ -369,3 +369,10 @@ def remove_majors(id):
     return flask.jsonify({
         "majors": flask.url_for("colleges.get_majors", id=id)
     })
+
+
+@colleges_module.bp.route("/<int:id>/additional_details")
+def get_college_additional_details(id):
+    college = college_model.College.query.get_or_404(id)
+
+    return flask.jsonify(college.get_additional_details())
