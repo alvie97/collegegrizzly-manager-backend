@@ -99,7 +99,7 @@ def post_college():
 
             produces:
                 Application/json.
-        422:
+        400:
             some or all of the fields are invalid. Returns error of 
             invalid fields.
 
@@ -114,7 +114,7 @@ def post_college():
     try:
         college_schema.load(data)
     except marshmallow.ValidationError as err:
-        return flask.jsonify(err.messages), 422
+        return flask.jsonify(err.messages), 400
 
     college_details = college_details_model.CollegeDetails(**data)
     college = college_model.College(college_details=college_details)
@@ -194,7 +194,7 @@ def patch_college(college):
 
             produces:
                 Application/json.
-        422:
+        400:
             some or all of the fields are invalid. Returns error of 
             invalid fields.
 
@@ -209,7 +209,7 @@ def patch_college(college):
     try:
         college_schema.load(data, partial=True)
     except marshmallow.ValidationError as err:
-        return flask.jsonify(err.messages), 422
+        return flask.jsonify(err.messages), 400
 
     college_details = college.college_details
     college_details.update(data)
@@ -252,6 +252,7 @@ def delete_college(college):
 
 # add majors
 @colleges_module.bp.route("/<int:id>/majors", methods=["POST"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def add_majors(id):
     """Adds majors to college
 
@@ -297,6 +298,7 @@ def add_majors(id):
 
 # read majors
 @colleges_module.bp.route("/<int:id>/majors")
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_majors(id):
     """Gets college majors in database
 
@@ -331,6 +333,7 @@ def get_majors(id):
 
 # remove majors
 @colleges_module.bp.route("/<int:id>/majors", methods=["DELETE"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def remove_majors(id):
     """removes majors to college
 
@@ -375,6 +378,7 @@ def remove_majors(id):
 
 
 @colleges_module.bp.route("/<int:id>/additional_details")
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_college_additional_details(id):
     """Gets college additional details.
 
@@ -400,6 +404,7 @@ def get_college_additional_details(id):
 
 
 @colleges_module.bp.route("/<int:id>/additional_details", methods=["POST"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def post_college_additional_details(id):
     """Adds college addtional detail.
 
@@ -434,7 +439,7 @@ def post_college_additional_details(id):
 
             produces:
                 Application/json.
-        422:
+        400:
             some or all of the fields are invalid. Returns error of 
             invalid fields.
 
@@ -451,7 +456,10 @@ def post_college_additional_details(id):
     try:
         detail_schema.load(data)
     except marshmallow.ValidationError as err:
-        return flask.jsonify(err.messages), 422
+        return flask.jsonify(err.messages), 400
+
+    if not detail_model.Detail.validate_value(data["value"], data["type"]):
+        return errors.bad_request("value does not match type")
 
     detail = detail_model.Detail(**data)
 
@@ -468,6 +476,7 @@ def post_college_additional_details(id):
 
 @colleges_module.bp.route(
     "/<int:college_id>/additional_details/<int:detail_id>", methods=["DELETE"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def delete_college_additional_details(college_id, detail_id):
     """Adds college addtional detail.
 

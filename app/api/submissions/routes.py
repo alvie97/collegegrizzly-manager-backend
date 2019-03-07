@@ -17,7 +17,7 @@ def submit(college):
 
     POST:
     Responses:
-        422:
+        400:
             Returns message if college doesn't exist.
 
             Produces:
@@ -36,7 +36,7 @@ def submit(college):
         return flask.jsonify({
             "message":
             f"college '{college.name}' has pending submissions"
-        }), 422
+        }), 400
 
     user_id = int(security.get_current_user())
 
@@ -102,7 +102,7 @@ def assign_submission(submission):
             Returns message if submission not found.
             Produces:
                 Application/json.
-        422:
+        400:
             Returns message if submission is already assigned.
             Produces:
                 Application/json.
@@ -113,7 +113,7 @@ def assign_submission(submission):
     """
 
     if submission.assigned_to is not None:
-        return flask.jsonify({"message": "submission already assigned"}), 422
+        return flask.jsonify({"message": "submission already assigned"}), 400
 
     user_id = int(security.get_current_user())
     user = user_model.User.get(user_id)
@@ -140,7 +140,7 @@ def approve_submission(submission):
             Returns message if submission was not found.
             Produces:
                 Application/json.
-        422:
+        400:
             Returns message if submission was already reviewed.
             Produces:
                 Application/json.
@@ -163,7 +163,7 @@ def approve_submission(submission):
         return flask.jsonify({
             "message":
             "submission already reviewed by an administrator"
-        }), 422
+        }), 400
 
     submission.status = "approved"
     submission.reviewed_at = datetime.datetime.utcnow()
@@ -189,7 +189,7 @@ def decline_submission(submission):
             Returns message if submission was not found.
             Produces:
                 Application/json.
-        422:
+        400:
             Returns message if submission was already reviewed.
             Produces:
                 Application/json.
@@ -211,7 +211,7 @@ def decline_submission(submission):
         return flask.jsonify({
             "message":
             "submission already reviewed by an administrator"
-        }), 422
+        }), 400
 
     data = flask.request.get_json() or {}
 
@@ -219,7 +219,7 @@ def decline_submission(submission):
         return flask.jsonify({
             "message":
             "A reason for declination must be stated"
-        }), 422
+        }), 400
 
     submission.status = "declined"
     submission.reviewed_at = datetime.datetime.utcnow()

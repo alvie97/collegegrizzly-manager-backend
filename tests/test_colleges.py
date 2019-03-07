@@ -5,6 +5,7 @@ from app import db
 from app.utils import generate_public_id
 from app.models.college import College
 from app.models.college_details import CollegeDetails
+from app.models.detail import Detail
 from app.models.major import Major
 
 url = "/api/colleges"
@@ -168,3 +169,41 @@ def test_college_majors(app, client, auth):
 
         for major in majors:
             assert major["id"] in [3, 4]
+
+
+def test_college_additional_details(app, client, auth):
+    """tests college additional details"""
+
+    auth.login()
+
+    with app.app_context():
+        college_details = CollegeDetails(name="test college")
+        college = College(college_details=college_details)
+
+        db.session.add(college_details)
+        db.session.add(college)
+        db.session.commit()
+
+        detail = {"name": "test detail", "type": "integer", "value": "3"}
+
+        response = client.post(
+            url + f"/{college.id}/additional_details", json=detail)
+
+        additional_details_url = response.get_json()["additional_details"]
+
+        response = client.get(additional_details_url)
+        additional_details = response.get_json()
+
+        detail = Detail.query.first()
+
+        assert additional_details[0] == detail.to_dict()
+
+        response = client.delete(
+            url + f"/{college.id}/additional_details/{detail.id}")
+
+        additional_details_url = response.get_json()["additional_details"]
+
+        response = client.get(additional_details_url)
+        additional_details = response.get_json()
+
+        assert len(additional_details) == 0

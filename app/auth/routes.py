@@ -34,11 +34,11 @@ def login():
 
     if not id:
         flask.flash("no username or email provided")
-        return flask.redirect(flask.url_for("auth.login")), 422
+        return flask.redirect(flask.url_for("auth.login")), 400
 
     if not password:
         flask.flash("no password provided")
-        return flask.redirect(flask.url_for("auth.login")), 422
+        return flask.redirect(flask.url_for("auth.login")), 400
 
     user = user_model.User.query.filter(
         sqlalchemy.or_(user_model.User.username == id,

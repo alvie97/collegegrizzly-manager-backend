@@ -1,3 +1,4 @@
+#TODO: Get detail colleges.
 import flask
 import marshmallow
 
@@ -6,11 +7,13 @@ from app.api import details as details_module
 from app.api import errors
 from app.models import detail as detail_model
 from app.schemas import detail_schema as detail_schema_class
+from app import security
 
 detail_schema = detail_schema_class.DetailSchema()
 
 
 @details_module.bp.route("/", strict_slashes=False)
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_details():
     """Gets details in database
 
@@ -55,6 +58,7 @@ def get_details():
 
 
 @details_module.bp.route("/<int:id>")
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_detail(id):
     """Gets detail.
 
@@ -83,6 +87,7 @@ def get_detail(id):
 
 
 @details_module.bp.route("/<int:id>", methods=["PATCH"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def patch_detail(id):
     """Edits detail.
 
@@ -118,7 +123,7 @@ def patch_detail(id):
 
             produces:
                 Application/json.
-        422:
+        400:
             some or all of the fields are invalid. Returns error of 
             invalid fields.
 
@@ -135,7 +140,7 @@ def patch_detail(id):
     try:
         detail_schema.load(data, partial=True)
     except marshmallow.ValidationError as err:
-        return flask.jsonify(err.messages), 422
+        return flask.jsonify(err.messages), 400
 
     if "type" in data:
         if "value" in data:
@@ -158,3 +163,25 @@ def patch_detail(id):
     return flask.jsonify({
         "detail": flask.url_for("details.get_detail", id=id)
     })
+
+
+@details_module.bp.route("/<int:id>/college")
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+def get_college(id):
+    """Retrieves college that owns this detail.
+
+    GET:
+    Responses:
+        200:
+            retrieves college.
+
+            Produces:
+                Application/json.
+        404:
+            Detail not found, returns message.
+
+            produces:
+                Application/json.
+    """
+    detail = detail_model.Detail.query.get_or_404(id)
+    return flask.jsonify(detail.college.to_dict())
