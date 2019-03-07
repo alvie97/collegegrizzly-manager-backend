@@ -1,4 +1,5 @@
 import app
+import flask
 from app.models.common import paginated_api_mixin
 from app.models.common import base_mixin
 
@@ -62,5 +63,9 @@ class Detail(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
             "id": self.id,
             "name": self.name,
             "value": self.value,
-            "type": self.type
+            "type": self.type,
+            "links": {
+                "get_college": flask.url_for(
+                    "details.get_college", id=self.id)
+            }
         }

@@ -99,7 +99,7 @@ def test_patch_college(app, client, auth):
     response = client.get(college_url)
     response_data = response.get_json()
 
-    with app.app_context():
+    with app.test_request_context():
         college = College.get(response_data["id"])
 
         assert college is not None
@@ -176,7 +176,7 @@ def test_college_additional_details(app, client, auth):
 
     auth.login()
 
-    with app.app_context():
+    with app.test_request_context():
         college_details = CollegeDetails(name="test college")
         college = College(college_details=college_details)
 

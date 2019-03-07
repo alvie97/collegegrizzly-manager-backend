@@ -2,6 +2,7 @@ from app.models.detail import Detail
 from app.models.college import College
 from app.models.college_details import CollegeDetails
 from app import db
+from flask import url_for
 
 url = "/api/details"
 
@@ -13,7 +14,7 @@ def test_get_details(app, client, auth):
 
     types = ["integer", "decimal", "string", "boolean"]
     values = ["100", "3.1415", "test example", "true"]
-    with app.app_context():
+    with app.test_request_context():
         for i in range(50):
             index = i % len(types)
             detail = Detail(
@@ -52,7 +53,7 @@ def test_get_detail(app, client, auth):
 
     auth.login()
 
-    with app.app_context():
+    with app.test_request_context():
         detail_properties = {
             "name": "test detail",
             "type": "string",
@@ -65,7 +66,7 @@ def test_get_detail(app, client, auth):
         response = client.get(url + f"/{detail.id}")
         detail_response = response.get_json()
 
-        assert detail_response == {"name"}
+        assert detail_response == detail.to_dict()
 
 
 def test_patch_detail(app, client, auth):
@@ -73,7 +74,7 @@ def test_patch_detail(app, client, auth):
 
     auth.login()
 
-    with app.app_context():
+    with app.test_request_context():
         detail = Detail(name="test detail", type="string", value="test value")
         db.session.add(detail)
         db.session.commit()
@@ -104,7 +105,12 @@ def test_patch_detail(app, client, auth):
         detail_response = response.get_json()
 
         assert detail_response == dict(
-            id=detail.id, name=detail.name, **detail_properties)
+            id=detail.id,
+            name=detail.name,
+            links={
+                "get_college": url_for("details.get_college", id=detail.id)
+            },
+            **detail_properties)
 
         detail_properties = {"type": "decimal", "value": "test"}
 
@@ -127,7 +133,12 @@ def test_patch_detail(app, client, auth):
         detail_response = response.get_json()
 
         assert detail_response == dict(
-            id=detail.id, name=detail.name, **detail_properties)
+            id=detail.id,
+            name=detail.name,
+            links={
+                "get_college": url_for("details.get_college", id=detail.id)
+            },
+            **detail_properties)
 
         detail_properties = {"type": "boolean", "value": "3"}
 
@@ -155,7 +166,12 @@ def test_patch_detail(app, client, auth):
         detail_response = response.get_json()
 
         assert detail_response == dict(
-            id=detail.id, name=detail.name, **detail_properties)
+            id=detail.id,
+            name=detail.name,
+            links={
+                "get_college": url_for("details.get_college", id=detail.id)
+            },
+            **detail_properties)
 
         detail_properties = {"type": "string", "value": 3}
 
@@ -178,7 +194,12 @@ def test_patch_detail(app, client, auth):
         detail_response = response.get_json()
 
         assert detail_response == dict(
-            id=detail.id, name=detail.name, **detail_properties)
+            id=detail.id,
+            name=detail.name,
+            links={
+                "get_college": url_for("details.get_college", id=detail.id)
+            },
+            **detail_properties)
 
 
 def test_detail_college(app, client, auth):
