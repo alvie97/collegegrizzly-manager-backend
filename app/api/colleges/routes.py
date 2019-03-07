@@ -9,10 +9,13 @@ from app import security, utils
 from app.models import college as college_model
 from app.models import college_details as college_details_model
 from app.models import major as major_model
+from app.models import detail as detail_model
 from app.schemas import college_schema as college_schema_class
+from app.schemas import detail_schema as detail_schema_class
 from app.api import errors
 
 college_schema = college_schema_class.CollegeSchema()
+detail_schema = detail_schema_class.DetailSchema()
 
 
 @colleges_module.bp.route("/", methods=["GET"], strict_slashes=False)
@@ -126,7 +129,7 @@ def post_college():
 
 
 @colleges_module.bp.route("/<int:id>", methods=["GET"])
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
+# @security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College)
 def get_college(college):
     """Gets college.
@@ -373,6 +376,130 @@ def remove_majors(id):
 
 @colleges_module.bp.route("/<int:id>/additional_details")
 def get_college_additional_details(id):
+    """Gets college additional details.
+
+    GET:
+        Param Args:
+            id (integer): college id.
+    Responses:
+        200:
+            Successfully retieves college additional details.
+
+            produces:
+                Application/json.
+        
+        404:
+            College not found, returns message.
+
+            produces:
+                Application/json.
+    """
     college = college_model.College.query.get_or_404(id)
 
     return flask.jsonify(college.get_additional_details())
+
+
+@colleges_module.bp.route("/<int:id>/additional_details", methods=["POST"])
+def post_college_additional_details(id):
+    """Adds college addtional detail.
+
+    Post:
+        Consumes:
+            Application/json.
+        Request body:
+            dictionary with name, type and value required. type should be 
+            "integer", "decimal", "string", "boolean".
+        
+            Example::
+                {
+                    "name": "act",
+                    "type": "integer",
+                    "value": "1"
+                }
+    Responses:
+        201:
+            Successfully created and added college additional detail. Returns 
+            link to get college additional details.
+
+            produces:
+                Application/json.
+
+            Example::
+                {
+                    "additional_details": link to get college additional 
+                        details.
+                }
+        400:
+            Empty json object. Returns message "no data provided".
+
+            produces:
+                Application/json.
+        422:
+            some or all of the fields are invalid. Returns error of 
+            invalid fields.
+
+            produces:
+                Application/json.
+    """
+    data = flask.request.get_json() or {}
+
+    if not data:
+        return errors.bad_request("no data provided")
+
+    college: college_model.College = college_model.College.query.get_or_404(id)
+
+    try:
+        detail_schema.load(data)
+    except marshmallow.ValidationError as err:
+        return flask.jsonify(err.messages), 422
+
+    detail = detail_model.Detail(**data)
+
+    app.db.session.add(detail)
+    college.add_additional_detail(detail)
+
+    app.db.session.commit()
+
+    return flask.jsonify({
+        "additional_details":
+        flask.url_for("colleges.get_college_additional_details", id=id)
+    }), 201
+
+
+@colleges_module.bp.route(
+    "/<int:college_id>/additional_details/<int:detail_id>", methods=["DELETE"])
+def delete_college_additional_details(college_id, detail_id):
+    """Adds college addtional detail.
+
+    Post:
+        Param Args:
+            college_id (integer): college id.
+            detail_id (integer): detail id.
+
+    Responses:
+        200:
+            Successfully removed additional detail from college. Returns link 
+            to get college additional details.
+
+            produces:
+                Application/json.
+
+            Example::
+                {
+                    "additional_details": link to get college additional 
+                        details.
+                }
+    """
+    college = college_model.College.query.get_or_404(college_id)
+
+    detail = detail_model.Detail.query.get_or_404(detail_id)
+
+    college.remove_additional_detail(detail)
+    app.db.session.delete(detail)
+    app.db.session.commit()
+
+    return flask.jsonify({
+        "additional_details":
+        flask.url_for(
+            "colleges.get_college_additional_details", id=college_id)
+    })
