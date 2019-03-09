@@ -20,7 +20,7 @@ class CollegeDetails(app.db.Model, date_audit.DateAudit, base_mixin.BaseMixin):
     str_repr = "college_details"
 
     ATTR_FIELDS = [
-        "room_and_board", "type_of_institution", "phone", "website",
+        "name", "room_and_board", "type_of_institution", "phone", "website",
         "in_state_tuition", "out_of_state_tuition", "location_address",
         "religious_affiliation", "setting", "number_of_students"
     ]
@@ -30,6 +30,7 @@ class CollegeDetails(app.db.Model, date_audit.DateAudit, base_mixin.BaseMixin):
 
     def to_dict(self):
         return {
+            "name": self.name,
             "costs": {
                 "room_and_board": str(self.room_and_board),
                 "in_state_tuition": str(self.in_state_tuition),

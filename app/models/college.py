@@ -18,9 +18,9 @@ class College(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
 
     Attributes:
         id (Integer): model id.
-        name (String): name of the college.
         college_details (sqlalchemy.Model): college details.
         majors (sqlachemy.Query): college majors
+        additional_details (sqlalchemy.relationship): list of additional details.
     """
     id = app.db.Column(app.db.Integer, primary_key=True)
     str_repr = "college"
@@ -146,6 +146,7 @@ class College(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
         return {
             "id": self.id,
             "details": self.college_details.to_dict(),
+            "audit_dates": self.audit_dates(),
             "links": {
                 "get_majors": flask.url_for("colleges.get_majors", id=self.id)
             }

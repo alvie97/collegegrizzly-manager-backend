@@ -1,8 +1,4 @@
-from decimal import Decimal
-import flask
-
 from app import db
-from app.utils import generate_public_id
 from app.models.college import College
 from app.models.college_details import CollegeDetails
 from app.models.detail import Detail

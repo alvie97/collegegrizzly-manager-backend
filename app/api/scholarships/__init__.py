@@ -1,6 +1,6 @@
-"""Handles colleges
+"""Handles scholarships
 
-This module handles all related to colleges from creation to deletion.
+This module handles all related to scholarships from creation to deletion.
 
 Attributes:
     bp: Flask blueprint
@@ -9,7 +9,7 @@ import flask
 from app.security import token_auth
 # from app.security import csrf
 
-bp = flask.Blueprint("colleges", __name__)
+bp = flask.Blueprint("scholarships", __name__)
 
 @bp.before_request
 # @csrf.csrf_token_required
