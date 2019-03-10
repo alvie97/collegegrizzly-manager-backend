@@ -1,4 +1,3 @@
-#TODO: remove get_entity and use first_or_404 or get_or_404
 import flask
 import marshmallow
 
@@ -43,7 +42,8 @@ def get_scholarships():
     page = flask.request.args.get("page", 1, type=int)
     per_page = flask.request.args.get(
         "per_page",
-        flask.current_app.config["SCHOLARSHIPS_PER_PAGE"], type=int)
+        flask.current_app.config["SCHOLARSHIPS_PER_PAGE"],
+        type=int)
     search = flask.request.args.get("search", "", type=str)
 
     if search:
@@ -285,7 +285,7 @@ def get_scholarship_additional_details(id):
 @scholarships_module.bp.route("/<int:id>/additional_details", methods=["POST"])
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 def post_scholarship_additional_details(id):
-    """Adds scholarship addtional detail.
+    """Adds scholarship additional detail.
 
     Post:
         Consumes:
@@ -330,7 +330,7 @@ def post_scholarship_additional_details(id):
     if not data:
         return errors.bad_request("no data provided")
 
-    scholarship: scholarship_model.Scholarship = scholarship_model.Scholarship.query.get_or_404(id)
+    scholarship = scholarship_model.Scholarship.query.get_or_404(id)
 
     try:
         detail_schema.load(data)
@@ -349,12 +349,14 @@ def post_scholarship_additional_details(id):
 
     return flask.jsonify({
         "additional_details":
-            flask.url_for("scholarships.get_scholarship_additional_details", id=id)
+        flask.url_for(
+            "scholarships.get_scholarship_additional_details", id=id)
     }), 201
 
 
 @scholarships_module.bp.route(
-    "/<int:scholarship_id>/additional_details/<int:detail_id>", methods=["DELETE"])
+    "/<int:scholarship_id>/additional_details/<int:detail_id>",
+    methods=["DELETE"])
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 def delete_scholarship_additional_details(scholarship_id, detail_id):
     """Adds scholarship additional detail.
@@ -378,7 +380,8 @@ def delete_scholarship_additional_details(scholarship_id, detail_id):
                         details.
                 }
     """
-    scholarship = scholarship_model.Scholarship.query.get_or_404(scholarship_id)
+    scholarship = scholarship_model.Scholarship.query.get_or_404(
+        scholarship_id)
 
     detail = detail_model.Detail.query.get_or_404(detail_id)
 
@@ -388,6 +391,7 @@ def delete_scholarship_additional_details(scholarship_id, detail_id):
 
     return flask.jsonify({
         "additional_details":
-            flask.url_for(
-                "scholarships.get_scholarship_additional_details", id=scholarship_id)
+        flask.url_for(
+            "scholarships.get_scholarship_additional_details",
+            id=scholarship_id)
     })

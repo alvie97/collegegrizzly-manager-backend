@@ -128,6 +128,7 @@ def test_delete_scholarship(app, client, auth):
 
         assert scholarship is None and scholarship_details is None
 
+
 def test_scholarship_additional_details(app, client, auth):
     """tests scholarship additional details"""
 
