@@ -21,6 +21,8 @@ class Detail(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
     type = app.db.Column(app.db.String(256))
     college_id = app.db.Column(
         app.db.Integer, app.db.ForeignKey("college.id"), nullable=True)
+    scholarship_id = app.db.Column(
+        app.db.Integer, app.db.ForeignKey("scholarship.id"), nullable=True)
     str_repr = "detail"
 
     ATTR_FIELDS = ["value", "type"]

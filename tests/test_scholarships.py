@@ -1,6 +1,7 @@
 from app import db
 from app.models.scholarship import Scholarship
 from app.models.scholarship_details import ScholarshipDetails
+from app.models.detail import Detail
 
 url = "/api/scholarships"
 
@@ -126,3 +127,40 @@ def test_delete_scholarship(app, client, auth):
         scholarship = Scholarship.get(scholarship_id)
 
         assert scholarship is None and scholarship_details is None
+
+def test_scholarship_additional_details(app, client, auth):
+    """tests scholarship additional details"""
+
+    auth.login()
+
+    with app.test_request_context():
+        scholarship_details = ScholarshipDetails(name="test scholarship")
+        scholarship = Scholarship(scholarship_details=scholarship_details)
+
+        db.session.add(scholarship_details)
+        db.session.add(scholarship)
+        db.session.commit()
+
+        detail = {"name": "test detail", "type": "integer", "value": "3"}
+
+        response = client.post(
+            url + f"/{scholarship.id}/additional_details", json=detail)
+
+        additional_details_url = response.get_json()["additional_details"]
+
+        response = client.get(additional_details_url)
+        additional_details = response.get_json()
+
+        detail = Detail.query.first()
+
+        assert additional_details[0] == detail.to_dict()
+
+        response = client.delete(
+            url + f"/{scholarship.id}/additional_details/{detail.id}")
+
+        additional_details_url = response.get_json()["additional_details"]
+
+        response = client.get(additional_details_url)
+        additional_details = response.get_json()
+
+        assert len(additional_details) == 0
