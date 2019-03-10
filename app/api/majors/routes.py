@@ -168,12 +168,12 @@ def delete_major(id):
             produces:
                 Application/json.
     """
-    college = major_model.Major.query.get_or_404(id)
+    major = major_model.Major.query.get_or_404(id)
 
-    app.db.session.delete(college)
+    app.db.session.delete(major)
     app.db.session.commit()
 
-    return flask.jsonify({"message": "college deleted"})
+    return flask.jsonify({"message": "major deleted"})
 
 
 @majors_module.bp.route("/<int:id>/colleges")
