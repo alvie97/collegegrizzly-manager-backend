@@ -36,10 +36,14 @@ def create_app(config_class=config.Config):
     from app.api import submissions
     from app.api import majors
     from app.api import details
+    from app.api import programs
+    from app.api import qualification_rounds
 
     app.register_blueprint(colleges.bp, url_prefix="/api/colleges")
     app.register_blueprint(scholarships.bp, url_prefix="/api/scholarships")
     app.register_blueprint(majors.bp, url_prefix="/api/majors")
+    app.register_blueprint(qualification_rounds.bp, url_prefix="/api/qualification_rounds")
+    app.register_blueprint(programs.bp, url_prefix="/api/programs")
     app.register_blueprint(users.bp, url_prefix="/api/users")
     app.register_blueprint(submissions.bp, url_prefix="/api/submissions")
     app.register_blueprint(details.bp, url_prefix="/api/details")

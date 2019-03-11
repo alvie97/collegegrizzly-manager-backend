@@ -1,12 +1,11 @@
 import marshmallow
-from app.models import major
 
 
-class MajorSchema(marshmallow.Schema):
-    """Major schema
+class QualificationRoundSchema(marshmallow.Schema):
+    """Qualification Round schema.
 
     Attributes:
-        name (string): major name, required.
+        name (string): program name, required.
     """
     name = marshmallow.fields.String(
         required=True, error_messages={"required": "name required"})
