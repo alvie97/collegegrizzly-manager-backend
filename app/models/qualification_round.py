@@ -26,6 +26,6 @@ class QualificationRound(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
             "name": self.name,
             "links": {
                 "get_programs":
-                flask.url_for("qualification_rounds.get_programs")
+                flask.url_for("qualification_rounds.get_programs", id=self.id)
             }
         }
