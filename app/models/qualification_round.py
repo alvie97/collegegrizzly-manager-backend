@@ -1,9 +1,10 @@
+import flask
 import app
 from app.models.common import base_mixin, paginated_api_mixin, date_audit
 
 
 class QualificationRound(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
-              base_mixin.BaseMixin, date_audit.DateAudit):
+                         base_mixin.BaseMixin, date_audit.DateAudit):
     """ Qualification Round model.
 
     Attributes:
@@ -12,7 +13,6 @@ class QualificationRound(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
     """
     id = app.db.Column(app.db.Integer, primary_key=True)
     name = app.db.Column(app.db.String(256), unique=True, index=True)
-    description = app.db.Column(app.db.Text, nullable=True)
 
     def __repr__(self):
         return f"<Qualification Round {self.name}>"
@@ -21,4 +21,11 @@ class QualificationRound(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
         return self.to_dict()
 
     def to_dict(self):
-        return {"id": self.id, "name": self.name, "links": {}}
+        return {
+            "id": self.id,
+            "name": self.name,
+            "links": {
+                "get_programs":
+                flask.url_for("qualification_rounds.get_programs")
+            }
+        }
