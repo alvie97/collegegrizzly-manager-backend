@@ -127,6 +127,73 @@ def create_qualification_round():
     }), 201
 
 
+@qualification_rounds_module.bp.route("/<int:id>", methods=["PATCH"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+def patch_qualification_round(id):
+    """Edits qualification_round.
+
+    PATCH:
+        Params:
+            name (string) (required): name of qualification_round.
+
+        Consumes:
+            Application/json.
+
+        Request Body:
+            Dictionary of qualification_round fields.
+
+        Example::
+            {
+                "name": "example qualification_round name"
+            }
+
+    Responses:
+        200:
+            QualificationRound successfully modified. Returns message.
+
+            Produces:
+                Application/json.
+
+        400:
+            Empty json object. Returns message "no data provided".
+
+            produces:
+                Application/json.
+        404:
+            QualificationRound not found, returns message.
+
+            produces:
+                Application/json.
+        400:
+            some or all of the fields are invalid. Returns error of
+            invalid fields.
+
+            produces:
+                Application/json.
+    """
+    qualification_round = qualification_round_model.QualificationRound.query.get_or_404(
+        id)
+
+    data = flask.request.get_json() or {}
+
+    if not data:
+        return flask.jsonify({"message": "no data provided"}), 400
+
+    try:
+        qualification_round_schema.load(data, partial=True)
+    except marshmallow.ValidationError as err:
+        return flask.jsonify(err.messages), 400
+
+    qualification_round.update(data)
+    app.db.session.commit()
+    return flask.jsonify({
+        "qualification_round":
+        flask.url_for(
+            "qualification_rounds.get_qualification_round",
+            id=qualification_round.id)
+    })
+
+
 @qualification_rounds_module.bp.route("/<int:id>")
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_qualification_round(id):

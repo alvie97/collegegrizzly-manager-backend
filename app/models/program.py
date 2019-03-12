@@ -16,6 +16,7 @@ class Program(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
     id = app.db.Column(app.db.Integer, primary_key=True)
     name = app.db.Column(app.db.String(256), unique=True, index=True)
     description = app.db.Column(app.db.Text, nullable=True)
+    str_repr = "program"
     qualification_rounds = app.db.relationship(
         "QualificationRound",
         secondary=association_tables.program_qualification_round,

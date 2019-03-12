@@ -74,6 +74,32 @@ def test_create_qualification_round(app, client, auth):
         assert qualification_round is not None
         assert qualification_round.to_dict() == response_data
 
+def test_patch_qualification_round(app, client, auth):
+    # update qualification_round
+
+    auth.login()
+
+    patch_data = {"name": "test patch qualification_round"}
+
+    with app.app_context():
+        qualification_round = QualificationRound(name="test qualification_round")
+        db.session.add(qualification_round)
+        db.session.commit()
+        qualification_round_id = qualification_round.id
+
+        response = client.patch(url + f"/{qualification_round_id}", json=patch_data)
+
+    response_data = response.get_json()
+    qualification_round_url = response_data["qualification_round"]
+
+    response = client.get(qualification_round_url)
+    response_data = response.get_json()
+
+    with app.app_context():
+        qualification_round = QualificationRound.get(response_data["id"])
+
+        assert qualification_round is not None
+        assert qualification_round.name == patch_data["name"]
 
 def test_delete_qualification_round(app, client, auth):
     """ create qualification_rounds and edit them"""

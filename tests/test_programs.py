@@ -69,6 +69,32 @@ def test_create_program(app, client, auth):
         assert program is not None
         assert program.to_dict() == response_data
 
+def test_patch_program(app, client, auth):
+    # update program
+
+    auth.login()
+
+    patch_data = {"name": "test patch program", "description": "test description"}
+
+    with app.app_context():
+        program = Program(name="test program")
+        db.session.add(program)
+        db.session.commit()
+        program_id = program.id
+
+        response = client.patch(url + f"/{program_id}", json=patch_data)
+
+    response_data = response.get_json()
+    program_url = response_data["program"]
+
+    response = client.get(program_url)
+    response_data = response.get_json()
+
+    with app.app_context():
+        program = Program.get(response_data["id"])
+
+        assert program is not None
+        assert program.name == patch_data["name"]
 
 def test_delete_program(app, client, auth):
     """ create programs and edit them"""
