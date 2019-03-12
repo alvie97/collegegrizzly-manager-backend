@@ -12,11 +12,14 @@ class Grade(app.db.Model, base_mixin.BaseMixin, date_audit.DateAudit, paginated_
         description (string): grade description.
     """
 
-    id = app.db.Column(app.db.integer, primary_key=True)
+    id = app.db.Column(app.db.Integer, primary_key=True)
     name = app.db.Column(app.db.String(256), unique=True, index=True)
     max = app.db.Column(app.db.Numeric(8, 2))
     min = app.db.Column(app.db.Numeric(8, 2))
     description = app.db.Column(app.db.String(256), nullable=True)
+    str_repr = "grade"
+
+    ATTR_FIELDS = ["name", "max", "min", "description"]
 
     def __repr__(self):
         return f"<Grade {self.name}>"
