@@ -145,6 +145,70 @@ def get_major(id):
     return flask.jsonify(major.to_dict())
 
 
+@majors_module.bp.route("/<int:id>", methods=["PATCH"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+def patch_major(id):
+    """Edits major.
+
+    PATCH:
+        Params:
+            name (string) (required): name of major.
+
+        Consumes:
+            Application/json.
+
+        Request Body:
+            Dictionary of major fields.
+
+        Example::
+            {
+                "name": "example major name"
+            }
+
+    Responses:
+        200:
+            Major successfully modified. Returns message.
+
+            Produces:
+                Application/json.
+
+        400:
+            Empty json object. Returns message "no data provided".
+
+            produces:
+                Application/json.
+        404:
+            Major not found, returns message.
+
+            produces:
+                Application/json.
+        422:
+            some or all of the fields are invalid. Returns error of
+            invalid fields.
+
+            produces:
+                Application/json.
+    """
+    major = major_model.Major.query.get_or_404(id)
+
+    data = flask.request.get_json() or {}
+
+    if not data:
+        return flask.jsonify({"message": "no data provided"}), 400
+
+    try:
+        major_schema.load(data, partial=True)
+    except marshmallow.ValidationError as err:
+        return flask.jsonify(err.messages), 422
+
+    major.update(data)
+    app.db.session.commit()
+    return flask.jsonify({
+        "major":
+        flask.url_for("majors.get_major", id=major.id)
+    })
+
+
 @majors_module.bp.route("/<int:id>", methods=["DELETE"])
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 def delete_major(id):
