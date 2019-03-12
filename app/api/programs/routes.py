@@ -145,6 +145,68 @@ def get_program(id):
     return flask.jsonify(program.to_dict())
 
 
+@programs_module.bp.route("/<int:id>", methods=["PATCH"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+def patch_program(id):
+    """Edits program.
+
+    PATCH:
+        Params:
+            name (string) (required): name of program.
+
+        Consumes:
+            Application/json.
+
+        Request Body:
+            Dictionary of program fields.
+
+        Example::
+            {
+                "name": "example program name"
+            }
+
+    Responses:
+        200:
+            Program successfully modified. Returns message.
+
+            Produces:
+                Application/json.
+
+        400:
+            Empty json object. Returns message "no data provided".
+
+            produces:
+                Application/json.
+        404:
+            Program not found, returns message.
+
+            produces:
+                Application/json.
+        400:
+            some or all of the fields are invalid. Returns error of
+            invalid fields.
+
+            produces:
+                Application/json.
+    """
+    program = program_model.Program.query.get_or_404(id)
+
+    data = flask.request.get_json() or {}
+
+    if not data:
+        return flask.jsonify({"message": "no data provided"}), 400
+
+    try:
+        program_schema.load(data, partial=True)
+    except marshmallow.ValidationError as err:
+        return flask.jsonify(err.messages), 400
+
+    program.update(data)
+    app.db.session.commit()
+    return flask.jsonify({
+        "program":
+            flask.url_for("programs.get_program", id=program.id)
+    })
 @programs_module.bp.route("/<int:id>", methods=["DELETE"])
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 def delete_program(id):

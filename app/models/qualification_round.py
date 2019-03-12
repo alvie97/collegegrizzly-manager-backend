@@ -13,6 +13,9 @@ class QualificationRound(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
     """
     id = app.db.Column(app.db.Integer, primary_key=True)
     name = app.db.Column(app.db.String(256), unique=True, index=True)
+    str_repr = "qualification_round"
+
+    ATTR_FIELDS = ["name"]
 
     def __repr__(self):
         return f"<Qualification Round {self.name}>"
