@@ -74,6 +74,32 @@ def test_create_major(app, client, auth):
         assert major is not None
         assert major.to_dict() == response_data
 
+def test_patch_major(app, client, auth):
+    # update major
+
+    auth.login()
+
+    patch_data = {"name": "test patch major", "description": "test description"}
+
+    with app.app_context():
+        major = Major(name="test major")
+        db.session.add(major)
+        db.session.commit()
+        major_id = major.id
+
+        response = client.patch(url + f"/{major_id}", json=patch_data)
+
+    response_data = response.get_json()
+    major_url = response_data["major"]
+
+    response = client.get(major_url)
+    response_data = response.get_json()
+
+    with app.test_request_context():
+        major = Major.get(response_data["id"])
+
+        assert major is not None
+        assert major.to_dict() == response_data
 
 def test_delete_major(app, client, auth):
     """ create majors and edit them"""

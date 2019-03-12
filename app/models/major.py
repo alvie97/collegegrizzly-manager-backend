@@ -6,9 +6,6 @@ from app.models.common import date_audit
 from app.models.common import paginated_api_mixin
 
 
-#TODO: add get_colleges route
-#TODO: add get_major route
-#TODO: create major schema
 class Major(app.db.Model, base_mixin.BaseMixin, date_audit.DateAudit,
             paginated_api_mixin.PaginatedAPIMixin):
     """Major model
@@ -22,7 +19,7 @@ class Major(app.db.Model, base_mixin.BaseMixin, date_audit.DateAudit,
     name = app.db.Column(app.db.String(256), unique=True, index=True)
     description = app.db.Column(app.db.Text, nullable=True)
 
-    ATTR_FIELDS = ["description"]
+    ATTR_FIELDS = ["name", "description"]
 
     def __repr__(self):
         return f"<major {self.name}>"
