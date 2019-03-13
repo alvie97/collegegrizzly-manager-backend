@@ -1,7 +1,9 @@
 import app
 from app.models.common import base_mixin, date_audit, paginated_api_mixin
 
-class Grade(app.db.Model, base_mixin.BaseMixin, date_audit.DateAudit, paginated_api_mixin.PaginatedAPIMixin):
+
+class Grade(app.db.Model, base_mixin.BaseMixin, date_audit.DateAudit,
+            paginated_api_mixin.PaginatedAPIMixin):
     """Grade model.
 
     Attributes:
@@ -30,8 +32,8 @@ class Grade(app.db.Model, base_mixin.BaseMixin, date_audit.DateAudit, paginated_
     def to_dict(self):
         return {
             "id": self.id,
-            "name": self.id,
-            "max": self.max,
-            "min": self.min,
+            "name": self.name,
+            "max": str(self.max),
+            "min": str(self.min),
             "description": self.description
         }
