@@ -10,6 +10,7 @@ from app.models import detail as detail_model
 from app.schemas import scholarship_schema as scholarship_schema_class
 from app.schemas import detail_schema as detail_schema_class
 from app.api import errors
+from app.models import college as college_model
 
 scholarship_schema = scholarship_schema_class.ScholarshipSchema()
 detail_schema = detail_schema_class.DetailSchema()
@@ -114,14 +115,21 @@ def post_scholarship():
     if not data:
         return errors.bad_request("no data provided")
 
+    college_id = flask.request.args.get("college_id", type=int)
+
+    if college_id is None:
+        return errors.bad_request("no college provided")
+
     try:
         scholarship_schema.load(data)
     except marshmallow.ValidationError as err:
         return flask.jsonify(err.messages), 400
 
+    college = college_model.College.query.get_or_404(college_id)
+
     scholarship_details = scholarship_details_model.ScholarshipDetails(**data)
     scholarship = scholarship_model.Scholarship(
-        scholarship_details=scholarship_details)
+        scholarship_details=scholarship_details, college=college)
     app.db.session.add(scholarship_details)
     app.db.session.add(scholarship)
     app.db.session.commit()
@@ -395,3 +403,180 @@ def delete_scholarship_additional_details(scholarship_id, detail_id):
             "scholarships.get_scholarship_additional_details",
             id=scholarship_id)
     })
+
+
+@scholarships_module.bp.route("/<string:id>/scholarships_needed")
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+def get_scholarships_needed(id):
+    """Gets scholarships needed for scholarship.
+
+    Retrieves paginated list of all scholarships from database or scholarships
+    that contains the search request parameter if defined.
+
+    GET:
+        Request params:
+            page (int) (optional): Page number in paginated resource, defaults
+            to one.
+            per_page (int) (optional): Number of items to retrieve per page,
+            defaults to configuration constant SCHOLARSHIP_PER_PAGE.
+            search (string) (optional): Search query keyword, defaults to "".
+
+    Responses:
+        200:
+            Successfully retrieves items from database. Returns paginated list
+            of scholarships. See PaginatedAPIMixin.
+
+            produces:
+                Application/json.
+    """
+    scholarship = scholarship_model.Scholarship.query.get_or_404(id)
+    page = flask.request.args.get("page", 1, type=int)
+    per_page = flask.request.args.get(
+        "per_page",
+        flask.current_app.config["SCHOLARSHIPS_PER_PAGE"],
+        type=int)
+    search = flask.request.args.get("search", "", type=str)
+
+    if search:
+        query = scholarship.scholarships_needed.query.join(
+            scholarship_details_model.ScholarshipDetails,
+            scholarship_details_model.ScholarshipDetails.id == scholarship.
+            scholarships_needed.id,
+            isouter=True).filter(
+                scholarship_details_model.ScholarshipDetails.name.like(
+                    f"%{search}%"))
+
+        data = scholarship.scholarships_needed.to_collection_dict(
+            query,
+            page,
+            per_page,
+            "scholarships.get_scholarships",
+            search=search)
+    else:
+        query = scholarship.scholarships_needed
+        data = scholarship_model.Scholarship.to_collection_dict(
+            query, page, per_page, "scholarships.get_scholarships")
+
+    return flask.jsonify(data)
+
+
+@scholarships_module.bp.route(
+    "/<string:id>/scholarships_needed", methods=["POST"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+def post_scholarships_needed(id):
+    """adds scholarship needed to scholarship.
+
+    POST:
+        Params:
+            id (string) (required): id of scholarship.
+
+        Consumes:
+            Application/json.
+
+        Request Body:
+            list of scholarships ids.
+
+        Example::
+            ["id 1", "id 2"]
+
+    Responses:
+        200:
+            Scholarship needed successfully added to scholarship. Returns
+            message.
+
+            Produces:
+                Application/json.
+
+        400:
+            Empty json object. Returns message "no data provided".
+
+            produces:
+                Application/json.
+        404:
+            Scholarship not found, returns message.
+
+            produces:
+                Application/json.
+    """
+    scholarship = scholarship_model.Scholarship.query.get_or_404(id)
+    data = flask.request.get_json() or {}
+
+    if not data or not isinstance(data, list):
+        return errors.bad_request("no data provided")
+
+    college = scholarship.college
+
+    for scholarship_needed in data:
+        if scholarship_needed == scholarship.id:
+            continue
+
+        scholarship_to_add = college.scholarships.filter_by(
+            id=scholarship_needed).first()
+
+        if scholarship_to_add is not None:
+            scholarship.add_needed_scholarship(scholarship_to_add)
+
+    app.db.session.commit()
+    return flask.jsonify({
+        "scholarships_needed":
+        flask.url_for("scholarships.get_scholarships_needed", id=id)
+    })
+
+
+@scholarships_module.bp.route(
+    "/<string:id>/scholarships_needed", methods=["DELETE"])
+@security.user_role([security.ADMINISTRATOR, security.BASIC])
+def delete_scholarships_needed(id):
+    """removes scholarship needed to scholarship.
+
+    POST:
+        Params:
+            id (string) (required): id of scholarship.
+
+        Consumes:
+            Application/json.
+
+        Request Body:
+            list of scholarships ids.
+
+        Example::
+            ["id 1", "id 2"]
+
+    Responses:
+        200:
+            Scholarship needed successfully removed from scholarship. Returns
+            message.
+
+            Produces:
+                Application/json.
+
+        400:
+            Empty json object. Returns message "no data provided".
+
+            produces:
+                Application/json.
+        404:
+            Scholarship not found, returns message.
+
+            produces:
+                Application/json.
+    """
+    scholarship = scholarship_model.Scholarship.query.get_or_404(id)
+    data = flask.request.get_json() or {}
+
+    if not data or not isinstance(data, list):
+        return errors.bad_request("no data provided")
+
+    for scholarship_needed in data:
+        scholarship_to_remove = scholarship.scholarships_needed.filter_by(
+            id=scholarship_needed).first()
+
+        if scholarship_to_remove is not None:
+            scholarship.remove_needed_scholarship(scholarship_to_remove)
+
+    app.db.session.commit()
+    return flask.jsonify({
+        "scholarships_needed":
+            flask.url_for("scholarships.get_scholarships_needed", id=id)
+    })
+

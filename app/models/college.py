@@ -42,6 +42,13 @@ class College(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
         lazy="dynamic",
         backref=app.db.backref("colleges", lazy="dynamic"))
 
+    scholarships = app.db.relationship(
+        "Scholarship",
+        backref="college",
+        cascade="all, delete-orphan",
+        lazy="dynamic"
+    )
+
     ATTR_FIELDS = ["name"]
 
     def __repr__(self):
