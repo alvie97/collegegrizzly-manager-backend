@@ -7,6 +7,9 @@ from app import security
 from app.models import scholarship as scholarship_model
 from app.models import scholarship_details as scholarship_details_model
 from app.models import detail as detail_model
+from app.models import association_tables
+from app.models import program as program_model
+from app.models import qualification_round as qualification_round_model
 from app.schemas import scholarship_schema as scholarship_schema_class
 from app.schemas import detail_schema as detail_schema_class
 from app.api import errors
@@ -577,6 +580,141 @@ def delete_scholarships_needed(id):
     app.db.session.commit()
     return flask.jsonify({
         "scholarships_needed":
-            flask.url_for("scholarships.get_scholarships_needed", id=id)
+        flask.url_for("scholarships.get_scholarships_needed", id=id)
     })
 
+
+# TODO: Add common methods for adding removing and checking existence for
+#   programs requirements and programs requirements qualification rounds.
+@scholarships_module.bp.route(
+    "/<int:id>/programs_requirement", methods=["POST"])
+def add_programs_requirement(id):
+    """Adds programs requirement to scholarship
+
+    POST:
+        Args:
+            id (integer): scholarship id.
+
+        Consumes:
+            Application/json.
+
+        Request Body:
+            programs and qualification rounds needed for scholarship.
+
+        Example::
+            [
+                {
+                    "program_id": program id,
+                    "qualification_rounds": [
+                        qualification round id,
+                        .
+                        .
+                        .
+                    ]
+                },
+                .
+                .
+                .
+            ]
+
+    Responses:
+        404:
+            returns message if any model instance is not found.
+        400:
+            if data is empty, not a list or not well structured.
+        200:
+            success message.
+    """
+    data = flask.request.get_json() or {}
+
+    if not data or not isinstance(data, list):
+        return errors.bad_request("no data provided")
+
+    scholarship = scholarship_model.Scholarship.query.get_or_404(id)
+
+    try:
+        for requirement in data:
+            program_id = int(requirement["program_id"])
+            program = program_model.Program.query.get_or_404(program_id)
+
+            program_requirement = scholarship.programs_requirement.filter_by(
+                program=program).first()
+
+            if program_requirement is None:
+                program_requirement = association_tables.ProgramRequirement(
+                    program=program)
+                app.db.session.add(program_requirement)
+                scholarship.programs_requirement.append(program_requirement)
+
+            for qualification_round_id in requirement["qualification_rounds"]:
+                qualification_round_id = int(qualification_round_id)
+                qualification_round = qualification_round_model \
+                    .QualificationRound.query.get_or_404(
+                        qualification_round_id)
+
+                qualification_rounds_count = program_requirement.qualification_rounds.filter_by(
+                    id=qualification_round_id).count()
+
+                if qualification_rounds_count == 0:
+                    program_requirement.qualification_rounds.append(
+                        qualification_round)
+    except KeyError:
+        return errors.bad_request("missing fields in data provided")
+    except ValueError:
+        return errors.bad_request("invalid id")
+
+
+    app.db.session.commit()
+
+    return flask.jsonify({"message": "requirements added"})
+
+
+# TODO: Add test to this route.
+# TODO: Finish route docstring.
+@scholarships_module.bp.route("/<int:scholarship_id>/programs_requirement"
+                              "/<int:program_id>/qualification_rounds",
+                              methods=["POST"])
+def add_qualification_rounds_to_program_requirement(scholarship_id,
+                                                    program_id):
+    """Adds qualification rounds to program_requirement
+
+    POST:
+        Args:
+            scholarship_id (integer): scholarship id.
+            program_id (integer): program id of program requirement.
+        Consumes:
+            Application/json.
+        Request body:
+            [qualification round id, ...]
+    """
+    data = flask.request.get_json() or {}
+
+    if not data or not isinstance(data, list):
+        return errors.bad_request("no data provided")
+
+    scholarship = scholarship_model.Scholarship.query.get_or_404(
+        scholarship_id)
+
+    program_requirement = scholarship.programs_requirement.filter(
+        program_model.Program.id == program_id)
+
+    for qualification_round_id in data:
+
+        try:
+            qualification_round_id = int(qualification_round_id)
+        except ValueError:
+            return errors.bad_request("invalid qualification round id")
+
+        qualification_round = qualification_round_model.QualificationRound \
+            .query.get_or_404(qualification_round_id)
+
+        qualification_rounds_count = program_requirement.qualification_rounds \
+            .filter_by(id=qualification_round_id).count()
+
+        if qualification_rounds_count == 0:
+            program_requirement.qualification_rounds.append(
+                qualification_round)
+
+    app.db.session.commit()
+
+    return flask.jsonify({"message": "qualification rounds added"})
