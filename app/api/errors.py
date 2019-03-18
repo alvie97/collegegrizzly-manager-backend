@@ -38,3 +38,16 @@ def forbidden(message):
     """
 
     return flask.jsonify({"message": message}), 403
+
+
+def not_found(message):
+    """Returns not found error
+
+    Args:
+        message (string): error message.
+
+    Returns:
+        Object (Flask response): error code 404 and error message
+    """
+
+    return flask.jsonify({"message": message}), 404

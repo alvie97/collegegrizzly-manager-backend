@@ -8,6 +8,10 @@ from app.utils import generate_public_id
 from app.models.college import College
 from app.models.user import User
 from config import Config
+from app.models.scholarship import Scholarship
+from app.models.program import Program
+from app.models.qualification_round import QualificationRound
+from app.models.association_tables import ProgramRequirement
 
 
 @pytest.fixture
@@ -65,3 +69,29 @@ def auth(app, client):
         db.session.add(user)
         db.session.commit()
     return AuthActions(client)
+
+@pytest.fixture
+def programs_requirement(app):
+    with app.app_context():
+        scholarship = Scholarship()
+        db.session.add(scholarship)
+        program = Program(name="test program")
+        program_1 = Program(name="test program 1")
+
+        db.session.add(program)
+
+        for i in range(4):
+            q_round = QualificationRound(name=f"test qualification round {i}")
+            db.session.add(q_round)
+            if i <= 3:
+                program.add_qualification_round(q_round)
+            else:
+                program_1.add_qualification_round(q_round)
+
+        program_requirement = ProgramRequirement(program=program)
+        program_requirement.qualification_rounds.append(
+            program.qualification_rounds.first())
+
+        scholarship.programs_requirement.append(program_requirement)
+
+        db.session.commit()

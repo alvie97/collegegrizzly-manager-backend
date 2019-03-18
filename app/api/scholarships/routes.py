@@ -663,14 +663,11 @@ def add_programs_requirement(id):
     except ValueError:
         return errors.bad_request("invalid id")
 
-
     app.db.session.commit()
 
     return flask.jsonify({"message": "requirements added"})
 
 
-# TODO: Add test to this route.
-# TODO: Finish route docstring.
 @scholarships_module.bp.route("/<int:scholarship_id>/programs_requirement"
                               "/<int:program_id>/qualification_rounds",
                               methods=["POST"])
@@ -686,17 +683,34 @@ def add_qualification_rounds_to_program_requirement(scholarship_id,
             Application/json.
         Request body:
             [qualification round id, ...]
+    Responses:
+    200:
+        qualification rounds added to scholarship program requirement
+
+        Produces:
+            Application/json.
+    400:
+        no data provided or data not list, invalid qualification round id
+
+        Produces:
+            Application/json.
+    404:
+        either scholarship or program not found, or program doesn't have a
+        qualification round
+
+        Produces:
+            Application/json.
     """
     data = flask.request.get_json() or {}
 
     if not data or not isinstance(data, list):
-        return errors.bad_request("no data provided")
+        return errors.bad_request("no data provided or bad structure")
 
     scholarship = scholarship_model.Scholarship.query.get_or_404(
         scholarship_id)
 
     program_requirement = scholarship.programs_requirement.filter(
-        program_model.Program.id == program_id)
+        program_model.Program.id == program_id).first_or_404()
 
     for qualification_round_id in data:
 
@@ -705,13 +719,17 @@ def add_qualification_rounds_to_program_requirement(scholarship_id,
         except ValueError:
             return errors.bad_request("invalid qualification round id")
 
-        qualification_round = qualification_round_model.QualificationRound \
-            .query.get_or_404(qualification_round_id)
+        qualification_round = program_requirement.program.qualification_rounds \
+            .filter_by(id=qualification_round_id).first()
 
-        qualification_rounds_count = program_requirement.qualification_rounds \
-            .filter_by(id=qualification_round_id).count()
+        if qualification_round is None:
+            return errors.not_found("program does not have qualification "
+                                    f"round {qualification_round_id}")
 
-        if qualification_rounds_count == 0:
+        qualification_rounds_with_id_count = program_requirement \
+            .qualification_rounds.filter_by(id=qualification_round_id).count()
+
+        if qualification_rounds_with_id_count == 0:
             program_requirement.qualification_rounds.append(
                 qualification_round)
 

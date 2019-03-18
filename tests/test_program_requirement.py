@@ -161,3 +161,135 @@ def test_get_program_requirement_from_program_id(app):
                 compile_kwargs={"literal_binds": True}))
 
         assert programs_requirement.count() == 1
+
+
+# failure cases
+
+
+def test_add_qualification_rounds_scholarships_failure_0(
+        app, client, auth, programs_requirement):
+    """json data is empty"""
+    auth.login()
+    url = "/api/scholarships/1/programs_requirement/1/qualification_rounds"
+    json = []
+    response = client.post(url, json=json)
+
+    assert response.status_code == 400
+    assert response.get_json(
+    )["message"] == "no data provided or bad structure"
+
+
+def test_add_qualification_rounds_scholarships_failure_1(
+        app, client, auth, programs_requirement):
+    """json is not a list"""
+    auth.login()
+    url = "/api/scholarships/1/programs_requirement/1/qualification_rounds"
+    json = "not a list"
+    response = client.post(url, json=json)
+    assert response.status_code == 400
+    assert response.get_json(
+    )["message"] == "no data provided or bad structure"
+
+
+def test_add_qualification_rounds_scholarships_failure_2(
+        app, client, auth, programs_requirement):
+    """scholarship is not found"""
+    auth.login()
+    json = [1, 3]
+    response = client.post(
+        "/api/scholarships/10000/programs_requirement/1"
+        "/qualification_rounds",
+        json=json)
+
+    assert response.status_code == 404
+    assert response.get_json()["message"] == "resource not found"
+
+
+def test_add_qualification_rounds_scholarships_failure_3(
+        app, client, auth, programs_requirement):
+    """scholarship doesn't have program requirement with given program id"""
+    auth.login()
+    json = [1, 3]
+    response = client.post(
+        "/api/scholarships/1/programs_requirement/1000"
+        "/qualification_rounds",
+        json=json)
+
+    assert response.status_code == 404
+    assert response.get_json()["message"] == "resource not found"
+
+
+def test_add_qualification_rounds_scholarships_failure_4(
+        app, client, auth, programs_requirement):
+    """qualification round id in list is not an integer"""
+    auth.login()
+    url = "/api/scholarships/1/programs_requirement/1/qualification_rounds"
+    json = [1, "test integer"]
+    response = client.post(url, json=json)
+    assert response.status_code == 400
+    assert response.get_json()["message"] == "invalid qualification round id"
+
+
+def test_add_qualification_rounds_scholarships_failure_5(
+        app, client, auth, programs_requirement):
+    """qualification round not found"""
+    auth.login()
+    json = [1, 10]
+    url = "/api/scholarships/1/programs_requirement/1/qualification_rounds"
+    response = client.post(url, json=json)
+    assert response.status_code == 404
+    assert response.get_json(
+    )["message"] == f"program does not have qualification round {json[1]}"
+
+
+def test_add_qualification_rounds_scholarships_failure_6(
+        app, client, auth, programs_requirement):
+    """rounds aren't stored in database on error"""
+    auth.login()
+    json = [2, 10]
+    url = "/api/scholarships/1/programs_requirement/1/qualification_rounds"
+    client.post(url, json=json)
+    with app.app_context():
+        scholarship = Scholarship.query.first()
+        program_requirement = scholarship.programs_requirement.first()
+        scholarship_qualification_rounds_count = program_requirement \
+            .qualification_rounds.count()
+
+        assert scholarship_qualification_rounds_count == 1
+
+
+# success cases
+def test_add_qualification_rounds_scholarships_success_0(
+        app, client, auth, programs_requirement):
+    """qualification rounds added successfully"""
+    auth.login()
+    json = [2, 3]
+    url = "/api/scholarships/1/programs_requirement/1/qualification_rounds"
+    response = client.post(url, json=json)
+    assert response.status_code == 200
+    assert response.get_json()["message"] == "qualification rounds added"
+    with app.app_context():
+        scholarship = Scholarship.query.first()
+        program_requirement = scholarship.programs_requirement.first()
+        scholarship_qualification_rounds_count = program_requirement \
+            .qualification_rounds.count()
+
+        assert scholarship_qualification_rounds_count == 3
+
+
+def test_add_qualification_rounds_scholarships_success_1(
+        app, client, auth, programs_requirement):
+    """one or more qualification rounds already exist in program requirement"""
+    auth.login()
+    json = [1, 3]
+    url = "/api/scholarships/1/programs_requirement/1/qualification_rounds"
+    response = client.post(url, json=json)
+    assert response.status_code == 200
+    assert response.get_json()["message"] == "qualification rounds added"
+    with app.app_context():
+        scholarship = Scholarship.query.first()
+        program_requirement = scholarship.programs_requirement.first()
+        scholarship_qualification_rounds_count = program_requirement \
+            .qualification_rounds.count()
+
+        assert scholarship_qualification_rounds_count == 2

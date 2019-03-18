@@ -55,6 +55,10 @@ def create_app(config_class=config.Config):
     app.register_blueprint(auth.bp, url_prefix="/auth")
     app.register_blueprint(site.bp)
 
+    from app.errors import error_404
+
+    app.register_error_handler(404, error_404)
+
     return app
 
 
