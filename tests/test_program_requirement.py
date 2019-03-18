@@ -293,3 +293,191 @@ def test_add_qualification_rounds_scholarships_success_1(
             .qualification_rounds.count()
 
         assert scholarship_qualification_rounds_count == 2
+
+
+def test_remove_program_requirement_from_scholarship_failure_0(
+        app, client, auth, programs_requirement):
+    """json data is empty"""
+    auth.login()
+    url = "/api/scholarships/1/programs_requirement"
+    json = []
+    response = client.delete(url, json=json)
+
+    assert response.status_code == 400
+    assert response.get_json(
+    )["message"] == "no data provided or bad structure"
+
+
+def test_remove_program_requirement_from_scholarship_failure_1(
+        app, client, auth, programs_requirement):
+    """json is not a list"""
+    auth.login()
+    url = "/api/scholarships/1/programs_requirement"
+    json = "not a list"
+    response = client.delete(url, json=json)
+    assert response.status_code == 400
+    assert response.get_json(
+    )["message"] == "no data provided or bad structure"
+
+
+def test_remove_program_requirement_from_scholarship_failure_2(
+        app, client, auth, programs_requirement):
+    """scholarship is not found"""
+    auth.login()
+    json = [1, 3]
+    response = client.delete(
+        "/api/scholarships/10000/programs_requirement",
+        json=json)
+
+    assert response.status_code == 404
+    assert response.get_json()["message"] == "resource not found"
+
+
+def test_remove_program_requirement_from_scholarship_failure_3(
+        app, client, auth, programs_requirement):
+    """qualification round id in list is not an integer"""
+    auth.login()
+    url = "/api/scholarships/1/programs_requirement"
+    json = [1, "test integer"]
+    response = client.delete(url, json=json)
+    assert response.status_code == 400
+    assert response.get_json()["message"] == "invalid id"
+
+
+def test_remove_program_requirement_from_scholarship_success_0(
+        app, client, auth, programs_requirement):
+    """test remove program requirement from scholarship"""
+    auth.login()
+    url = "/api/scholarships/1/programs_requirement"
+    json = [1]
+    response = client.delete(url, json=json)
+    assert response.status_code == 200
+    assert response.get_json()["message"] == "requirements removed"
+
+    with app.app_context():
+        scholarship = Scholarship.query.first()
+
+        for program_id in json:
+            assert scholarship.programs_requirement.filter(
+                Program.id == program_id).count() == 0
+
+            assert ProgramRequirement.query.filter(
+                Program.id == program_id).count() == 0
+
+def test_remove_program_requirement_from_scholarship_success_1(
+        app, client, auth, programs_requirement):
+    """test remove program requirement from scholarship where scholarship
+        doesn't have the requirement.
+    """
+    auth.login()
+    url = "/api/scholarships/1/programs_requirement"
+    json = [100000, 1]
+    response = client.delete(url, json=json)
+    assert response.status_code == 200
+    assert response.get_json()["message"] == "requirements removed"
+
+    with app.app_context():
+        scholarship = Scholarship.query.first()
+
+        for program_id in json:
+            assert scholarship.programs_requirement.filter(
+                Program.id == program_id).count() == 0
+
+            assert ProgramRequirement.query.filter(
+                Program.id == program_id).count() == 0
+
+def test_remove_program_requirement_qualification_rounds_from_scholarship_failure_0(
+        app, client, auth, programs_requirement):
+    """json data is empty"""
+    auth.login()
+    url = "/api/scholarships/1/programs_requirement/1/qualification_rounds"
+    json = []
+    response = client.delete(url, json=json)
+
+    assert response.status_code == 400
+    assert response.get_json(
+    )["message"] == "no data provided or bad structure"
+
+
+def test_remove_program_requirement_qualification_rounds_from_scholarship_failure_1(
+        app, client, auth, programs_requirement):
+    """json is not a list"""
+    auth.login()
+    url = "/api/scholarships/1/programs_requirement/1/qualification_rounds"
+    json = "not a list"
+    response = client.delete(url, json=json)
+    assert response.status_code == 400
+    assert response.get_json(
+    )["message"] == "no data provided or bad structure"
+
+
+def test_remove_program_requirement_qualification_rounds_from_scholarship_failure_2(
+        app, client, auth, programs_requirement):
+    """scholarship is not found"""
+    auth.login()
+    json = [1, 3]
+    response = client.delete(
+        "/api/scholarships/10000/programs_requirement"
+        "/qualification_rounds",
+        json=json)
+
+    assert response.status_code == 404
+    assert response.get_json()["message"] == "resource not found"
+
+
+def test_remove_program_requirement_qualification_rounds_from_scholarship_failure_3(
+        app, client, auth, programs_requirement):
+    """qualification round id in list is not an integer"""
+    auth.login()
+    url = "/api/scholarships/1/programs_requirement"
+    json = [1, "test integer"]
+    response = client.delete(url, json=json)
+    assert response.status_code == 400
+    assert response.get_json()["message"] == "invalid id"
+
+def test_remove_program_requirement_qualification_rounds_from_scholarship_failure_4(
+        app, client, auth, programs_requirement):
+    """qualification round id in list is not an integer"""
+    auth.login()
+    url = "/api/scholarships/1/programs_requirement/1/qualification_rounds"
+    json = [1, "test integer"]
+    response = client.delete(url, json=json)
+    assert response.status_code == 400
+    assert response.get_json()["message"] == "invalid qualification round id"
+
+
+def test_remove_program_requirement_qualification_rounds_from_scholarship_failure_5(
+        app, client, auth, programs_requirement):
+    """qualification round not found"""
+    auth.login()
+    json = [1, 10]
+    url = "/api/scholarships/1/programs_requirement/1/qualification_rounds"
+    response = client.delete(url, json=json)
+    assert response.status_code == 404
+    assert response.get_json(
+    )["message"] == f"qualification round {json[1]} not in program requirement"
+
+def test_remove_program_requirement_qualification_rounds_from_scholarship_success_0(
+        app, client, auth, programs_requirement):
+    """qualification rounds removed successfully"""
+    with app.app_context():
+        program_requirement = ProgramRequirement.query.first()
+        qualification_round = QualificationRound.first(id=2)
+        program_requirement.add_qualification_round(qualification_round)
+
+        db.session.commit()
+
+    auth.login()
+    json = [1, 2]
+    url = "/api/scholarships/1/programs_requirement/1/qualification_rounds"
+    response = client.delete(url, json=json)
+    assert response.status_code == 200
+    assert response.get_json()["message"] == "qualification rounds removed"
+    with app.app_context():
+        scholarship = Scholarship.query.first()
+        program_requirement = scholarship.programs_requirement.first()
+        scholarship_qualification_rounds_count = program_requirement \
+            .qualification_rounds.count()
+
+        assert scholarship_qualification_rounds_count == 0
+

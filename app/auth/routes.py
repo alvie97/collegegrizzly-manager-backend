@@ -6,6 +6,8 @@ from app import auth
 from app.auth import utils as auth_utils
 from app.models import refresh_token
 from app.models import user as user_model
+# TODO: change this imports
+from app import security
 from app.security import csrf, token_auth
 
 

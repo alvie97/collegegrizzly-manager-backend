@@ -1,4 +1,5 @@
 import app
+import flask
 from app.models.common import base_mixin, date_audit, paginated_api_mixin
 
 college_major = app.db.Table(
@@ -62,3 +63,51 @@ class ProgramRequirement(app.db.Model, base_mixin.BaseMixin,
         secondary=program_requirement_qualification_round,
         lazy="dynamic",
         backref=app.db.backref("programs_requirement", lazy="dynamic"))
+
+    def __repr__(self):
+        return f"<ProgramRequirement {self.program.name} " \
+            f"for scholarship {self.scholarship_id}>"
+
+    def has_qualification_round(self, qualification_round):
+        """Checks if program requirement has qualification round.
+
+        Args:
+            qualification_round (QualificationRound): qualification round.
+
+        Returns:
+            bool: True if program has qualification round, false otherwise.
+        """
+        return self.qualification_rounds.filter_by(
+            id=qualification_round.id).count() > 0
+
+    def add_qualification_round(self, qualification_round):
+        """Adds qualification round to program requirement.
+
+        Args:
+            qualification_round (QualificationRound): qualification round
+        """
+        if not self.has_qualification_round(qualification_round):
+            self.qualification_rounds.append(qualification_round)
+
+    def remove_qualification_round(self, qualification_round):
+        """Removes qualification round from program requirement.
+
+        Args:
+            qualification_round (QualificationRound): qualification round
+        """
+        if self.has_qualification_round(qualification_round):
+            self.qualification_rounds.remove(qualification_round)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "links": {
+                "get_program":
+                flask.url_for("programs.get_program", id=self.program_id),
+                "get_qualification_rounds":
+                flask.url_for(
+                    "scholarships.get_program_requirement_qualification_rounds",
+                    scholarship_id=self.scholarship_id,
+                    program_id=self.program_id)
+            }
+        }
