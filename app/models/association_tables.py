@@ -29,6 +29,13 @@ program_requirement_qualification_round = app.db.Table(
     app.db.Column("qualification_round_id", app.db.Integer,
                   app.db.ForeignKey("qualification_round.id")))
 
+chosen_college_requirement = app.db.Table(
+    "chosen_college_requirement",
+    app.db.Column("scholarship_id", app.db.Integer,
+                  app.db.ForeignKey("scholarship.id")),
+    app.db.Column("question_id", app.db.Integer,
+                  app.db.ForeignKey("question.id")))
+
 
 class ProgramRequirement(app.db.Model, base_mixin.BaseMixin,
                          date_audit.DateAudit,

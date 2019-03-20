@@ -43,6 +43,11 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
         lazy="dynamic")
     programs_requirement = app.db.relationship(
         "ProgramRequirement", lazy="dynamic")
+    chosen_college_requirement = app.db.relationship(
+        "Scholarship",
+        secondary=association_tables.chosen_college_requirement,
+        backref=app.db.backref("scholarship", lazy="dynamic"),
+        lazy="dynamic")
 
     str_repr = "scholarship"
 
