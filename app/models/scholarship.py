@@ -4,8 +4,9 @@ import app
 from app.models.common import base_mixin
 from app.models.common import date_audit
 from app.models.common import paginated_api_mixin
-from app.models import scholarship_details
+from app.models import scholarship_details as scholarship_details_model
 from app.models import association_tables
+from app.models import question as question_model
 
 
 class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
@@ -44,7 +45,7 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
     programs_requirement = app.db.relationship(
         "ProgramRequirement", lazy="dynamic")
     chosen_college_requirement = app.db.relationship(
-        "Scholarship",
+        "Question",
         secondary=association_tables.chosen_college_requirement,
         backref=app.db.backref("scholarship", lazy="dynamic"),
         lazy="dynamic")
@@ -74,7 +75,7 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
             Boolean: true if scholarship has major, false otherwise.
 
         """
-        details = scholarship_details.ScholarshipDetails.ATTR_FIELDS
+        details = scholarship_details_model.ScholarshipDetails.ATTR_FIELDS
         additional_details_count = self.additional_details.filter_by(
             name=detail_name).count()
 
@@ -130,6 +131,43 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
         return self.scholarships_needed.filter(
             association_tables.scholarships_needed.c.needed_id ==
             scholarship_needed.id).count() > 0
+
+    def has_chosen_college_requirement(self, question):
+        """
+        Checks if scholarship has question as chosen college requirement.
+        Args:
+            question (object:Question): question to check.
+
+        Returns:
+            bool: true if question is in chosen_college_requirement, false
+                otherwise.
+        """
+
+        return self.chosen_college_requirement.filter(
+            association_tables.chosen_college_requirement.c.question_id ==
+            question.id).count() > 0
+
+    def add_chosen_college_requirement(self, question):
+        """
+        Adds question to scholarship's chosen college requirement.
+
+        Args:
+            question (obj:Question): question to add.
+        """
+
+        if not self.has_chosen_college_requirement(question):
+            self.chosen_college_requirement.append(question)
+
+    def remove_chosen_college_requirement(self, question):
+        """
+        Removes question to scholarship's chosen college requirement.
+
+        Args:
+            question (obj:Question): question to remove.
+        """
+
+        if self.has_chosen_college_requirement(question):
+            self.chosen_college_requirement.remove(question)
 
     def for_pagination(self):
         """ Serializes model for pagination.

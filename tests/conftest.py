@@ -6,6 +6,8 @@ import pytest
 from app import create_app, db
 from app.utils import generate_public_id
 from app.models.college import College
+from app.models.scholarship_details import ScholarshipDetails
+from app.models.question import Question
 from app.models.user import User
 from config import Config
 from app.models.scholarship import Scholarship
@@ -93,5 +95,25 @@ def programs_requirement(app):
             program.qualification_rounds.first())
 
         scholarship.programs_requirement.append(program_requirement)
+
+        db.session.commit()
+
+@pytest.fixture
+def scholarships(app):
+    with app.app_context():
+        for i in range(10):
+            scholarship_details = ScholarshipDetails(name=f"test scholarship {i}")
+            scholarship = Scholarship(scholarship_details=scholarship_details)
+            db.session.add(scholarship_details)
+            db.session.add(scholarship)
+
+        db.session.commit()
+
+@pytest.fixture
+def questions(app):
+    with app.app_context():
+        for i in range(10):
+            question = Question(name=f"test question {i}")
+            db.session.add(question)
 
         db.session.commit()

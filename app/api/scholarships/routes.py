@@ -9,6 +9,7 @@ from app.models import scholarship_details as scholarship_details_model
 from app.models import detail as detail_model
 from app.models import association_tables
 from app.models import program as program_model
+from app.models import question as question_model
 from app.schemas import scholarship_schema as scholarship_schema_class
 from app.schemas import detail_schema as detail_schema_class
 from app.api import errors
@@ -500,12 +501,12 @@ def post_scholarships_needed(id):
             produces:
                 Application/json.
     """
-    scholarship = scholarship_model.Scholarship.query.get_or_404(id)
-    data = flask.request.get_json() or {}
+    data = flask.request.get_json() or []
 
     if not data or not isinstance(data, list):
         return errors.bad_request("no data provided")
 
+    scholarship = scholarship_model.Scholarship.query.get_or_404(id)
     college = scholarship.college
 
     for scholarship_needed in data:
@@ -563,11 +564,12 @@ def delete_scholarships_needed(id):
             produces:
                 Application/json.
     """
-    scholarship = scholarship_model.Scholarship.query.get_or_404(id)
-    data = flask.request.get_json() or {}
+    data = flask.request.get_json() or []
 
     if not data or not isinstance(data, list):
         return errors.bad_request("no data provided")
+
+    scholarship = scholarship_model.Scholarship.query.get_or_404(id)
 
     for scholarship_needed in data:
         scholarship_to_remove = scholarship.scholarships_needed.filter_by(
@@ -622,7 +624,7 @@ def add_programs_requirement(id):
         200:
             success message.
     """
-    data = flask.request.get_json() or {}
+    data = flask.request.get_json() or []
 
     if not data or not isinstance(data, list):
         return errors.bad_request("no data provided")
@@ -703,7 +705,7 @@ def add_qualification_rounds_to_program_requirement(scholarship_id,
         Produces:
             Application/json.
     """
-    data = flask.request.get_json() or {}
+    data = flask.request.get_json() or []
 
     if not data or not isinstance(data, list):
         return errors.bad_request("no data provided or bad structure")
@@ -762,7 +764,7 @@ def remove_programs_requirement(id):
         200:
             success message.
     """
-    data = flask.request.get_json() or {}
+    data = flask.request.get_json() or []
 
     if not data or not isinstance(data, list):
         return errors.bad_request("no data provided or bad structure")
@@ -823,7 +825,7 @@ def remove_qualification_rounds_from_program_requirement(
         Produces:
             Application/json.
     """
-    data = flask.request.get_json() or {}
+    data = flask.request.get_json() or []
 
     if not data or not isinstance(data, list):
         return errors.bad_request("no data provided or bad structure")
@@ -918,4 +920,158 @@ def get_program_requirement_qualification_rounds(scholarship_id, program_id):
     return flask.jsonify([
         qualification_round.to_dict()
         for qualification_round in program_requirement.qualification_rounds
+    ])
+
+
+@scholarships_module.bp.route(
+    "/<int:id>/chosen_college_requirement", methods=["POST"])
+def add_chosen_college_requirement(id):
+    """Adds questions to scholarship's chosen college requirement.
+
+    POST:
+        Args:
+            id (integer): scholarship id
+
+        Request Body:
+            list of ids.
+
+            Example::
+                [question id, ...]
+
+        Consumes:
+            Application/json.
+
+    Responses:
+        200:
+            successfully added questions to chosen college requirement.
+
+            Produces:
+                Application/json.
+
+        400:
+            list of ids not a list, is empty, or an id is not an integer.
+
+            Produces:
+                Application/json.
+        404:
+            scholarship or question not found.
+
+            Produces:
+                Application/json.
+    """
+    data = flask.request.get_json() or []
+
+    if not data or not isinstance(data, list):
+        return errors.bad_request("no data provided or bad structure")
+
+    scholarship = scholarship_model.Scholarship.query.get_or_404(id)
+
+    try:
+        for question_id in data:
+            question_id = int(question_id)
+            question = question_model.Question.query.get_or_404(question_id)
+
+            scholarship.add_chosen_college_requirement(question)
+
+    except ValueError:
+        return errors.bad_request("invalid id")
+
+    app.db.session.commit()
+
+    return flask.jsonify({
+        "message":
+        "added questions to chosen college requirement"
+    })
+
+
+@scholarships_module.bp.route(
+    "/<int:id>/chosen_college_requirement", methods=["DELETE"])
+def remove_chosen_college_requirement(id):
+    """Removes questions to scholarship's chosen college requirement.
+
+    DELETE:
+        Args:
+            id (integer): scholarship id
+
+        Request Body:
+            list of ids.
+
+            Example::
+                [question id, ...]
+
+        Consumes:
+            Application/json.
+
+    Responses:
+        200:
+            successfully removed questions from chosen college requirement.
+
+            Produces:
+                Application/json.
+
+        400:
+            list of ids not a list, is empty, or an id is not an integer.
+
+            Produces:
+                Application/json.
+        404:
+            scholarship or question not found.
+
+            Produces:
+                Application/json.
+    """
+
+    data = flask.request.get_json() or []
+
+    if not data or not isinstance(data, list):
+        return errors.bad_request("no data provided or bad structure")
+
+    scholarship = scholarship_model.Scholarship.query.get_or_404(id)
+
+    try:
+        for question_id in data:
+            question_id = int(question_id)
+            question = question_model.Question.query.get_or_404(question_id)
+
+            scholarship.remove_chosen_college_requirement(question)
+
+    except ValueError:
+        return errors.bad_request("invalid id")
+
+    app.db.session.commit()
+
+    return flask.jsonify({
+        "message":
+        "removed questions to chosen college requirement"
+    })
+
+
+@scholarships_module.bp.route("/<int:id>/chosen_college_requirement")
+def get_chosen_college_requirement(id):
+    """
+
+    GET:
+        Args:
+            id (integer): Scholarship id.
+
+    Responses:
+        200:
+            Retrieves questions from scholarship's chosen college requirement.
+
+            Produces:
+                Application/json.
+
+        404:
+            scholarship not found.
+
+            Produces:
+                Application/json.
+
+    """
+
+    scholarship = scholarship_model.Scholarship.query.get_or_404(id)
+
+    return flask.jsonify([
+        question.to_dict()
+        for question in scholarship.chosen_college_requirement
     ])
