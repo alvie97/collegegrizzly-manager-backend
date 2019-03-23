@@ -1075,3 +1075,159 @@ def get_chosen_college_requirement(id):
         question.to_dict()
         for question in scholarship.chosen_college_requirement
     ])
+
+
+@scholarships_module.bp.route(
+    "/<int:id>/boolean_requirement", methods=["POST"])
+def post_boolean_requirement(id):
+    """Adds boolean requirement to scholarship
+
+    POST:
+        Consumes:
+            Application/json.
+
+        Request Body:
+            question id and required value.
+
+            Example::
+                {
+                    "question_id": question id,
+                    "required_value": either 1 or 0
+                }
+
+        Args:
+            id (integer): scholarship id.
+    Responses:
+        200:
+            boolean requirement added successfully.
+
+            Produces:
+                Application/json.
+
+        400:
+            no data provided or badly structured, no question_id or
+            required_value in dict, invalid id or required_value not 1 or 0.
+
+            Produces:
+                Application/json.
+
+        404:
+            no scholarship or question found.
+
+            Produces:
+                Application/json.
+    """
+
+    data = flask.request.get_json() or {}
+
+    if not data or isinstance(data, dict):
+        return errors.bad_request("no data provided or bad structure")
+
+    try:
+        question_id = int(data["question_id"])
+        required_value = data["required_value"]
+    except KeyError:
+        return errors.bad_request("no question_id or required_value")
+    except ValueError:
+        return errors.bad_request("invalid id")
+
+    if required_value not in [1, 0]:
+        return errors.bad_request("required_value must be either 1 or 0")
+
+    required_value = required_value == 1
+
+    scholarship = scholarship_model.Scholarship.get_or_404(id)
+    question = question_model.Question.get_or_404(question_id)
+    scholarship.add_boolean_requirement(question, required_value)
+
+    app.db.sesion.commit()
+
+    return flask.jsonify({"message": "boolean requirement added successfully"})
+
+
+@scholarships_module.bp.route(
+    "/<int:id>/boolean_requirement", methods=["DELETE"])
+def delete_boolean_requirement(id):
+    """Removes boolean requirements to scholarship
+
+    DELETE:
+        Consumes:
+            Application/json.
+
+        Request Body:
+            list of question ids of the scholarship's boolean requirement.
+
+            Example::
+                [question id, ...]
+
+        Args:
+            id (integer): scholarship id.
+
+    Responses:
+        200:
+            Successfully removed boolean requirements.
+
+            Produces:
+                Application/json.
+
+        400:
+            no data provided or badly structured, invalid id.
+
+            Produces:
+                Application/json.
+        404:
+            no scholarship or question found.
+
+            Produces:
+                Application/json.
+    """
+
+    data = flask.request.get_json() or {}
+
+    if not data or isinstance(data, list):
+        return errors.bad_request("no data provided or bad structure")
+
+    scholarship = scholarship_model.Scholarship.get_or_404(id)
+
+    try:
+        for question_id in data:
+            question_id = int(question_id)
+            question = question_model.Question.get_or_404(question_id)
+
+            scholarship.remove_boolean_requirement(question)
+
+    except ValueError:
+        return errors.bad_request("invalid id")
+
+    return flask.jsonify({
+        "message": "boolean requirements removed successfully"
+    })
+
+
+@scholarships_module.bp.route("/<int:id>/boolean_requirement")
+def get_boolean_requirement(id):
+    """Gets boolean requirement
+
+    GET:
+        Args:
+            id (integer): scholarship id.
+    Responses:
+        200:
+            list of boolean requirements.
+
+            Produces:
+                Application/json.
+
+        404:
+            no scholarship found.
+
+            Produces:
+                Application/json.
+    """
+
+    scholarship = scholarship_model.Scholarship.query.get_or_404(id)
+
+    return flask.jsonify([
+        requirement.to_dict()
+        for requirement in scholarship.boolean_requirement.all()
+    ])

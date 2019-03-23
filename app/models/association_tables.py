@@ -118,3 +118,42 @@ class ProgramRequirement(app.db.Model, base_mixin.BaseMixin,
                     program_id=self.program_id)
             }
         }
+
+
+class BooleanRequirement(app.db.Model, base_mixin.BaseMixin,
+                         paginated_api_mixin.PaginatedAPIMixin):
+    """Boolean requirement
+
+    holds many to many relationship to the question table.
+
+    Attributes:
+        scholarship_id (integer): scholarship id.
+        question_id (integer): question id.
+        question (db.relationship): question relationship.
+        required_value (boolean): value required to get scholarship.
+    """
+    scholarship_id = app.db.Column(
+        "scholarship_id",
+        app.db.Integer,
+        app.db.ForeignKey("scholarship.id"),
+        primary_key=True)
+    question_id = app.db.Column(
+        "question_id",
+        app.db.Integer,
+        app.db.ForeignKey("question.id"),
+        primary_key=True)
+    question = app.db.relationship("Program")
+    required_value = app.db.Column(app.db.Boolean, default=True)
+
+    def __repr__(self):
+        return f"<Boolean requirement for {self.scholarship_id}>"
+
+    def to_dict(self):
+        return {
+            "question_name": self.question.name,
+            "required_value": self.required_value,
+            "links": {
+                "get_question":
+                flask.url_for("questions.get_question", id=self.question_id)
+            }
+        }

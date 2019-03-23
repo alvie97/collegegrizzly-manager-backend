@@ -49,6 +49,8 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
         secondary=association_tables.chosen_college_requirement,
         backref=app.db.backref("scholarship", lazy="dynamic"),
         lazy="dynamic")
+    boolean_requirement = app.db.relationship(
+        "BooleanRequirement", lazy="dynamic")
 
     str_repr = "scholarship"
 
@@ -168,6 +170,48 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
 
         if self.has_chosen_college_requirement(question):
             self.chosen_college_requirement.remove(question)
+
+    def has_boolean_requirement(self, question):
+        """
+        Checks if scholarship has question as boolean requirement.
+        Args:
+            question (object:Question): question to check.
+
+        Returns:
+            bool: true if question is in boolean_requirement, false
+                otherwise.
+        """
+
+        return self.boolean_requirement.filter(
+            association_tables.BooleanRequirement.question_id == question.
+            id).count() > 0
+
+    def add_boolean_requirement(self, question, required_value):
+        """
+        Adds question to scholarship's boolean requirement.
+
+        Args:
+            question (obj:Question): question to add.
+            required_value (boolean): required boolean value.
+        """
+
+        if not self.has_boolean_requirement(question):
+            boolean_requirement = association_tables.BooleanRequirement(
+                required_value=required_value)
+            boolean_requirement.question = question
+            app.db.session.add(boolean_requirement)
+            self.boolean_requirement.append(boolean_requirement)
+
+    def remove_boolean_requirement(self, question):
+        """
+        Removes question to scholarship's boolean requirement.
+
+        Args:
+            question (obj:Question): question to remove.
+        """
+
+        if self.has_boolean_requirement(question):
+            self.boolean_requirement.remove(question)
 
     def for_pagination(self):
         """ Serializes model for pagination.
