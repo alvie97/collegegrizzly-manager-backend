@@ -49,6 +49,13 @@ class College(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
         lazy="dynamic"
     )
 
+    grade_requirement_groups = app.db.relationship(
+        "GradeRequirementGroup",
+        backref=app.db.backref("colleges", lazy="dynamic"),
+        cascade="all, delete-orphan",
+        lazy="dynamic")
+
+
     ATTR_FIELDS = ["name"]
 
     def __repr__(self):
@@ -128,6 +135,38 @@ class College(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
         """
         if self.has_detail(detail.name):
             self.additional_details.remove(detail)
+
+    def has_grade_requirement_group(self, group):
+        """
+        checks if college has grade requirement group.
+
+        Args:
+            group (association_tables.GradeRequirementGroup): grade requirement
+                group.
+
+        Returns:
+            bool: True if college has grade requirement group.
+        """
+        return self.grade_requirement_groups.filter(
+            association_tables.GradeRequirementGroup.id == group.
+            id).count() > 0
+
+    def create_grade_requirement_group(self):
+        """creates and adds grade requirement group to college."""
+        group = association_tables.GradeRequirementGroup()
+        self.grade_requirement_groups.append(group)
+
+    def remove_grade_requirement_group(self, group):
+        """
+        Removes grade requirement group from college and deletes it.
+        Args:
+            group (association_tables.GradeRequirementGroup): grade requirement
+                group.
+        """
+        if self.has_grade_requirement_group(group):
+            self.grade_requirement_groups.remove(group)
+            group.grade_requirements = []
+            app.db.session.delete(group)
 
     def for_pagination(self):
         """ Serializes model for pagination.
