@@ -1120,7 +1120,7 @@ def post_boolean_requirement(id):
 
     data = flask.request.get_json() or {}
 
-    if not data or isinstance(data, dict):
+    if not data or not isinstance(data, dict):
         return errors.bad_request("no data provided or bad structure")
 
     try:
@@ -1136,13 +1136,16 @@ def post_boolean_requirement(id):
 
     required_value = required_value == 1
 
-    scholarship = scholarship_model.Scholarship.get_or_404(id)
-    question = question_model.Question.get_or_404(question_id)
+    scholarship = scholarship_model.Scholarship.query.get_or_404(id)
+    question = question_model.Question.query.get_or_404(question_id)
     scholarship.add_boolean_requirement(question, required_value)
 
-    app.db.sesion.commit()
+    app.db.session.commit()
 
-    return flask.jsonify({"message": "boolean requirement added successfully"})
+    return flask.jsonify({
+        "boolean_requirement":
+        flask.url_for("scholarships.get_boolean_requirement", id=id)
+    })
 
 
 @scholarships_module.bp.route(
@@ -1184,23 +1187,26 @@ def delete_boolean_requirement(id):
 
     data = flask.request.get_json() or {}
 
-    if not data or isinstance(data, list):
+    if not data or not isinstance(data, list):
         return errors.bad_request("no data provided or bad structure")
 
-    scholarship = scholarship_model.Scholarship.get_or_404(id)
+    scholarship = scholarship_model.Scholarship.query.get_or_404(id)
 
     try:
         for question_id in data:
             question_id = int(question_id)
-            question = question_model.Question.get_or_404(question_id)
+            question = question_model.Question.query.get_or_404(question_id)
 
             scholarship.remove_boolean_requirement(question)
 
     except ValueError:
         return errors.bad_request("invalid id")
 
+    app.db.session.commit()
+
     return flask.jsonify({
-        "message": "boolean requirements removed successfully"
+        "boolean_requirement":
+        flask.url_for("scholarships.get_boolean_requirement", id=id)
     })
 
 

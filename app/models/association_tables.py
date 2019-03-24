@@ -132,17 +132,17 @@ class BooleanRequirement(app.db.Model, base_mixin.BaseMixin,
         question (db.relationship): question relationship.
         required_value (boolean): value required to get scholarship.
     """
+    id = app.db.Column(app.db.Integer, primary_key=True)
     scholarship_id = app.db.Column(
         "scholarship_id",
         app.db.Integer,
-        app.db.ForeignKey("scholarship.id"),
-        primary_key=True)
+        app.db.ForeignKey("scholarship.id"))
     question_id = app.db.Column(
         "question_id",
         app.db.Integer,
-        app.db.ForeignKey("question.id"),
-        primary_key=True)
-    question = app.db.relationship("Program")
+        app.db.ForeignKey("question.id"))
+
+    question = app.db.relationship("Question")
     required_value = app.db.Column(app.db.Boolean, default=True)
 
     def __repr__(self):

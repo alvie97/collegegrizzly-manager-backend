@@ -211,7 +211,9 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
         """
 
         if self.has_boolean_requirement(question):
-            self.boolean_requirement.remove(question)
+            requirement = self.boolean_requirement.filter(
+                question_model.Question.id == question.id).first()
+            self.boolean_requirement.remove(requirement)
 
     def for_pagination(self):
         """ Serializes model for pagination.
