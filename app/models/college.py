@@ -52,7 +52,7 @@ class College(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
 
     grade_requirement_groups = app.db.relationship(
         "GradeRequirementGroup",
-        backref=app.db.backref("colleges", lazy="dynamic"),
+        backref="college",
         cascade="all, delete-orphan",
         lazy="dynamic")
 
@@ -155,9 +155,11 @@ class College(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
     def create_grade_requirement_group(self):
         """creates and adds grade requirement group to college."""
         group = grade_requirement_group.GradeRequirementGroup()
+        app.db.session.add(group)
         self.grade_requirement_groups.append(group)
+        return group
 
-    def remove_grade_requirement_group(self, group):
+    def delete_grade_requirement_group(self, group):
         """
         Removes grade requirement group from college and deletes it.
         Args:
@@ -166,7 +168,6 @@ class College(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
         """
         if self.has_grade_requirement_group(group):
             self.grade_requirement_groups.remove(group)
-            group.grade_requirements = []
             app.db.session.delete(group)
 
     def for_pagination(self):

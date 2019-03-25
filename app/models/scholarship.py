@@ -55,7 +55,7 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
 
     grade_requirement_groups = app.db.relationship(
         "GradeRequirementGroup",
-        backref=app.db.backref("scholarships", lazy="dynamic"),
+        backref="scholarships",
         cascade="all, delete-orphan",
         lazy="dynamic")
 
@@ -238,11 +238,18 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
             id).count() > 0
 
     def create_grade_requirement_group(self):
-        """creates and adds grade requirement group to scholarship."""
-        group = grade_requirement_group.GradeRequirementGroup()
-        self.grade_requirement_groups.append(group)
+        """creates and adds grade requirement group to scholarship.
 
-    def remove_grade_requirement_group(self, group):
+        Returns:
+            grade_requirement_group.GradeRequirementGroup: returns created
+                group.
+        """
+        group = grade_requirement_group.GradeRequirementGroup()
+        app.db.session.add(group)
+        self.grade_requirement_groups.append(group)
+        return group
+
+    def delete_grade_requirement_group(self, group):
         """
         Removes grade requirement group from scholarship and deletes it.
         Args:
@@ -251,7 +258,6 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
         """
         if self.has_grade_requirement_group(group):
             self.grade_requirement_groups.remove(group)
-            group.grade_requirements = []
             app.db.session.delete(group)
 
     def for_pagination(self):

@@ -20,7 +20,8 @@ class GradeRequirementGroup(app.db.Model, base_mixin.BaseMixin,
     college_id = app.db.Column(app.db.Integer, app.db.ForeignKey("college.id"))
     grade_requirements = app.db.relationship(
         "GradeRequirement",
-        backref=app.db.backref("grade_requirement_groups", lazy="dynamic"),
+        cascade="all, delete-orphan",
+        backref="grade_requirement_groups",
         lazy="dynamic")
 
     def __repr__(self):
@@ -43,12 +44,13 @@ class GradeRequirementGroup(app.db.Model, base_mixin.BaseMixin,
 
         Args:
             grade (grade_model.Grade): grade model instance.
-            min (decimal): min grade.
-            max (decimal): max grade.
+            min (float): min grade.
+            max (float): max grade.
         """
-        if not self.has_grade(grade):
+        if not self.has_grade_requirement(grade):
             grade_requirement = association_tables.GradeRequirement(
-                min_range=min, max_range=max)
+                min=min, max=max)
+            app.db.session.add(grade_requirement)
             grade_requirement.grade = grade
             self.grade_requirements.append(grade_requirement)
 
@@ -58,7 +60,7 @@ class GradeRequirementGroup(app.db.Model, base_mixin.BaseMixin,
         Args:
             grade (grade_model.Grade): grade model instance.
         """
-        if self.has_grade(grade):
+        if self.has_grade_requirement(grade):
             grade_requirement = self.grade_requirements.filter(
                 association_tables.GradeRequirement.grade_id == grade.
                 id).first()

@@ -167,8 +167,8 @@ class GradeRequirement(app.db.Model, base_mixin.BaseMixin,
         grade_group_id (integer): grade_group id.
         grade_id (integer): grade id.
         grade (sqlalchemy.relationship): grade relationship.
-        range_min (decimal): valid grade min.
-        range_max (decimal): valid grade max.
+        range_min (float): valid grade min.
+        range_max (float): valid grade max.
     """
     id = app.db.Column(app.db.Integer, primary_key=True)
     grade_requirement_group_id = app.db.Column(
@@ -179,21 +179,25 @@ class GradeRequirement(app.db.Model, base_mixin.BaseMixin,
     range_max = app.db.Column(app.db.Numeric(8, 2), nullable=True)
 
     def __repr__(self):
-
-        if self.scholarship_id is not None:
-            repr = f"scholarship {self.scholarship_id}"
-        else:
-            repr = f"college {self.college_id}"
-
-        return f"<GradeRequirement for {repr}>"
+        return "<GradeRequirement for grade_requirement_group " \
+            f"= {self.grade_requirement_group_id} and " \
+            f"grade_id = {self.grade_id}>"
 
     @property
     def min(self):
         return self.range_min if self.range_min is not None else self.grade.min
 
+    @min.setter
+    def min(self, value):
+        self.range_min = value
+
     @property
     def max(self):
         return self.range_max if self.range_max is not None else self.grade.max
+
+    @max.setter
+    def max(self, value):
+        self.range_max = value
 
     def to_dict(self):
         return {

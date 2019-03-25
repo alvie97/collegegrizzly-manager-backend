@@ -6,6 +6,8 @@ import pytest
 from app import create_app, db
 from app.utils import generate_public_id
 from app.models.college import College
+from app.models.college_details import CollegeDetails
+from app.models.grade import Grade
 from app.models.scholarship_details import ScholarshipDetails
 from app.models.question import Question
 from app.models.user import User
@@ -43,7 +45,6 @@ def client(app):
 
 
 class AuthActions(object):
-
     def __init__(self, client, csrf_token=""):
         self._client = client
         self._csrf_token = csrf_token
@@ -72,6 +73,7 @@ def auth(app, client):
         db.session.commit()
     return AuthActions(client)
 
+
 @pytest.fixture
 def programs_requirement(app):
     with app.app_context():
@@ -98,11 +100,25 @@ def programs_requirement(app):
 
         db.session.commit()
 
+
+@pytest.fixture
+def colleges(app):
+    with app.app_context():
+        for i in range(10):
+            college_details = CollegeDetails(
+                name=f"test college {i}")
+            college = College(college_details=college_details)
+            db.session.add(college_details)
+            db.session.add(college)
+
+        db.session.commit()
+
 @pytest.fixture
 def scholarships(app):
     with app.app_context():
         for i in range(10):
-            scholarship_details = ScholarshipDetails(name=f"test scholarship {i}")
+            scholarship_details = ScholarshipDetails(
+                name=f"test scholarship {i}")
             scholarship = Scholarship(scholarship_details=scholarship_details)
             db.session.add(scholarship_details)
             db.session.add(scholarship)
@@ -115,5 +131,14 @@ def questions(app):
         for i in range(10):
             question = Question(name=f"test question {i}")
             db.session.add(question)
+
+        db.session.commit()
+
+@pytest.fixture
+def grades(app):
+    with app.app_context():
+        for i in range(10):
+            grade = Grade(name=f"test grade {i}")
+            db.session.add(grade)
 
         db.session.commit()
