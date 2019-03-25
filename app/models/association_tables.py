@@ -156,24 +156,6 @@ class BooleanRequirement(app.db.Model, base_mixin.BaseMixin,
         }
 
 
-scholarship_grade_requirement_group = app.db.Table(
-    "scholarship_grade_requirement_group",
-    app.db.Column("scholarship_id", app.db.Integer,
-                  app.db.ForeignKey("scholarship.id")),
-    app.db.Column("grade_requirement_group", app.db.Integer,
-                  app.db.ForeignKey("grade_requirement_group.id")),
-)
-college_grade_requirement_group = app.db.Table(
-    "college_grade_requirement_group",
-    app.db.Column("college_id", app.db.Integer,
-                  app.db.ForeignKey("college.id")),
-    app.db.Column("grade_requirement_group_id", app.db.Integer,
-                  app.db.ForeignKey("grade_requirement_group.id")),
-)
-
-
-
-
 class GradeRequirement(app.db.Model, base_mixin.BaseMixin,
                        paginated_api_mixin.PaginatedAPIMixin):
     """Grade requirement
@@ -189,10 +171,9 @@ class GradeRequirement(app.db.Model, base_mixin.BaseMixin,
         range_max (decimal): valid grade max.
     """
     id = app.db.Column(app.db.Integer, primary_key=True)
-    grade_requirement_group_id = app.db.Column(app.db.Integer,
-        app.db.ForeignKey("grade_requirement_group.id"))
-    grade_id = app.db.Column(app.db.Integer,
-                             app.db.ForeignKey("grade.id"))
+    grade_requirement_group_id = app.db.Column(
+        app.db.Integer, app.db.ForeignKey("grade_requirement_group.id"))
+    grade_id = app.db.Column(app.db.Integer, app.db.ForeignKey("grade.id"))
     grade = app.db.relationship("Grade")
     range_min = app.db.Column(app.db.Numeric(8, 2), nullable=True)
     range_max = app.db.Column(app.db.Numeric(8, 2), nullable=True)
