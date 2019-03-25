@@ -195,7 +195,7 @@ class GradeRequirement(app.db.Model, base_mixin.BaseMixin,
                              app.db.ForeignKey("grade.id"))
     grade = app.db.relationship("Grade")
     range_min = app.db.Column(app.db.Numeric(8, 2), nullable=True)
-    range_max = app.db.Column(app.db.String(8, 2), nullable=True)
+    range_max = app.db.Column(app.db.Numeric(8, 2), nullable=True)
 
     def __repr__(self):
 
