@@ -158,7 +158,7 @@ class BooleanRequirement(app.db.Model, base_mixin.BaseMixin,
 
 class GradeRequirement(app.db.Model, base_mixin.BaseMixin,
                        paginated_api_mixin.PaginatedAPIMixin):
-    """Grade requirement
+    """Grade requirement.
 
     Holds many to many relationship between grade group and grade.
 
