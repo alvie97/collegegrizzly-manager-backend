@@ -10,6 +10,7 @@ from app.models.common import paginated_api_mixin
 from app.models import association_tables
 from app.models import major as major_model
 from app.models import college_details
+from app.models import grade_requirement_group
 
 
 class College(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
@@ -148,12 +149,12 @@ class College(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
             bool: True if college has grade requirement group.
         """
         return self.grade_requirement_groups.filter(
-            association_tables.GradeRequirementGroup.id == group.
+            grade_requirement_group.GradeRequirementGroup.id == group.
             id).count() > 0
 
     def create_grade_requirement_group(self):
         """creates and adds grade requirement group to college."""
-        group = association_tables.GradeRequirementGroup()
+        group = grade_requirement_group.GradeRequirementGroup()
         self.grade_requirement_groups.append(group)
 
     def remove_grade_requirement_group(self, group):

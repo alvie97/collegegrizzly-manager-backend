@@ -1,0 +1,65 @@
+import app
+from app.models.common import base_mixin, paginated_api_mixin
+from app.models import association_tables
+
+
+class GradeRequirementGroup(app.db.Model, base_mixin.BaseMixin,
+                            paginated_api_mixin.PaginatedAPIMixin):
+    """Grade requirement group.
+
+    only one of the grades in this group is needed as requirement.
+
+    Attributes:
+         id (integer): model id.
+         grade_requirements (sqlalchemy.relationship): grade requirements of
+             group.
+    """
+    id = app.db.Column(app.db.Integer, primary_key=True)
+    scholarship_id = app.db.Column(app.db.Integer,
+                                   app.db.ForeignKey("scholarship.id"))
+    college_id = app.db.Column(app.db.Integer, app.db.ForeignKey("college.id"))
+    grade_requirements = app.db.relationship(
+        "GradeRequirement",
+        backref=app.db.backref("grade_requirement_groups", lazy="dynamic"),
+        lazy="dynamic")
+
+    def __repr__(self):
+        return f"<GradeRequirementGroup {self.id}>"
+
+    def has_grade_requirement(self, grade):
+        """checks if grade requirement group has grade requirement.
+
+        Args:
+            grade (grade_model.Grade): grade model instance.
+        Returns:
+            bool: True if grade requirement group has grade requirement.
+        """
+        return self.grade_requirements.filter(
+            association_tables.GradeRequirement.grade_id == grade.
+            id).count() > 0
+
+    def add_grade_requirement(self, grade, min=None, max=None):
+        """Adds grade requirement to grade requirement group.
+
+        Args:
+            grade (grade_model.Grade): grade model instance.
+            min (decimal): min grade.
+            max (decimal): max grade.
+        """
+        if not self.has_grade(grade):
+            grade_requirement = association_tables.GradeRequirement(
+                min_range=min, max_range=max)
+            grade_requirement.grade = grade
+            self.grade_requirements.append(grade_requirement)
+
+    def remove_grade_requirement(self, grade):
+        """Removes grade requirement to grade requirement group.
+
+        Args:
+            grade (grade_model.Grade): grade model instance.
+        """
+        if self.has_grade(grade):
+            grade_requirement = self.grade_requirements.filter(
+                association_tables.GradeRequirement.grade_id == grade.
+                id).first()
+            self.grade_requirements.remove(grade_requirement)

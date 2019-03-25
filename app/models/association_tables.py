@@ -158,75 +158,20 @@ class BooleanRequirement(app.db.Model, base_mixin.BaseMixin,
 
 scholarship_grade_requirement_group = app.db.Table(
     "scholarship_grade_requirement_group",
-    app.db.Column(app.db.Integer, app.db.ForeignKey("scholarship.id")),
-    app.db.Column(app.db.Integer,
+    app.db.Column("scholarship_id", app.db.Integer,
+                  app.db.ForeignKey("scholarship.id")),
+    app.db.Column("grade_requirement_group", app.db.Integer,
                   app.db.ForeignKey("grade_requirement_group.id")),
 )
 college_grade_requirement_group = app.db.Table(
     "college_grade_requirement_group",
-    app.db.Column(app.db.Integer, app.db.ForeignKey("college.id")),
-    app.db.Column(app.db.Integer,
+    app.db.Column("college_id", app.db.Integer,
+                  app.db.ForeignKey("college.id")),
+    app.db.Column("grade_requirement_group_id", app.db.Integer,
                   app.db.ForeignKey("grade_requirement_group.id")),
 )
 
 
-class GradeRequirementGroup(app.db.Model, base_mixin.BaseMixin,
-                            paginated_api_mixin.PaginatedAPIMixin):
-    """Grade requirement group.
-
-    only one of the grades in this group is needed as requirement.
-
-    Attributes:
-         id (integer): model id.
-         grade_requirements (sqlalchemy.relationship): grade requirements of
-             group.
-    """
-    id = app.db.Column(app.db.Integer, primary_key=True)
-    scholarship_id = app.db.Column(app.db.Integer,
-                                   app.db.ForeignKey("scholarship.id"))
-    college_id = app.db.Column(app.db.Integer, app.db.ForeignKey("college.id"))
-    grade_requirements = app.db.relationship(
-        "GradeRequirement",
-        backref=app.db.backref("grade_requirement_groups", lazy="dynamic"),
-        lazy="dynamic")
-
-    def __repr__(self):
-        return f"<GradeRequirementGroup {self.id}>"
-
-    def has_grade_requirement(self, grade):
-        """checks if grade requirement group has grade requirement.
-
-        Args:
-            grade (grade_model.Grade): grade model instance.
-        Returns:
-            bool: True if grade requirement group has grade requirement.
-        """
-        return self.grade_requirements.filter(
-            GradeRequirement.grade_id == grade.id).count() > 0
-
-    def add_grade_requirement(self, grade, min=None, max=None):
-        """Adds grade requirement to grade requirement group.
-
-        Args:
-            grade (grade_model.Grade): grade model instance.
-            min (decimal): min grade.
-            max (decimal): max grade.
-        """
-        if not self.has_grade(grade):
-            grade_requirement = GradeRequirement(min_range=min, max_range=max)
-            grade_requirement.grade = grade
-            self.grade_requirements.append(grade_requirement)
-
-    def remove_grade_requirement(self, grade):
-        """Removes grade requirement to grade requirement group.
-
-        Args:
-            grade (grade_model.Grade): grade model instance.
-        """
-        if self.has_grade(grade):
-            grade_requirement = self.grade_requirements.filter(
-                GradeRequirement.grade_id == grade.id).first()
-            self.grade_requirements.remove(grade_requirement)
 
 
 class GradeRequirement(app.db.Model, base_mixin.BaseMixin,
@@ -244,10 +189,9 @@ class GradeRequirement(app.db.Model, base_mixin.BaseMixin,
         range_max (decimal): valid grade max.
     """
     id = app.db.Column(app.db.Integer, primary_key=True)
-    grade_group_id = app.db.Column(
-        "grade_requirement_group_id", app.db.Integer,
+    grade_requirement_group_id = app.db.Column(app.db.Integer,
         app.db.ForeignKey("grade_requirement_group.id"))
-    grade_id = app.db.Column("grade_id", app.db.Integer,
+    grade_id = app.db.Column(app.db.Integer,
                              app.db.ForeignKey("grade.id"))
     grade = app.db.relationship("Grade")
     range_min = app.db.Column(app.db.Numeric(8, 2), nullable=True)
