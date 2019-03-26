@@ -512,3 +512,98 @@ def delete_college_additional_details(college_id, detail_id):
         flask.url_for(
             "colleges.get_college_additional_details", id=college_id)
     })
+
+@colleges_module.bp.route("/<int:id>/grade_requirement_groups")
+def get_grade_requirement_groups(id):
+    """
+    Gets grade requirement groups from college.
+    GET:
+       Args:
+            id (integer): college id.
+    Responses:
+        200:
+            returns list of grade requirement groups.
+
+            Produces:
+                Application/json.
+
+        404:
+            college not found.
+
+            Produces:
+                Application/json.
+    """
+
+    college = college_model.College.query.get_or_404(id)
+
+    return flask.jsonify([
+        group.to_dict()
+        for group in college.grade_requirement_groups.all()
+    ])
+
+
+@colleges_module.bp.route(
+    "/<int:id>/grade_requirement_groups", methods=["POST"])
+def post_grade_requirement_group(id):
+    """creates college grade requirement group.
+
+    POST:
+        Args:
+            id (integer): college id.
+
+    Responses:
+        200:
+            returns grade requirement group.
+
+            Produces:
+                Application/json.
+
+        404:
+            college not found.
+
+            Produces:
+                Application/json.
+    """
+    college = college_model.College.query.get_or_404(id)
+    group = college.create_grade_requirement_group()
+    app.db.session.commit()
+    return flask.jsonify(group.to_dict())
+
+
+@colleges_module.bp.route(
+    "/<int:college_id>/grade_requirement_groups/<int:group_id>",
+    methods=["DELETE"])
+def delete_grade_requirement_group(college_id, group_id):
+    """Deletes college grade requirement group.
+
+    POST:
+        Args:
+            id (integer): college id.
+
+    Responses:
+        200:
+            returns list of grade requirement group.
+
+            Produces:
+                Application/json.
+
+        404:
+            college not found.
+
+            Produces:
+                Application/json.
+    """
+    college = college_model.College.query.get_or_404(id)
+    group = college.grade_requirement_groups.filter_by(id=group_id).first()
+
+    if group is None:
+        return errors.not_found("college doesn't have grade "
+                                f"requirement group with id {group_id}")
+    college.delete_grade_requirement_group(group)
+    app.db.session.commit()
+
+    return flask.jsonify({
+        "get_grade_requirement_groups":
+            flask.url_for(
+                "colleges.get_grade_requirement_groups", id=college_id)
+    })

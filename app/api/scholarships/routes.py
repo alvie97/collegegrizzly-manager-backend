@@ -1237,3 +1237,99 @@ def get_boolean_requirement(id):
         requirement.to_dict()
         for requirement in scholarship.boolean_requirement.all()
     ])
+
+
+@scholarships_module.bp.route("/<int:id>/grade_requirement_groups")
+def get_grade_requirement_groups(id):
+    """
+    Gets grade requirement groups from scholarship.
+    GET:
+       Args:
+            id (integer): scholarship id.
+    Responses:
+        200:
+            returns list of grade requirement groups.
+
+            Produces:
+                Application/json.
+
+        404:
+            scholarship not found.
+
+            Produces:
+                Application/json.
+    """
+
+    scholarship = scholarship_model.Scholarship.query.get_or_404(id)
+
+    return flask.jsonify([
+        group.to_dict()
+        for group in scholarship.grade_requirement_groups.all()
+    ])
+
+
+@scholarships_module.bp.route(
+    "/<int:id>/grade_requirement_groups", methods=["POST"])
+def post_grade_requirement_group(id):
+    """creates scholarship grade requirement group.
+
+    POST:
+        Args:
+            id (integer): scholarship id.
+
+    Responses:
+        200:
+            returns grade requirement group.
+
+            Produces:
+                Application/json.
+
+        404:
+            scholarship not found.
+
+            Produces:
+                Application/json.
+    """
+    scholarship = scholarship_model.Scholarship.query.get_or_404(id)
+    group = scholarship.create_grade_requirement_group()
+    app.db.session.commit()
+    return flask.jsonify(group.to_dict())
+
+
+@scholarships_module.bp.route(
+    "/<int:scholarship_id>/grade_requirement_groups/<int:group_id>",
+    methods=["DELETE"])
+def delete_grade_requirement_group(scholarship_id, group_id):
+    """Deletes scholarship grade requirement group.
+
+    POST:
+        Args:
+            id (integer): scholarship id.
+
+    Responses:
+        200:
+            returns list of grade requirement group.
+
+            Produces:
+                Application/json.
+
+        404:
+            scholarship not found.
+
+            Produces:
+                Application/json.
+    """
+    scholarship = scholarship_model.Scholarship.query.get_or_404(id)
+    group = scholarship.grade_requirement_groups.filter_by(id=group_id).first()
+
+    if group is None:
+        return errors.not_found("scholarship doesn't have grade "
+                                f"requirement group with id {group_id}")
+    scholarship.delete_grade_requirement_group(group)
+    app.db.session.commit()
+
+    return flask.jsonify({
+        "get_grade_requirement_groups":
+        flask.url_for(
+            "scholarships.get_grade_requirement_groups", id=scholarship_id)
+    })

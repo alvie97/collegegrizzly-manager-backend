@@ -1,6 +1,7 @@
 import app
 from app.models.common import base_mixin, paginated_api_mixin
 from app.models import association_tables
+import flask
 
 
 class GradeRequirementGroup(app.db.Model, base_mixin.BaseMixin,
@@ -65,3 +66,14 @@ class GradeRequirementGroup(app.db.Model, base_mixin.BaseMixin,
                 association_tables.GradeRequirement.grade_id == grade.
                 id).first()
             self.grade_requirements.remove(grade_requirement)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "links": {
+                "get_grade_requirements":
+                flask.url_for(
+                    "grade_requirement_groups.get_grade_requirements",
+                    id=self.id)
+            }
+        }
