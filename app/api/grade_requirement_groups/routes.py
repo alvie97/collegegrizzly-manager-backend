@@ -42,7 +42,7 @@ def get_grade_requirements(id):
 
 @grade_requirement_groups_module.bp.route(
     "/<int:group_id>/grade_requirements/<int:grade_id>")
-def get_grade_requirements(group_id, grade_id):
+def get_grade_requirement(group_id, grade_id):
     """Gets grade requirement from group.
 
     GET:

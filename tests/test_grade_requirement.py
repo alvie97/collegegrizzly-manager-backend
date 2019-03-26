@@ -53,6 +53,7 @@ def test_grade_requirement_scholarships_schema(app, scholarships, grades):
         assert association_tables.GradeRequirement.query.count() == 1
         assert grade_model.Grade.query.count() == grade_count
 
+
 def test_grade_requirement_colleges_schema(app, colleges, grades):
     """tests colleges grade requirement"""
 
@@ -99,3 +100,50 @@ def test_grade_requirement_colleges_schema(app, colleges, grades):
         assert grade_requirement_group.GradeRequirementGroup.query.count() == 1
         assert association_tables.GradeRequirement.query.count() == 1
         assert grade_model.Grade.query.count() == grade_count
+
+
+def test_get_grade_requirement_groups_scholarships(app, client, auth,
+                                                   scholarships):
+    """test get_grade_requirement_groups route for scholarships."""
+
+    auth.login()
+
+    with app.test_request_context():
+        scholarship = scholarship_model.Scholarship.query.first()
+
+        for i in range(10):
+            scholarship.create_grade_requirement_group()
+
+        application.db.session.commit()
+
+        response = client.get(
+            f"/api/scholarships/{scholarship.id}/grade_requirement_groups")
+
+        assert response.status_code == 200
+        assert response.get_json() == [
+            group.to_dict()
+            for group in scholarship.grade_requirement_groups.all()
+        ]
+
+
+def test_get_grade_requirement_groups_colleges(app, client, auth, colleges):
+    """test get_grade_requirement_groups route for colleges."""
+
+    auth.login()
+
+    with app.test_request_context():
+        college = college_model.College.query.first()
+
+        for i in range(10):
+            college.create_grade_requirement_group()
+
+        application.db.session.commit()
+
+        response = client.get(
+            f"/api/colleges/{college.id}/grade_requirement_groups")
+
+        assert response.status_code == 200
+        assert response.get_json() == [
+            group.to_dict()
+            for group in college.grade_requirement_groups.all()
+        ]
