@@ -287,4 +287,37 @@ def test_add_grade_requirement_to_grade_requirement_group_success(
         assert requirement_0.max == decimal.Decimal(str(json[0]["max"]))
 
         assert requirement_1.min == requirement_1.grade.min
-        assert requirement_1.max == decimal.Decimal(str(json[1]["max"]))
+
+
+def test_remove_grade_requirement_from_grade_requirement_group_success(
+        app, client, auth, grades):
+    """tests removing grade requirement from grade requirement group"""
+
+    auth.login()
+    ids = (1, 2)
+    with app.app_context():
+        group = grade_requirement_group.GradeRequirementGroup()
+        application.db.session.add(group)
+        grades = grade_model.Grade.query.filter(
+            grade_model.Grade.id.in_(ids)).all()
+
+        for grade in grades:
+            group.add_grade_requirement(grade)
+        application.db.session.commit()
+
+    response = client.delete(
+        "/api/grade_requirement_groups/1/grade_requirements", json=[ids[1]])
+
+    assert response.status_code == 200
+    with app.test_request_context():
+        assert response.get_json() == {
+            "grade_requirements":
+            flask.url_for(
+                "grade_requirement_groups.get_grade_requirements", id=1)
+        }
+
+    with app.app_context():
+        group = grade_requirement_group.GradeRequirementGroup.query.first()
+
+        assert group.grade_requirements.count() == 1
+        assert group.grade_requirements.filter_by(grade_id=ids[0]).count() == 1
