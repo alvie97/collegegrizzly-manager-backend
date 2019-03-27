@@ -1,4 +1,6 @@
+import flask
 import app as application
+import decimal
 from app.models import scholarship as scholarship_model
 from app.models import college as college_model
 from app.models import grade_requirement_group
@@ -147,3 +149,142 @@ def test_get_grade_requirement_groups_colleges(app, client, auth, colleges):
             group.to_dict()
             for group in college.grade_requirement_groups.all()
         ]
+
+
+def test_post_grade_requirement_groups_scholarship_success(
+        app, client, auth, scholarships):
+    """tests adding grade requirement group to scholarship"""
+
+    auth.login()
+
+    response = client.post("/api/scholarships/1/grade_requirement_groups")
+    assert response.status_code == 201
+
+    response = client.post("/api/scholarships/1/grade_requirement_groups")
+    assert response.status_code == 201
+
+    with app.test_request_context():
+        scholarship = scholarship_model.Scholarship.query.first()
+        assert scholarship.grade_requirement_groups.count() == 2
+        group = scholarship.grade_requirement_groups.filter_by(id=2).first()
+        assert group.to_dict() == response.get_json()
+
+
+def test_delete_grade_requirement_groups_scholarship_success(
+        app, client, auth, scholarships):
+    """tests removing grade requirement group to scholarship"""
+
+    with app.app_context():
+        scholarship = scholarship_model.Scholarship.query.first()
+        scholarship.create_grade_requirement_group()
+        scholarship.create_grade_requirement_group()
+
+        application.db.session.commit()
+
+    auth.login()
+
+    response = client.delete("/api/scholarships/1/grade_requirement_groups/1")
+    assert response.status_code == 200
+
+    with app.app_context():
+        scholarship = scholarship_model.Scholarship.query.first()
+
+        assert scholarship.grade_requirement_groups.count() == 1
+        assert scholarship.grade_requirement_groups.filter_by(
+            id=2).count() == 1
+
+
+def test_post_grade_requirement_groups_college_success(app, client, auth,
+                                                       colleges):
+    """tests adding grade requirement group to college"""
+
+    auth.login()
+
+    response = client.post("/api/colleges/1/grade_requirement_groups")
+    assert response.status_code == 201
+
+    response = client.post("/api/colleges/1/grade_requirement_groups")
+    assert response.status_code == 201
+
+    with app.test_request_context():
+        college = college_model.College.query.first()
+        assert college.grade_requirement_groups.count() == 2
+        group = college.grade_requirement_groups.filter_by(id=2).first()
+        assert group.to_dict() == response.get_json()
+
+
+def test_delete_grade_requirement_groups_college_success(
+        app, client, auth, colleges):
+    """tests removing grade requirement group to college"""
+
+    with app.app_context():
+        college = college_model.College.query.first()
+        college.create_grade_requirement_group()
+        college.create_grade_requirement_group()
+
+        application.db.session.commit()
+
+    auth.login()
+
+    response = client.delete("/api/colleges/1/grade_requirement_groups/1")
+    assert response.status_code == 200
+
+    with app.app_context():
+        college = college_model.College.query.first()
+
+        assert college.grade_requirement_groups.count() == 1
+        assert college.grade_requirement_groups.filter_by(id=2).count() == 1
+
+
+def test_add_grade_requirement_to_grade_requirement_group_success(
+        app, client, auth, grades):
+    """tests adding grade requirement to grade requirement group"""
+
+    auth.login()
+
+    with app.app_context():
+        group = grade_requirement_group.GradeRequirementGroup()
+        application.db.session.add(group)
+        application.db.session.commit()
+
+    json = [{
+        "grade_id": 1,
+        "min": 2.4,
+        "max": 4.0
+    }, {
+        "grade_id": 2,
+        "min": None,
+        "max": 4.0
+    }]
+
+    response = client.post(
+        "/api/grade_requirement_groups/1/grade_requirements", json=json)
+
+    assert response.status_code == 200
+
+    with app.test_request_context():
+        assert response.get_json() == {
+            "grade_requirements":
+            flask.url_for(
+                "grade_requirement_groups.get_grade_requirements", id=1)
+        }
+
+    with app.app_context():
+        group = grade_requirement_group.GradeRequirementGroup.query.first()
+
+        assert group.grade_requirements.count() == 2
+        assert group.grade_requirements.filter(
+            association_tables.GradeRequirement.grade_id.in_(
+                (json[0]["grade_id"],
+                 json[1]["grade_id"]))).distinct().count() == 2
+
+        requirement_0 = group.grade_requirements.filter_by(
+            grade_id=json[0]["grade_id"]).first()
+        requirement_1 = group.grade_requirements.filter_by(
+            grade_id=json[1]["grade_id"]).first()
+
+        assert requirement_0.min == decimal.Decimal(str(json[0]["min"]))
+        assert requirement_0.max == decimal.Decimal(str(json[0]["max"]))
+
+        assert requirement_1.min == requirement_1.grade.min
+        assert requirement_1.max == decimal.Decimal(str(json[1]["max"]))

@@ -48,6 +48,16 @@ class GradeRequirementGroup(app.db.Model, base_mixin.BaseMixin,
             min (float): min grade.
             max (float): max grade.
         """
+        if min is not None and not (grade.min <= min <= grade.max):
+            return
+
+        if max is not None and not (grade.min <= max <= grade.max):
+            return
+
+        if min is not None and max is not None:
+            if min > max:
+                return
+
         if not self.has_grade_requirement(grade):
             grade_requirement = association_tables.GradeRequirement(
                 min=min, max=max)

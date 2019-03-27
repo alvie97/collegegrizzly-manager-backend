@@ -16,8 +16,8 @@ class Grade(app.db.Model, base_mixin.BaseMixin, date_audit.DateAudit,
 
     id = app.db.Column(app.db.Integer, primary_key=True)
     name = app.db.Column(app.db.String(256), unique=True, index=True)
-    max = app.db.Column(app.db.Numeric(8, 2))
-    min = app.db.Column(app.db.Numeric(8, 2))
+    max = app.db.Column(app.db.Numeric(8, 2), nullable=False)
+    min = app.db.Column(app.db.Numeric(8, 2), nullable=False)
     description = app.db.Column(app.db.String(256), nullable=True)
     str_repr = "grade"
 

@@ -1293,7 +1293,7 @@ def post_grade_requirement_group(id):
     scholarship = scholarship_model.Scholarship.query.get_or_404(id)
     group = scholarship.create_grade_requirement_group()
     app.db.session.commit()
-    return flask.jsonify(group.to_dict())
+    return flask.jsonify(group.to_dict()), 201
 
 
 @scholarships_module.bp.route(
@@ -1319,7 +1319,7 @@ def delete_grade_requirement_group(scholarship_id, group_id):
             Produces:
                 Application/json.
     """
-    scholarship = scholarship_model.Scholarship.query.get_or_404(id)
+    scholarship = scholarship_model.Scholarship.query.get_or_404(scholarship_id)
     group = scholarship.grade_requirement_groups.filter_by(id=group_id).first()
 
     if group is None:

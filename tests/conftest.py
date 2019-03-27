@@ -138,7 +138,7 @@ def questions(app):
 def grades(app):
     with app.app_context():
         for i in range(10):
-            grade = Grade(name=f"test grade {i}")
+            grade = Grade(name=f"test grade {i}", min=0, max=10)
             db.session.add(grade)
 
         db.session.commit()
