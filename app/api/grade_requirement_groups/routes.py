@@ -112,7 +112,7 @@ def post_grade_requirement(id):
 
         400:
             no data provided or bad structure, invalid grade id, either
-            range_min or range_max isn't a float, missing fileds.
+            range_min or range_max isn't a float, missing fields.
 
             Produces:
                 Application/json.

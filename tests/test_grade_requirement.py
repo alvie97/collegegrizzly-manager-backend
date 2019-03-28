@@ -151,9 +151,29 @@ def test_get_grade_requirement_groups_colleges(app, client, auth, colleges):
         ]
 
 
+def test_post_grade_requirement_groups_scholarship_failure(
+        app, client, auth, scholarships):
+    """tests adding grade requirement group to scholarship, failure cases"""
+
+    auth.login()
+
+    response = client.post("/api/scholarships/99999/grade_requirement_groups")
+    assert response.status_code == 404
+
+
+def test_post_grade_requirement_groups_college_failure(app, client, auth,
+                                                       colleges):
+    """tests adding grade requirement group to college, failure cases"""
+
+    auth.login()
+
+    response = client.post("/api/colleges/99999/grade_requirement_groups")
+    assert response.status_code == 404
+
+
 def test_post_grade_requirement_groups_scholarship_success(
         app, client, auth, scholarships):
-    """tests adding grade requirement group to scholarship"""
+    """tests adding grade requirement group to scholarship, success cases"""
 
     auth.login()
 
@@ -170,9 +190,26 @@ def test_post_grade_requirement_groups_scholarship_success(
         assert group.to_dict() == response.get_json()
 
 
+def test_delete_grade_requirement_groups_scholarship_failure(
+        app, client, auth, scholarships):
+    """tests removing grade requirement group to scholarship, failure cases"""
+
+    auth.login()
+
+    response = client.delete(
+        "/api/scholarships/9999/grade_requirement_groups/1")
+    assert response.status_code == 404
+
+    response = client.delete("/api/scholarships/1/grade_requirement_groups/1")
+    assert response.status_code == 404
+    assert response.get_json(
+    )["message"] == "scholarship doesn't have grade " \
+                    "requirement group with id 1"
+
+
 def test_delete_grade_requirement_groups_scholarship_success(
         app, client, auth, scholarships):
-    """tests removing grade requirement group to scholarship"""
+    """tests removing grade requirement group to scholarship, success cases"""
 
     with app.app_context():
         scholarship = scholarship_model.Scholarship.query.first()
@@ -212,6 +249,22 @@ def test_post_grade_requirement_groups_college_success(app, client, auth,
         group = college.grade_requirement_groups.filter_by(id=2).first()
         assert group.to_dict() == response.get_json()
 
+
+def test_delete_grade_requirement_groups_college_failure(
+        app, client, auth, colleges):
+    """tests removing grade requirement group to college, failure cases"""
+
+    auth.login()
+
+    response = client.delete(
+        "/api/colleges/9999/grade_requirement_groups/1")
+    assert response.status_code == 404
+
+    response = client.delete("/api/colleges/1/grade_requirement_groups/1")
+    assert response.status_code == 404
+    assert response.get_json(
+    )["message"] == "college doesn't have grade " \
+                    "requirement group with id 1"
 
 def test_delete_grade_requirement_groups_college_success(
         app, client, auth, colleges):

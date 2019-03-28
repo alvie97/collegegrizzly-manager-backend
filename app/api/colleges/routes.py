@@ -593,7 +593,7 @@ def delete_grade_requirement_group(college_id, group_id):
             Produces:
                 Application/json.
     """
-    college = college_model.College.query.get_or_404(id)
+    college = college_model.College.query.get_or_404(college_id)
     group = college.grade_requirement_groups.filter_by(id=group_id).first()
 
     if group is None:
