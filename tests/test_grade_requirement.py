@@ -22,7 +22,7 @@ def test_grade_requirement_scholarships_schema(app, scholarships, grades):
             group = scholarship.create_grade_requirement_group()
 
             for grade in grade_group:
-                group.add_grade_requirement(grade, min=0.0)
+                group.add_grade_requirement(grade)
 
         application.db.session.commit()
 
@@ -70,7 +70,7 @@ def test_grade_requirement_colleges_schema(app, colleges, grades):
             group = college.create_grade_requirement_group()
 
             for grade in grade_group:
-                group.add_grade_requirement(grade, min=0.0)
+                group.add_grade_requirement(grade)
 
         application.db.session.commit()
 
@@ -391,18 +391,20 @@ def test_add_grade_requirement_to_grade_requirement_group_success(
 
     with app.app_context():
         group = grade_requirement_group.GradeRequirementGroup()
+        grades = grade_model.Grade.query.filter(grade_model.Grade.id.in_((1, 2))).all()
         application.db.session.add(group)
-        application.db.session.commit()
 
-    json = [{
-        "grade_id": 1,
-        "min": 2.4,
-        "max": 4.0
-    }, {
-        "grade_id": 2,
-        "min": None,
-        "max": 4.0
-    }]
+        json = [{
+            "grade_id": grades[0].id,
+            "min": float(grades[0].min) + 0.4,
+            "max": float(grades[0].max) - 0.4
+        }, {
+            "grade_id": grades[1].id,
+            "min": None,
+            "max": float(grades[1].min) + 4.0
+        }]
+
+        application.db.session.commit()
 
     response = client.post(
         "/api/grade_requirement_groups/1/grade_requirements", json=json)

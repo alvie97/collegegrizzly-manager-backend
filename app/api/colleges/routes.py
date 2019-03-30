@@ -567,7 +567,7 @@ def post_grade_requirement_group(id):
     college = college_model.College.query.get_or_404(id)
     group = college.create_grade_requirement_group()
     app.db.session.commit()
-    return flask.jsonify(group.to_dict())
+    return flask.jsonify(group.to_dict()), 201
 
 
 @colleges_module.bp.route(
