@@ -125,7 +125,7 @@ def post_grade_requirement(id):
     """
     data = flask.request.get_json() or []
 
-    if not data and not isinstance(data, list):
+    if not data or not isinstance(data, list):
         return errors.bad_request("no data provided or bad structure")
 
     group = grade_requirement_group_model \
@@ -151,10 +151,30 @@ def post_grade_requirement(id):
                     grade_requirement["max"]
                 ) if grade_requirement["max"] is not None else None
             except ValueError:
-                return errors.bad_request("either range_min or range_max "
-                                          "isn't a float")
+                return errors.bad_request("either min or max isn't a float")
 
             grade = grade_model.Grade.query.get_or_404(grade_id)
+
+            if range_min is not None and range_max is not None:
+                if range_min > range_max:
+                    return errors.bad_request("min is bigger than max")
+
+            if range_min is not None:
+                if range_min < 0.0:
+                   return errors.bad_request("min must be bigger or equal to 0")
+
+                if not (grade.min <= range_min <= grade.max):
+                    return errors.bad_request(
+                        "min is not between grade's min and grade's max")
+
+            if range_max is not None:
+                if range_max < 0.0:
+                    return errors.bad_request("max must be bigger or equal to 0")
+
+                if not (grade.min <= range_max <= grade.max):
+                    return errors.bad_request(
+                        "max is not between grade's min and grade's max")
+
             group.add_grade_requirement(grade, range_min, range_max)
 
     except KeyError:
@@ -208,7 +228,7 @@ def delete_grade_requirement(id):
     """
     data = flask.request.get_json() or []
 
-    if not data and not isinstance(data, list):
+    if not data or not isinstance(data, list):
         return errors.bad_request("no data provided or bad structure")
 
     group = grade_requirement_group_model \

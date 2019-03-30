@@ -252,12 +252,11 @@ def test_post_grade_requirement_groups_college_success(app, client, auth,
 
 def test_delete_grade_requirement_groups_college_failure(
         app, client, auth, colleges):
-    """tests removing grade requirement group to college, failure cases"""
+    """tests removing grade requirement group from college, failure cases"""
 
     auth.login()
 
-    response = client.delete(
-        "/api/colleges/9999/grade_requirement_groups/1")
+    response = client.delete("/api/colleges/9999/grade_requirement_groups/1")
     assert response.status_code == 404
 
     response = client.delete("/api/colleges/1/grade_requirement_groups/1")
@@ -265,6 +264,7 @@ def test_delete_grade_requirement_groups_college_failure(
     assert response.get_json(
     )["message"] == "college doesn't have grade " \
                     "requirement group with id 1"
+
 
 def test_delete_grade_requirement_groups_college_success(
         app, client, auth, colleges):
@@ -287,6 +287,100 @@ def test_delete_grade_requirement_groups_college_success(
 
         assert college.grade_requirement_groups.count() == 1
         assert college.grade_requirement_groups.filter_by(id=2).count() == 1
+
+
+def test_add_grade_requirement_to_grade_requirement_group_failure(
+        app, client, auth, grades, groups):
+    """
+    tests adding grade requirement to grade requirement group,
+    failure cases.
+    """
+
+    url = "/api/grade_requirement_groups/1/grade_requirements"
+
+    auth.login()
+
+    response = client.post(url, json={})
+    assert response.status_code == 400
+    assert response.get_json(
+    )["message"] == "no data provided or bad structure"
+
+    response = client.post(url, json=[])
+    assert response.status_code == 400
+    assert response.get_json(
+    )["message"] == "no data provided or bad structure"
+
+    json = [{"grade_id": 1, "min": 4.0, "max": 5.0}]
+
+    response = client.post(
+        "/api/grade_requirement_groups/999/grade_requirements", json=json)
+    assert response.status_code == 404
+
+    json = [1]
+    response = client.post(url, json=json)
+    assert response.status_code == 400
+    assert response.get_json()["message"] == "bad structure"
+
+    json = [{"grade_id": "asdf"}]
+
+    response = client.post(url, json=json)
+    assert response.status_code == 400
+    assert response.get_json()["message"] == "invalid grade id"
+
+    json = [{}]
+
+    response = client.post(url, json=json)
+    assert response.status_code == 400
+    assert response.get_json()["message"] == "missing fields"
+
+    json = [{"grade_id": 1, "min": None, "max": "asdf"}]
+
+    response = client.post(url, json=json)
+    assert response.status_code == 400
+    assert response.get_json()["message"] == "either min or max isn't a float"
+
+    json = [{"grade_id": 1, "min": "asdf", "max": None}]
+
+    response = client.post(url, json=json)
+    assert response.status_code == 400
+    assert response.get_json()["message"] == "either min or max isn't a float"
+
+    json = [{"grade_id": 1, "min": 40, "max": 10}]
+
+    response = client.post(url, json=json)
+    assert response.status_code == 400
+    assert response.get_json()["message"] == "min is bigger than max"
+
+    with app.app_context():
+        grade = grade_model.Grade.query.get(1)
+        grade_min = float(grade.min)
+        grade_max = float(grade.max)
+
+    json = [{"grade_id": 1, "min": grade_min - 1.0, "max": None}]
+
+    response = client.post(url, json=json)
+    assert response.status_code == 400
+    assert response.get_json(
+    )["message"] == "min is not between grade's min and grade's max"
+
+    json = [{"grade_id": 1, "min": None, "max": grade_max + 1.0}]
+
+    response = client.post(url, json=json)
+    assert response.status_code == 400
+    assert response.get_json(
+    )["message"] == "max is not between grade's min and grade's max"
+
+    json = [{"grade_id": 1, "min": -1, "max": None}]
+
+    response = client.post(url, json=json)
+    assert response.status_code == 400
+    assert response.get_json()["message"] == "min must be bigger or equal to 0"
+
+    json = [{"grade_id": 1, "min": None, "max": -1}]
+
+    response = client.post(url, json=json)
+    assert response.status_code == 400
+    assert response.get_json()["message"] == "max must be bigger or equal to 0"
 
 
 def test_add_grade_requirement_to_grade_requirement_group_success(
@@ -340,6 +434,58 @@ def test_add_grade_requirement_to_grade_requirement_group_success(
         assert requirement_0.max == decimal.Decimal(str(json[0]["max"]))
 
         assert requirement_1.min == requirement_1.grade.min
+
+
+def test_remove_grade_requirement_from_grade_requirement_group_failure(
+        app, client, auth, grades, groups):
+    """
+    tests removing grade requirement from grade requirement group,
+    failure cases
+    """
+    ids = (1, 2, 3)
+
+    with app.app_context():
+        group = grade_requirement_group.GradeRequirementGroup.query.first()
+        grades = grade_model.Grade.query.filter(
+            grade_model.Grade.id.in_(ids)).all()
+
+        for grade in grades:
+            group.add_grade_requirement(grade)
+
+        application.db.session.commit()
+
+    auth.login()
+
+    url = "/api/grade_requirement_groups/1/grade_requirements"
+
+    response = client.delete(url, json={})
+    assert response.status_code == 400
+    assert response.get_json(
+    )["message"] == "no data provided or bad structure"
+
+    response = client.delete(url, json=[])
+    assert response.status_code == 400
+    assert response.get_json(
+    )["message"] == "no data provided or bad structure"
+
+    response = client.delete(
+        "/api/grade_requirement_groups/999/grade_requirements",
+        json=[ids[0], ids[2]])
+    assert response.status_code == 404
+
+    response = client.delete(url, json=["asdf", ids[2]])
+    assert response.status_code == 400
+    assert response.get_json()["message"] == "invalid grade id"
+
+    response = client.delete(url, json=[ids[2], 99999])
+    assert response.status_code == 404
+
+    with app.app_context():
+        group = grade_requirement_group.GradeRequirementGroup.query.first()
+
+        assert group.grade_requirements.filter(
+            association_tables.GradeRequirement.grade_id.in_(
+                ids)).distinct().count() == len(ids)
 
 
 def test_remove_grade_requirement_from_grade_requirement_group_success(

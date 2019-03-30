@@ -11,6 +11,7 @@ from app.models.grade import Grade
 from app.models.scholarship_details import ScholarshipDetails
 from app.models.question import Question
 from app.models.user import User
+from app.models.grade_requirement_group import GradeRequirementGroup
 from config import Config
 from app.models.scholarship import Scholarship
 from app.models.program import Program
@@ -138,7 +139,16 @@ def questions(app):
 def grades(app):
     with app.app_context():
         for i in range(10):
-            grade = Grade(name=f"test grade {i}", min=0, max=10)
+            grade = Grade(name=f"test grade {i}", min=10, max=20)
             db.session.add(grade)
+
+        db.session.commit()
+
+@pytest.fixture
+def groups(app):
+    with app.app_context():
+        for i in range(10):
+            group = GradeRequirementGroup()
+            db.session.add(group)
 
         db.session.commit()
