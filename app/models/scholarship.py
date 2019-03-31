@@ -59,6 +59,9 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
         cascade="all, delete-orphan",
         lazy="dynamic")
 
+    selection_requirements = app.db.relationship(
+        "SelectionRequirement", lazy="dynamic")
+
     str_repr = "scholarship"
 
     def __repr__(self):
@@ -259,6 +262,46 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
         if self.has_grade_requirement_group(group):
             self.grade_requirement_groups.remove(group)
             app.db.session.delete(group)
+
+    def has_selection_requirement(self, question):
+        """
+        Checks if scholarship has question as boolean requirement.
+        Args:
+            question (object:Question): question to check.
+
+        Returns:
+            bool: true if question is in selection_requirement, false
+                otherwise.
+        """
+
+        return self.selection_requirements.filter(
+            association_tables.SelectionRequirement.question_id == question.
+            id).count() > 0
+
+    def add_selection_requirement(self, question):
+        """
+        Adds selection requirement to scholarship.
+
+        Args:
+            question: question to add.
+        """
+
+        if not self.has_selection_requirement(question):
+            requirement = association_tables.SelectionRequirement()
+            requirement.question = question
+            app.db.session.add(requirement)
+            self.selection_requirements.append(requirement)
+
+    def remove_selection_requirement(self, selection_requirement):
+        """
+        Removes selection requirement from scholarship.
+
+        Args:
+            selection_requirement: selection requirement to remove.
+        """
+
+        if self.has_selection_requirement(selection_requirement):
+            self.selection_requirements.remove(selection_requirement)
 
     def for_pagination(self):
         """ Serializes model for pagination.
