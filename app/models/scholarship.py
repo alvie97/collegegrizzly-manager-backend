@@ -59,6 +59,12 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
         cascade="all, delete-orphan",
         lazy="dynamic")
 
+    location_requirements = app.db.relationship(
+        "Location",
+        backref="college",
+        cascade="all, delete-orphan",
+        lazy="dynamic")
+
     str_repr = "scholarship"
 
     def __repr__(self):
@@ -252,6 +258,7 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
     def delete_grade_requirement_group(self, group):
         """
         Removes grade requirement group from scholarship and deletes it.
+
         Args:
             group (association_tables.GradeRequirementGroup): grade requirement
                 group.
@@ -259,6 +266,37 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
         if self.has_grade_requirement_group(group):
             self.grade_requirement_groups.remove(group)
             app.db.session.delete(group)
+
+    def has_location_requirement(self, location):
+        """
+        Checks if location requirement exists.
+
+        location: location to check.
+        """
+
+        return self.location_requirements.filter_by(id=location.id).count() > 0
+
+    def add_location_requirement(self, location):
+        """
+        Adds location to location requirements.
+
+        Args:
+            location: location model instance to add.
+        """
+
+        if not self.has_location_requirement(location):
+            self.location_requirements.append(location)
+
+    def remove_location_requirement(self, location):
+        """
+        Removes location from location requirements.
+
+        Args:
+            location: location model instance to remove.
+        """
+
+        if self.has_location_requirement(location):
+            self.location_requirements.remove(location)
 
     def for_pagination(self):
         """ Serializes model for pagination.
