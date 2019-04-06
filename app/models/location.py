@@ -20,7 +20,7 @@ class Location(app.db.Model, base_mixin.BaseMixin,
     county = app.db.Column(app.db.String(256), nullable=True)
     place = app.db.Column(app.db.String(256), nullable=True)
     zip_code = app.db.Column(app.db.String(256), nullable=True)
-    blacklist = app.db.Column(app.db.Boolean, nullable=True)
+    blacklist = app.db.Column(app.db.Boolean, default=False)
     scholarship_id = app.db.Column(app.db.Integer,
                                    app.db.ForeignKey("scholarship.id"))
     college_id = app.db.Column(app.db.Integer, app.db.ForeignKey("college.id"))

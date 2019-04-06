@@ -4,12 +4,14 @@ import flask
 import marshmallow
 
 import app
+import re
 from app.api import colleges as colleges_module
 from app import security, utils
 from app.models import college as college_model
 from app.models import college_details as college_details_model
 from app.models import major as major_model
 from app.models import detail as detail_model
+from app.models import location as location_model
 from app.schemas import college_schema as college_schema_class
 from app.schemas import detail_schema as detail_schema_class
 from app.api import errors
@@ -513,6 +515,7 @@ def delete_college_additional_details(college_id, detail_id):
             "colleges.get_college_additional_details", id=college_id)
     })
 
+
 @colleges_module.bp.route("/<int:id>/grade_requirement_groups")
 def get_grade_requirement_groups(id):
     """
@@ -536,10 +539,8 @@ def get_grade_requirement_groups(id):
 
     college = college_model.College.query.get_or_404(id)
 
-    return flask.jsonify([
-        group.to_dict()
-        for group in college.grade_requirement_groups.all()
-    ])
+    return flask.jsonify(
+        [group.to_dict() for group in college.grade_requirement_groups.all()])
 
 
 @colleges_module.bp.route(
@@ -604,6 +605,89 @@ def delete_grade_requirement_group(college_id, group_id):
 
     return flask.jsonify({
         "get_grade_requirement_groups":
-            flask.url_for(
-                "colleges.get_grade_requirement_groups", id=college_id)
+        flask.url_for("colleges.get_grade_requirement_groups", id=college_id)
     })
+
+
+@colleges_module.bp.route("/<int:id>/location_requirements", methods=["POST"])
+def add_location_requirement(id):
+    """
+    Adds location requirement to the college's location requirements.
+
+    POST:
+        Args:
+            id (integer): college id.
+        
+        Consumes:
+            Application/json.
+        
+        Request Body:
+            location requirement dict.
+
+            Example::
+
+                {
+                    "state": state,
+                    "county": county,
+                    "place": place,
+                    "zip_code": zip_code
+                    "blacklist": 1 or 0
+                }
+        
+    Responses:
+
+        200:
+            Successfully adds location requirement.
+    """
+
+    data = flask.request.get_json() or {}
+
+    if not data or not isinstance(data, dict):
+        return errors.bad_request("no data provided or bad structure")
+
+    try:
+        state = data["state"]
+        county = data["county"]
+        place = data["place"]
+        zip_code = data["zip_code"]
+        blacklist = data["blacklist"]
+
+    except KeyError:
+        return errors.bad_request("missing fields")
+
+    if place is not None and (county is None or state is None):
+        return errors.bad_request(
+            "if place is defined county and state must be"
+            " defined")
+
+    if county is not None and state is None:
+        return errors.bad_request(
+            "if county is defined, state must be defined")
+
+    if zip_code is None and state is None:
+        return errors.bad_request("zip_code or state must be defined")
+
+    if blacklist not in [1, 0]:
+        return errors.bad_request("blacklist must be either 1 or 0")
+
+    blacklist = blacklist == 1
+
+    college = college_model.College.query.get_or_404(id)
+
+    if zip_code is not None:
+
+        if not re.fullmatch(r"[0-9]{5}(?:-[0-9]{4})?", zip_code):
+            return errors.bad_request("zip_code not valid")
+
+        location = location_model.Location(
+            zip_code=zip_code, blacklist=blacklist)
+
+    else:
+        location = location_model.Location(
+            state=state, county=county, place=place, blacklist=blacklist)
+
+    app.db.session.add(location)
+
+    college.add_location_requirement(location)
+
+    app.db.session.commit()
