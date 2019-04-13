@@ -10,6 +10,7 @@ from app.models import detail as detail_model
 from app.models import association_tables
 from app.models import program as program_model
 from app.models import question as question_model
+from app.models import location as location_model
 from app.schemas import scholarship_schema as scholarship_schema_class
 from app.schemas import detail_schema as detail_schema_class
 from app.api import errors
@@ -1332,4 +1333,157 @@ def delete_grade_requirement_group(scholarship_id, group_id):
         "get_grade_requirement_groups":
         flask.url_for(
             "scholarships.get_grade_requirement_groups", id=scholarship_id)
+    })
+
+@scholarships_module.bp.route("/<int:id>/location_requirements", methods=["POST"])
+def add_location_requirement(id):
+    """
+    Adds location requirement to the scholarship's location requirements.
+
+    POST:
+        Args:
+            id (integer): scholarship id.
+        
+        Consumes:
+            Application/json.
+        
+        Request Body:
+            location requirement dict.
+
+            Example::
+
+                {
+                    "state": state,
+                    "county": county,
+                    "place": place,
+                    "zip_code": zip_code
+                    "blacklist": 1 or 0
+                }
+        
+    Responses:
+
+        200:
+            Successfully adds location requirement.
+    """
+
+    data = flask.request.get_json() or {}
+
+    if not data or not isinstance(data, dict):
+        return errors.bad_request("no data provided or bad structure")
+
+    try:
+        state = data["state"]
+        county = data["county"]
+        place = data["place"]
+        zip_code = data["zip_code"]
+        blacklist = data["blacklist"]
+
+    except KeyError:
+        return errors.bad_request("missing fields")
+
+    if place is not None and (county is None or state is None):
+        return errors.bad_request(
+            "if place is defined county and state must be"
+            " defined")
+
+    if county is not None and state is None:
+        return errors.bad_request(
+            "if county is defined, state must be defined")
+
+    if zip_code is None and state is None:
+        return errors.bad_request("zip_code or state must be defined")
+
+    if blacklist not in [1, 0]:
+        return errors.bad_request("blacklist must be either 1 or 0")
+
+    blacklist = blacklist == 1
+
+    scholarship = scholarship_model.Scholarship.query.get_or_404(id)
+
+    if zip_code is not None:
+
+        if not re.fullmatch(r"[0-9]{5}(?:-[0-9]{4})?", zip_code):
+            return errors.bad_request("zip_code not valid")
+
+        location = location_model.Location(
+            zip_code=zip_code, blacklist=blacklist)
+
+    else:
+        location = location_model.Location(
+            state=state, county=county, place=place, blacklist=blacklist)
+
+    app.db.session.add(location)
+
+    scholarship.add_location_requirement(location)
+
+    app.db.session.commit()
+
+
+@scholarships_module.bp.route(
+    "/<int:scholarship_id>/location_requirements/<int:location_id>",
+    methods=["DELETE"])
+def delete_location_requirement(scholarship_id, location_id):
+    """
+    Deletes location requirement from scholarship.
+
+    DELETE:
+        Args:
+            scholarship_id (integer): scholarship id.
+            location_id (integer): location id.
+    Responses:
+        200:
+            location removed successfully.
+
+            Produces:
+                Application/json.
+        404:
+            scholarship not found or scholarship does not have location requirement.
+
+            Produces:
+                Application/json.
+    """
+
+    scholarship = scholarship_model.Scholarship.query.get_or_404(scholarship_id)
+    location = scholarship.location_requirements.filter_by(id=location_id).first()
+
+    if location is None:
+        return errors.not_found("scholarship doesn't have location requirement")
+
+    scholarship.remove_location_requirement(location)
+
+    db.session.delete(location)
+    db.session.commit()
+
+
+@scholarships_module.bp.route("/<int:id>/location_requirements")
+def get_location_requirements(id):
+    """
+    Gets location requirements.
+
+    GET:
+        id (integer): scholarship id.
+    Responses:
+        200:
+            Gets list of location requirements.
+
+            Produces:
+                Application/json.
+
+        404:
+            scholarship not found.
+
+            Produces:
+                Application/json.
+    """
+
+    scholarship = scholarship_model.Scholarship.query.get_or_404(id)
+    accepted_locations = scholarship.location_requirements.filter_by(
+        blacklist=False).all()
+    blacklisted_locations = scholarship.location_requirements.filter_by(
+        blacklist=True).all()
+
+    return flask.jsonify({
+        "accepted": [location.to_dict() for location in accepted_locations],
+        "blacklisted":
+        [location.to_dict() for location in blacklisted_locations],
     })

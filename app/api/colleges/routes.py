@@ -691,3 +691,73 @@ def add_location_requirement(id):
     college.add_location_requirement(location)
 
     app.db.session.commit()
+
+
+@colleges_module.bp.route(
+    "/<int:college_id>/location_requirements/<int:location_id>",
+    methods=["DELETE"])
+def delete_location_requirement(college_id, location_id):
+    """
+    Deletes location requirement from college.
+
+    DELETE:
+        Args:
+            college_id (integer): college id.
+            location_id (integer): location id.
+    Responses:
+        200:
+            location removed successfully.
+
+            Produces:
+                Application/json.
+        404:
+            college not found or college does not have location requirement.
+
+            Produces:
+                Application/json.
+    """
+
+    college = college_model.College.query.get_or_404(college_id)
+    location = college.location_requirements.filter_by(id=location_id).first()
+
+    if location is None:
+        return errors.not_found("college doesn't have location requirement")
+
+    college.remove_location_requirement(location)
+
+    db.session.delete(location)
+    db.session.commit()
+
+
+@colleges_module.bp.route("/<int:id>/location_requirements")
+def get_location_requirements(id):
+    """
+    Gets location requirements.
+
+    GET:
+        id (integer): college id.
+    Responses:
+        200:
+            Gets list of location requirements.
+
+            Produces:
+                Application/json.
+
+        404:
+            college not found.
+
+            Produces:
+                Application/json.
+    """
+
+    college = college_model.College.query.get_or_404(id)
+    accepted_locations = college.location_requirements.filter_by(
+        blacklist=False).all()
+    blacklisted_locations = college.location_requirements.filter_by(
+        blacklist=True).all()
+
+    return flask.jsonify({
+        "accepted": [location.to_dict() for location in accepted_locations],
+        "blacklisted":
+        [location.to_dict() for location in blacklisted_locations],
+    })
