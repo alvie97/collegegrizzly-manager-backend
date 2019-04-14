@@ -1,6 +1,7 @@
 import flask
 import marshmallow
 
+import re
 import app
 from app.api import scholarships as scholarships_module
 from app import security
@@ -1320,7 +1321,8 @@ def delete_grade_requirement_group(scholarship_id, group_id):
             Produces:
                 Application/json.
     """
-    scholarship = scholarship_model.Scholarship.query.get_or_404(scholarship_id)
+    scholarship = scholarship_model.Scholarship.query.get_or_404(
+        scholarship_id)
     group = scholarship.grade_requirement_groups.filter_by(id=group_id).first()
 
     if group is None:
@@ -1335,7 +1337,9 @@ def delete_grade_requirement_group(scholarship_id, group_id):
             "scholarships.get_grade_requirement_groups", id=scholarship_id)
     })
 
-@scholarships_module.bp.route("/<int:id>/location_requirements", methods=["POST"])
+
+@scholarships_module.bp.route(
+    "/<int:id>/location_requirements", methods=["POST"])
 def add_location_requirement(id):
     """
     Adds location requirement to the scholarship's location requirements.
@@ -1383,7 +1387,7 @@ def add_location_requirement(id):
 
     if place is not None and (county is None or state is None):
         return errors.bad_request(
-            "if place is defined county and state must be"
+            "if place is defined, county and state must be"
             " defined")
 
     if county is not None and state is None:
@@ -1391,7 +1395,7 @@ def add_location_requirement(id):
             "if county is defined, state must be defined")
 
     if zip_code is None and state is None:
-        return errors.bad_request("zip_code or state must be defined")
+        return errors.bad_request("zip code or state must be defined")
 
     if blacklist not in [1, 0]:
         return errors.bad_request("blacklist must be either 1 or 0")
@@ -1403,7 +1407,7 @@ def add_location_requirement(id):
     if zip_code is not None:
 
         if not re.fullmatch(r"[0-9]{5}(?:-[0-9]{4})?", zip_code):
-            return errors.bad_request("zip_code not valid")
+            return errors.bad_request("invalid zip code")
 
         location = location_model.Location(
             zip_code=zip_code, blacklist=blacklist)
@@ -1417,6 +1421,11 @@ def add_location_requirement(id):
     scholarship.add_location_requirement(location)
 
     app.db.session.commit()
+
+    return flask.jsonify({
+        "location_requirements":
+        flask.url_for("colleges.get_location_requirements", id=id)
+    }), 201
 
 
 @scholarships_module.bp.route(
@@ -1443,11 +1452,14 @@ def delete_location_requirement(scholarship_id, location_id):
                 Application/json.
     """
 
-    scholarship = scholarship_model.Scholarship.query.get_or_404(scholarship_id)
-    location = scholarship.location_requirements.filter_by(id=location_id).first()
+    scholarship = scholarship_model.Scholarship.query.get_or_404(
+        scholarship_id)
+    location = scholarship.location_requirements.filter_by(
+        id=location_id).first()
 
     if location is None:
-        return errors.not_found("scholarship doesn't have location requirement")
+        return errors.not_found(
+            "scholarship doesn't have location requirement")
 
     scholarship.remove_location_requirement(location)
 

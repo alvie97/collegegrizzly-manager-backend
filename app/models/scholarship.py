@@ -61,7 +61,7 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
 
     location_requirements = app.db.relationship(
         "Location",
-        backref="college",
+        backref="scholarship",
         cascade="all, delete-orphan",
         lazy="dynamic")
 

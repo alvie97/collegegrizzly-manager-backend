@@ -657,15 +657,14 @@ def add_location_requirement(id):
 
     if place is not None and (county is None or state is None):
         return errors.bad_request(
-            "if place is defined county and state must be"
-            " defined")
+            "if place is defined, county and state must be defined")
 
     if county is not None and state is None:
         return errors.bad_request(
             "if county is defined, state must be defined")
 
     if zip_code is None and state is None:
-        return errors.bad_request("zip_code or state must be defined")
+        return errors.bad_request("zip code or state must be defined")
 
     if blacklist not in [1, 0]:
         return errors.bad_request("blacklist must be either 1 or 0")
@@ -677,7 +676,7 @@ def add_location_requirement(id):
     if zip_code is not None:
 
         if not re.fullmatch(r"[0-9]{5}(?:-[0-9]{4})?", zip_code):
-            return errors.bad_request("zip_code not valid")
+            return errors.bad_request("invalid zip code")
 
         location = location_model.Location(
             zip_code=zip_code, blacklist=blacklist)
@@ -691,6 +690,11 @@ def add_location_requirement(id):
     college.add_location_requirement(location)
 
     app.db.session.commit()
+
+    return flask.jsonify({
+        "location_requirements":
+        flask.url_for("colleges.get_location_requirements", id=id)
+    }), 201
 
 
 @colleges_module.bp.route(
