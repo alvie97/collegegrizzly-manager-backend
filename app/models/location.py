@@ -32,3 +32,13 @@ class Location(app.db.Model, base_mixin.BaseMixin,
         zip_code = self.zip_code if self.zip_code is not None else ""
 
         return f"<Location {state}, {county}, {place}, {zip_code}>"
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "state": self.state,
+            "county": self.county,
+            "place": self.place,
+            "zip_code": self.zip_code,
+            "blacklist": self.blacklist,
+        }

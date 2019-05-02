@@ -729,8 +729,12 @@ def delete_location_requirement(college_id, location_id):
 
     college.remove_location_requirement(location)
 
-    db.session.delete(location)
-    db.session.commit()
+    app.db.session.delete(location)
+    app.db.session.commit()
+
+    return flask.jsonify({
+        "message": "location requirement removed from college"
+    })
 
 
 @colleges_module.bp.route("/<int:id>/location_requirements")

@@ -1463,8 +1463,12 @@ def delete_location_requirement(scholarship_id, location_id):
 
     scholarship.remove_location_requirement(location)
 
-    db.session.delete(location)
-    db.session.commit()
+    app.db.session.delete(location)
+    app.db.session.commit()
+
+    return flask.jsonify({
+        "message": "location requirement removed from scholarship"
+    })
 
 
 @scholarships_module.bp.route("/<int:id>/location_requirements")
