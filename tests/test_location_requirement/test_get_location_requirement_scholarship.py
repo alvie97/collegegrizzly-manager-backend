@@ -1,18 +1,19 @@
 import app as application
-from app.models import college as college_model
+from app.models import scholarship as scholarship_model
 from app.models import location as location_model
 
-url = "api/colleges/1/location_requirements"
+url = "api/scholarships/1/location_requirements"
 
 
-def test_get_college_location_requirements(app, client, auth, colleges):
+def test_get_scholarship_location_requirements(app, client, auth,
+                                               scholarships):
     """
-    Test get college location requirements
+    Test get scholarship location requirements
     """
     json = []
 
     with app.app_context():
-        college = college_model.College.query.first()
+        scholarship = scholarship_model.Scholarship.query.first()
         location_0 = location_model.Location(zip_code="12345")
 
         location_1 = location_model.Location(zip_code="12346", blacklist=True)
@@ -20,8 +21,8 @@ def test_get_college_location_requirements(app, client, auth, colleges):
         application.db.session.add(location_0)
         application.db.session.add(location_1)
 
-        college.add_location_requirement(location_0)
-        college.add_location_requirement(location_1)
+        scholarship.add_location_requirement(location_0)
+        scholarship.add_location_requirement(location_1)
 
         application.db.session.commit()
 
@@ -37,12 +38,12 @@ def test_get_college_location_requirements(app, client, auth, colleges):
     assert response.get_json() == json
 
 
-def test_get_college_location_requirements_failure(app, client, auth,
-                                                   colleges):
+def test_get_scholarship_location_requirements_failure(app, client, auth,
+                                                       scholarships):
     """
-    Test get college location requirements failure case.
+    Test get scholarship location requirements failure case.
     """
     auth.login()
-    response = client.get("api/3000/colleges/location_requirements")
+    response = client.get("api/3000/scholarships/location_requirements")
 
     assert response.status_code == 404
