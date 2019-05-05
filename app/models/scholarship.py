@@ -274,11 +274,10 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
                 otherwise.
         """
 
-        return self.selection_requirements.filter(
-            association_tables.SelectionRequirement.question_id == question.
-            id).count() > 0
+        return self.selection_requirements.filter_by(
+            question_id=question.id).count() > 0
 
-    def add_selection_requirement(self, question):
+    def add_selection_requirement(self, question, description):
         """
         Adds selection requirement to scholarship.
 
@@ -287,7 +286,8 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
         """
 
         if not self.has_selection_requirement(question):
-            requirement = association_tables.SelectionRequirement()
+            requirement = association_tables.SelectionRequirement(
+                description=description)
             requirement.question = question
             app.db.session.add(requirement)
             self.selection_requirements.append(requirement)
@@ -300,7 +300,7 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
             selection_requirement: selection requirement to remove.
         """
 
-        if self.has_selection_requirement(selection_requirement):
+        if self.has_selection_requirement(selection_requirement.question):
             self.selection_requirements.remove(selection_requirement)
 
     def for_pagination(self):

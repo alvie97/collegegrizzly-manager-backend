@@ -1341,6 +1341,7 @@ def delete_grade_requirement_group(scholarship_id, group_id):
     "/<int:id>/selection_requirements", methods=["POST"])
 def add_selection_requirement(id):
     """
+    Adds selection requirement to scholarship.
 
     POST:
         Args:
@@ -1353,7 +1354,7 @@ def add_selection_requirement(id):
             question id.
 
             Example::
-                { "question_id": question id. }
+                { "question_id": question id., "description": question description}
 
     Responses:
         200:
@@ -1386,7 +1387,7 @@ def add_selection_requirement(id):
         question = question_model.Question.query.get_or_404(question_id)
         scholarship = scholarship_model.Scholarship.query.get_or_404(id)
 
-        scholarship.add_selection_requirement(question)
+        scholarship.add_selection_requirement(question, data["description"])
 
     except KeyError:
         return errors.bad_request("missing fields")
@@ -1426,9 +1427,8 @@ def delete_selection_requirement(scholarship_id, question_id):
     """
     scholarship = scholarship_model.Scholarship.query.get_or_404(
         scholarship_id)
-    selection_requirement = scholarship.selection_requirements.filter(
-        association_tables.SelectionRequirement.question_id ==
-        question_id).first()
+    selection_requirement = scholarship.selection_requirements.filter_by(
+        question_id=question_id).first()
 
     if selection_requirement is None:
         return errors.not_found(
@@ -1446,6 +1446,8 @@ def delete_selection_requirement(scholarship_id, question_id):
 @scholarships_module.bp.route("/<int:id>/selection_requirements")
 def get_selection_requirements(id):
     """
+    Gets selection requirements.
+
     GET:
         Args:
             id: scholarship id.
@@ -1489,7 +1491,7 @@ def add_options_to_selection_requirement(scholarship_id, question_id):
             list of options to add.
 
             Example::
-                [{ "name": option, "description": option description }, ...]
+                [option id]
 
     Response:
         200:
@@ -1517,28 +1519,24 @@ def add_options_to_selection_requirement(scholarship_id, question_id):
 
     scholarship = scholarship_model.Scholarship.query.get_or_404(
         scholarship_id)
-    selection_requirement = scholarship.selection_requirements.filter(
-        association_tables.SelectionRequirement.question_id ==
-        question_id).first()
+    selection_requirement = scholarship.selection_requirements.filter_by(
+        question_id=question_id).first()
 
     if selection_requirement is None:
         return errors.not_found(
             "scholarship doesn't have selection requirement with question")
 
     try:
-        for option in data:
-            if not isinstance(option, dict):
-                return errors.bad_request("bad structure")
+        for option_id in data:
+            option = option_model.Option.query.get(int(option_id))
 
-            option = option_model.Option(
-                name=str(data["name"]), description=str(data["description"]))
-            app.db.session.add(option)
+            if option is not None:
+                selection_requirement.add_option(option)
 
-            selection_requirement.add_option(option)
     except KeyError:
         return errors.bad_request("missing fields")
     except ValueError:
-        return errors.bad_request("data can't be converted to string")
+        return errors.bad_request("option id must be an integer")
 
     app.db.session.commit()
 
@@ -1597,18 +1595,16 @@ def delete_options_from_selection_requirement(scholarship_id, question_id):
 
     scholarship = scholarship_model.Scholarship.query.get_or_404(
         scholarship_id)
-    selection_requirement = scholarship.selection_requirements.filter(
-        association_tables.SelectionRequirement.question_id ==
-        question_id).first()
+    selection_requirement = scholarship.selection_requirements.filter_by(
+        question_id=question_id).first()
 
     if selection_requirement is None:
         return errors.not_found(
             "scholarship doesn't have selection requirement with question")
 
     try:
-        for option in data:
-            option_id = int(option)
-            option = option_model.Option.query.get_or_404(option_id)
+        for option_id in data:
+            option = option_model.Option.query.get_or_404(int(option_id))
 
             selection_requirement.remove_option(option)
     except ValueError:
@@ -1629,6 +1625,8 @@ def delete_options_from_selection_requirement(scholarship_id, question_id):
     "/<int:scholarship_id>/selection_requirements/<int:question_id>/options")
 def get_selection_requirement_options(scholarship_id, question_id):
     """
+    Gets selection requirement options.
+
     GET:
         Args:
             scholarship_id: scholarship id.
@@ -1651,9 +1649,9 @@ def get_selection_requirement_options(scholarship_id, question_id):
 
     scholarship = scholarship_model.Scholarship.query.get_or_404(
         scholarship_id)
-    selection_requirement = scholarship.selection_requirements.filter(
-        association_tables.SelectionRequirement.question_id ==
-        question_id).first()
+    selection_requirement = scholarship.selection_requirements.filter_by(
+        question_id=question_id).first()
+
     if selection_requirement is None:
         return errors.not_found(
             "scholarship doesn't have selection requirement with question")
@@ -1661,202 +1659,3 @@ def get_selection_requirement_options(scholarship_id, question_id):
     options = selection_requirement.options.all()
 
     return flask.jsonify([option.to_dict() for option in options])
-
-
-@scholarships_module.bp.route("/<int:scholarship_id>/selection_requirements"
-                              "/<int:question_id>/accepted_options",
-                              methods=["POST"])
-def add_accepted_options_to_selection_requirement(scholarship_id, question_id):
-    """
-    Adds accepted options to selection requirement.
-
-    POST:
-        Args:
-            scholarship_id: scholarship id.
-            question_id: question id.
-
-        Consumes:
-            Application/json.
-
-        Request Body:
-            list of accepted options to add.
-
-            Example::
-                [accepted option id]
-
-    Response:
-        200:
-            Added accepted options to selection requirement.
-
-            Produces:
-                Application/json.
-
-        400:
-            no data provided or bad structure.
-
-            Produces:
-                Application/json.
-
-        404:
-            scholarship not found, scholarship doesn't have selection
-            requirement, option not in selection requirement options.
-
-            Produces:
-                Application/json.
-    """
-    data = flask.request.get_json() or []
-
-    if not data or not isinstance(data, list):
-        return errors.bad_request("no data provided or bad structure")
-
-    scholarship = scholarship_model.Scholarship.query.get_or_404(
-        scholarship_id)
-    selection_requirement = scholarship.selection_requirements.filter(
-        association_tables.SelectionRequirement.question_id ==
-        question_id).first()
-
-    if selection_requirement is None:
-        return errors.not_found(
-            "scholarship doesn't have selection requirement with question")
-
-    try:
-        for accepted_option_id in data:
-            accepted_option_id = int(accepted_option_id)
-            accepted_option = selection_requirement.options.filter(
-                association_tables.selection_requirement_option.option_id ==
-                accepted_option_id).first()
-
-            if accepted_option is None:
-                return errors.bad_request(
-                    "option not in selection requirement options")
-
-            selection_requirement.add_accepted_option(accepted_option)
-
-    except ValueError:
-        return errors.bad_request("invalid id")
-
-    app.db.session.commit()
-
-    return flask.jsonify({
-        "selection_requirement_accepted_options":
-        flask.url_for(
-            "scholarships.get_selection_requirement_accepted_options",
-            scholarship_id=scholarship_id,
-            question_id=question_id)
-    })
-
-
-@scholarships_module.bp.route("/<int:scholarship_id>/selection_requirements"
-                              "/<int:question_id>/accepted_options",
-                              methods=["DELETE"])
-def delete_accepted_options_from_selection_requirement(scholarship_id,
-                                                       question_id):
-    """
-    Removes accepted options from selection requirement.
-
-    POST:
-        Args:
-            scholarship_id: scholarship id.
-            question_id: question id.
-
-        Consumes:
-            Application/json.
-
-        Request Body:
-            list of accepted_options to add.
-
-            Example::
-                [accepted_option id, ...]
-
-    Response:
-        200:
-            Added accepted_options to selection requirement.
-
-            Produces:
-                Application/json.
-        400:
-            no data provided or bad structure, invalid id
-
-            Produces:
-                Application/json.
-        404:
-            scholarship not found, scholarship doesn't have selection
-            requirement, accepted_option not found.
-
-            Produces:
-                Application/json.
-    """
-    data = flask.request.get_json() or []
-
-    if not data or not isinstance(data, list):
-        return errors.bad_request("no data provided or bad structure")
-
-    scholarship = scholarship_model.Scholarship.query.get_or_404(
-        scholarship_id)
-    selection_requirement = scholarship.selection_requirements.filter(
-        association_tables.SelectionRequirement.question_id ==
-        question_id).first()
-
-    if selection_requirement is None:
-        return errors.not_found(
-            "scholarship doesn't have selection requirement with question")
-
-    try:
-        for accepted_option in data:
-            accepted_option_id = int(accepted_option)
-            accepted_option = option_model.Option.query.get_or_404(
-                accepted_option_id)
-
-            selection_requirement.remove_accepted_option(accepted_option)
-    except ValueError:
-        return errors.bad_request("invalid id")
-
-    app.db.session.commit()
-
-    return flask.jsonify({
-        "selection_requirement_accepted_options":
-        flask.url_for(
-            "scholarships.get_selection_requirement_accepted_options",
-            scholarship_id=scholarship_id,
-            question_id=question_id)
-    })
-
-
-@scholarships_module.bp.route(
-    "/<int:scholarship_id>/selection_requirements""/<int:question_id>/accepted_options"
-)
-def get_selection_requirement_accepted_options(scholarship_id, question_id):
-    """
-    GET:
-        Args:
-            scholarship_id: scholarship id.
-            question_id: question id.
-
-    Responses:
-        200:
-            Retrieves list of the selection requirement's accepted_options.
-
-            Produces:
-                Application/json.
-
-        404:
-            scholarship not found, scholarship doesn't have selection
-            requirement.
-
-            Produces:
-                Application/json.
-    """
-
-    scholarship = scholarship_model.Scholarship.query.get_or_404(
-        scholarship_id)
-    selection_requirement = scholarship.selection_requirements.filter(
-        association_tables.SelectionRequirement.question_id ==
-        question_id).first()
-    if selection_requirement is None:
-        return errors.not_found(
-            "scholarship doesn't have selection requirement with question")
-
-    accepted_options = selection_requirement.accepted_options.all()
-
-    return flask.jsonify(
-        [accepted_option.to_dict() for accepted_option in accepted_options])

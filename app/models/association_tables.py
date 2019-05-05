@@ -217,10 +217,10 @@ selection_requirement_option = app.db.Table(
                   app.db.ForeignKey("selection_requirement.id")),
     app.db.Column("option_id", app.db.Integer, app.db.ForeignKey("option.id")))
 
-selection_requirement_accepted_option = app.db.Table(
-    "selection_requirement_accepted_option",
-    app.db.Column("selection_requirement_id", app.db.Integer,
-                  app.db.ForeignKey("selection_requirement.id")),
+question_option = app.db.Table(
+    "question_option",
+    app.db.Column("question_id", app.db.Integer,
+                  app.db.ForeignKey("question.id")),
     app.db.Column("option_id", app.db.Integer, app.db.ForeignKey("option.id")))
 
 
@@ -242,21 +242,13 @@ class SelectionRequirement(app.db.Model, base_mixin.BaseMixin,
         app.db.Integer, app.db.ForeignKey("scholarship.id"), nullable=False)
     question_id = app.db.Column(
         app.db.Integer, app.db.ForeignKey("question.id"), nullable=False)
+    description = app.db.Column(app.db.String(512), nullable=True)
     question = app.db.relationship("Question")
     options = app.db.relationship(
         "Option",
         secondary=selection_requirement_option,
-        cascade="all, delete-orphan",
         lazy="dynamic",
         backref=app.db.backref("selection_requirements", lazy="dynamic"))
-
-    accepted_options = app.db.relationship(
-        "Option",
-        secondary=selection_requirement_accepted_option,
-        cascade="all, delete-orphan",
-        lazy="dynamic",
-        backref=app.db.backref(
-            "accepted_selection_requirements", lazy="dynamic"))
 
     def __repr__(self):
         return f"<SelectionRequirement {self.id}>"
@@ -271,8 +263,7 @@ class SelectionRequirement(app.db.Model, base_mixin.BaseMixin,
         Returns:
             bool: True if requirement has option, False otherwise.
         """
-        return self.options.filter(
-            option_model.Option.id == option.id).count() > 0
+        return self.options.filter_by(option_id=option.id).count() > 0
 
     def add_option(self, option):
         """
@@ -296,41 +287,6 @@ class SelectionRequirement(app.db.Model, base_mixin.BaseMixin,
         if self.has_option(option):
             self.options.remove(option)
 
-    def has_accepted_option(self, option):
-        """
-        Checks if selection requirement has accepted option.
-
-        Args:
-            option: option to check.
-
-        Returns:
-            bool: True if requirement has option, False otherwise.
-        """
-        return self.accepted_options.filter(
-            option_model.Option.id == option.id).count() > 0
-
-    def add_accepted_option(self, option):
-        """
-        Adds accepted option to selection requirement.
-
-        Args:
-            option: option to add.
-        """
-
-        if self.has_option(option) and not self.has_accepted_option(option):
-            self.accepted_options.append(option)
-
-    def remove_accepted_option(self, option):
-        """
-        Removes accepted option to selection requirement.
-
-        Args:
-            option: option to remove.
-        """
-
-        if self.has_accepted_option(option):
-            self.accepted_options.remove(option)
-
     def to_dict(self):
 
         return {
@@ -340,11 +296,8 @@ class SelectionRequirement(app.db.Model, base_mixin.BaseMixin,
                 flask.url_for("questions.get_question", id=self.option_id),
                 "get_options":
                 flask.url_for(
-                    "scholarships.get_selection_requirement_option",
-                    id=self.scholarship_id),
-                "get_accepted_options":
-                flask.url_for(
-                    "scholarships.get_selection_requirement_accepted_option",
-                    id=self.scholarship_id)
+                    "scholarships.get_selection_requirement_options",
+                    scholarship_id=self.scholarship_id,
+                    question_id=self.question_id)
             }
         }
