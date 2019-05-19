@@ -234,14 +234,13 @@ class SelectionRequirement(app.db.Model, base_mixin.BaseMixin,
     question_id (integer): question id.
     question (SQLAlchemy.relationship): question relationship.
     options (SQLAlchemy.relationship):  options for question.
-    accepted_options (SQLAlchemy.relationship): accepted options by the entity.
     """
 
     id = app.db.Column(app.db.Integer, primary_key=True)
-    scholarship_id = app.db.Column(
-        app.db.Integer, app.db.ForeignKey("scholarship.id"), nullable=False)
-    question_id = app.db.Column(
-        app.db.Integer, app.db.ForeignKey("question.id"), nullable=False)
+    scholarship_id = app.db.Column(app.db.Integer,
+                                   app.db.ForeignKey("scholarship.id"))
+    question_id = app.db.Column(app.db.Integer,
+                                app.db.ForeignKey("question.id"))
     description = app.db.Column(app.db.String(512), nullable=True)
     question = app.db.relationship("Question")
     options = app.db.relationship(
@@ -253,7 +252,7 @@ class SelectionRequirement(app.db.Model, base_mixin.BaseMixin,
     def __repr__(self):
         return f"<SelectionRequirement {self.id}>"
 
-    def has_option(self, option):
+    def has_option(self, option_id):
         """
         Checks if selection requirement has option.
 
@@ -263,7 +262,8 @@ class SelectionRequirement(app.db.Model, base_mixin.BaseMixin,
         Returns:
             bool: True if requirement has option, False otherwise.
         """
-        return self.options.filter_by(option_id=option.id).count() > 0
+        return self.options.filter(
+            selection_requirement_option.c.option_id == option_id).count() > 0
 
     def add_option(self, option):
         """
@@ -273,7 +273,7 @@ class SelectionRequirement(app.db.Model, base_mixin.BaseMixin,
             option: option to add.
         """
 
-        if not self.has_option(option):
+        if not self.has_option(option.id):
             self.options.append(option)
 
     def remove_option(self, option):
@@ -284,7 +284,7 @@ class SelectionRequirement(app.db.Model, base_mixin.BaseMixin,
             option: option to remove.
         """
 
-        if self.has_option(option):
+        if self.has_option(option.id):
             self.options.remove(option)
 
     def to_dict(self):

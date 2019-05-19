@@ -17,6 +17,8 @@ from app.models.scholarship import Scholarship
 from app.models.program import Program
 from app.models.qualification_round import QualificationRound
 from app.models.association_tables import ProgramRequirement
+from app.models import question as question_model
+from app.models import option as option_model
 
 
 @pytest.fixture
@@ -46,6 +48,7 @@ def client(app):
 
 
 class AuthActions(object):
+
     def __init__(self, client, csrf_token=""):
         self._client = client
         self._csrf_token = csrf_token
@@ -106,13 +109,13 @@ def programs_requirement(app):
 def colleges(app):
     with app.app_context():
         for i in range(10):
-            college_details = CollegeDetails(
-                name=f"test college {i}")
+            college_details = CollegeDetails(name=f"test college {i}")
             college = College(college_details=college_details)
             db.session.add(college_details)
             db.session.add(college)
 
         db.session.commit()
+
 
 @pytest.fixture
 def scholarships(app):
@@ -126,6 +129,7 @@ def scholarships(app):
 
         db.session.commit()
 
+
 @pytest.fixture
 def questions(app):
     with app.app_context():
@@ -134,6 +138,7 @@ def questions(app):
             db.session.add(question)
 
         db.session.commit()
+
 
 @pytest.fixture
 def grades(app):
@@ -144,6 +149,7 @@ def grades(app):
 
         db.session.commit()
 
+
 @pytest.fixture
 def groups(app):
     with app.app_context():
@@ -152,3 +158,19 @@ def groups(app):
             db.session.add(group)
 
         db.session.commit()
+
+
+@pytest.fixture
+def questions(app):
+    with app.app_context():
+        for i in range(5):
+            db.session.add(question_model.Question(name=f"question test {i}"))
+            db.session.commit()
+
+
+@pytest.fixture
+def options(app):
+    with app.app_context():
+        for i in range(5):
+            db.session.add(option_model.Option(name=f"option test {i}"))
+            db.session.commit()

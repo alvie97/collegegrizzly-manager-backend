@@ -28,13 +28,13 @@ class Question(app.db.Model, base_mixin.BaseMixin,
 
         Args:
             self (class): question class.
-            option_id (integer): option id.
+            option (Option): option.
         Returns:
             Boolean: true if question has option, false otherwise.
 
         """
-        return self.options.filter(association_tables.question_option.
-                                   question_id == option_id).count() > 0
+        return self.options.filter(association_tables.question_option.c.
+                                   option_id == option_id).count() > 0
 
     def add_option(self, option):
         """Adds option to question.

@@ -60,7 +60,7 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
         lazy="dynamic")
 
     selection_requirements = app.db.relationship(
-        "SelectionRequirement", lazy="dynamic")
+        "SelectionRequirement", lazy="dynamic", cascade="all, delete-orphan")
 
     str_repr = "scholarship"
 
@@ -263,29 +263,31 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
             self.grade_requirement_groups.remove(group)
             app.db.session.delete(group)
 
-    def has_selection_requirement(self, question):
+    def has_selection_requirement(self, question_id):
         """
         Checks if scholarship has question as boolean requirement.
         Args:
-            question (object:Question): question to check.
+            question (integer): question id to check.
 
         Returns:
             bool: true if question is in selection_requirement, false
                 otherwise.
         """
 
-        return self.selection_requirements.filter_by(
-            question_id=question.id).count() > 0
+        return self.selection_requirements.filter(
+            association_tables.SelectionRequirement.question_id ==
+            question_id).count() > 0
 
-    def add_selection_requirement(self, question, description):
+    def add_selection_requirement(self, question, description=None):
         """
         Adds selection requirement to scholarship.
 
         Args:
             question: question to add.
+            description: question description. (optional)
         """
 
-        if not self.has_selection_requirement(question):
+        if not self.has_selection_requirement(question.id):
             requirement = association_tables.SelectionRequirement(
                 description=description)
             requirement.question = question
@@ -300,7 +302,7 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
             selection_requirement: selection requirement to remove.
         """
 
-        if self.has_selection_requirement(selection_requirement.question):
+        if self.has_selection_requirement(selection_requirement.question.id):
             self.selection_requirements.remove(selection_requirement)
 
     def for_pagination(self):
