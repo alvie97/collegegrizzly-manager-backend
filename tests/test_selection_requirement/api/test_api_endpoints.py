@@ -34,3 +34,65 @@ def test_add_selection_requirement_to_scholarship_success(
         response_json = response.get_json()
         assert response_json["selection_requirements"] == flask.url_for(
             "scholarships.get_selection_requirements", id=1)
+
+
+def test_add_selection_requirement_to_scholarship_failure(
+        app, client, auth, questions, scholarships):
+    """
+    Failure cases for adding a selection requirement to a scholarship
+    """
+    auth.login()
+
+    json = ["test"]
+
+    response = client.post(url + "/1/selection_requirements", json=json)
+
+    assert response.status_code == 400
+    assert response.get_json(
+    )["message"] == "no data provided or bad structure"
+
+    json = {}
+
+    response = client.post(url + "/1/selection_requirements", json=json)
+
+    assert response.status_code == 400
+    assert response.get_json(
+    )["message"] == "no data provided or bad structure"
+
+    json = {"question_id": 1}
+
+    response = client.post(url + "/1/selection_requirements", json=json)
+
+    assert response.status_code == 400
+    assert response.get_json()["message"] == "missing fields"
+
+    json = {"description": "asdfasdf"}
+
+    response = client.post(url + "/1/selection_requirements", json=json)
+
+    assert response.status_code == 400
+    assert response.get_json()["message"] == "missing fields"
+
+    json = {"question_id": "asdf23"}
+
+    response = client.post(url + "/1/selection_requirements", json=json)
+
+    assert response.status_code == 400
+    assert response.get_json()["message"] == "invalid id"
+
+    json = {"question_id": 1, "description": None}
+
+    response = client.post(url + "/9999/selection_requirements", json=json)
+
+    assert response.status_code == 404
+
+    json = {"question_id": 999999, "description": None}
+
+    response = client.post(url + "/1/selection_requirements", json=json)
+
+    assert response.status_code == 404
+
+    with app.app_context():
+        scholarship = scholarship_model.Scholarship.query.first()
+
+        assert scholarship.selection_requirements.count() == 0
