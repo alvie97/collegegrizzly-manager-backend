@@ -1337,6 +1337,8 @@ def delete_grade_requirement_group(scholarship_id, group_id):
     })
 
 
+
+
 @scholarships_module.bp.route(
     "/<int:id>/selection_requirements", methods=["POST"])
 def add_selection_requirement(id):
@@ -1401,7 +1403,6 @@ def add_selection_requirement(id):
         flask.url_for("scholarships.get_selection_requirements", id=id)
     })
 
-
 @scholarships_module.bp.route(
     "/<int:scholarship_id>/selection_requirements/<int:question_id>",
     methods=["DELETE"])
@@ -1439,9 +1440,9 @@ def delete_selection_requirement(scholarship_id, question_id):
 
     return flask.jsonify({
         "selection_requirements":
-        flask.url_for("scholarships.get_selection_requirements", id=id)
+        flask.url_for(
+            "scholarships.get_selection_requirements", id=scholarship_id)
     })
-
 
 @scholarships_module.bp.route("/<int:id>/selection_requirements")
 def get_selection_requirements(id):

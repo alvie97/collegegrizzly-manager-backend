@@ -1,4 +1,5 @@
 import flask
+import app as application
 from app.models import question as question_model
 from app.models import scholarship as scholarship_model
 
@@ -96,3 +97,82 @@ def test_add_selection_requirement_to_scholarship_failure(
         scholarship = scholarship_model.Scholarship.query.first()
 
         assert scholarship.selection_requirements.count() == 0
+
+
+def test_delete_selection_requirement_from_scholarship_success(
+        app, client, auth, questions, scholarships):
+    """
+    Tests delete selection requirement from scholarship success
+    """
+    auth.login()
+    with app.test_request_context():
+        scholarship = scholarship_model.Scholarship.query.first()
+        question = question_model.Question.query.first()
+
+        scholarship.add_selection_requirement(question)
+
+        application.db.session.commit()
+
+        assert scholarship.selection_requirements.count() == 1
+
+        response = client.delete(url + "/1/selection_requirements/1")
+        assert response.status_code == 200
+        assert scholarship.selection_requirements.count() == 0
+
+        assert response.get_json()["selection_requirements"] == flask.url_for(
+            "scholarships.get_selection_requirements", id=1)
+
+
+def test_delete_selection_requirement_from_scholarship_failure(
+        app, client, auth, questions, scholarships):
+    """
+    Tests delete selection requirement from scholarship failure
+    """
+    auth.login()
+    with app.app_context():
+        scholarship = scholarship_model.Scholarship.query.first()
+        question = question_model.Question.query.first()
+
+        scholarship.add_selection_requirement(question)
+
+        application.db.session.commit()
+
+        response = client.delete(url + "/999/selection_requirements/1")
+        assert response.status_code == 404
+
+        response = client.delete(url + "/1/selection_requirements/999")
+        assert response.status_code == 404
+        assert response.get_json(
+        )["message"] == "scholarship doesn't have selection requirement with question"
+
+        assert scholarship.selection_requirements.count() == 1
+
+
+def test_get_selection_requirements_from_scholarship_success(
+        app, client, auth, questions, scholarships):
+    """
+    Tests get selection requirement from scholarship success
+    """
+    auth.login()
+    with app.test_request_context():
+        scholarship = scholarship_model.Scholarship.query.first()
+        question = question_model.Question.query.first()
+
+        scholarship.add_selection_requirement(question)
+
+        application.db.session.commit()
+
+        response = client.get(url + "/1/selection_requirements")
+        selection_requirement = scholarship.selection_requirements.first()
+        assert response.status_code == 200
+        assert response.get_json() == [selection_requirement.to_dict()]
+
+
+def test_get_selection_requirements_from_scholarship_failure(
+        app, client, auth, questions, scholarships):
+    """
+    Tests get selection requirement from scholarship failure
+    """
+    auth.login()
+    response = client.get(url + "/9999/selection_requirements")
+    assert response.status_code == 404

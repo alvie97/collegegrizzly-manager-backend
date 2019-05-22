@@ -293,7 +293,7 @@ class SelectionRequirement(app.db.Model, base_mixin.BaseMixin,
             "id": self.id,
             "links": {
                 "get_question":
-                flask.url_for("questions.get_question", id=self.option_id),
+                flask.url_for("questions.get_question", id=self.question_id),
                 "get_options":
                 flask.url_for(
                     "scholarships.get_selection_requirement_options",
