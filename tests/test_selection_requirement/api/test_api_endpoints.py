@@ -176,3 +176,34 @@ def test_get_selection_requirements_from_scholarship_failure(
     auth.login()
     response = client.get(url + "/9999/selection_requirements")
     assert response.status_code == 404
+
+
+def test_add_option_to_selection_requirement_succes(
+        app, client, auth, scholarships, questions, options):
+    """
+    Tests add option to selection requirement, success cases
+    """
+    auth.login()
+
+    with app.app_context():
+        scholarship = scholarship_model.Scholarship.query.first()
+        question = question_model.Question.query.first()
+
+        scholarship.add_selection_requirement(question)
+        application.db.session.commit()
+
+        json = [1, 2, 3]
+
+    response = client.post(
+        url + "/1/selection_requirements/1/options", json=json)
+
+    assert response.status_code == 200
+
+    with app.app_context():
+
+        scholarship = scholarship_model.Scholarship.query.first()
+        selection_requirement = scholarship.selection_requirements.first()
+        options_array = selection_requirement.options.all()
+
+        for index, option in enumerate(options_array):
+            assert option.id == json[index]
