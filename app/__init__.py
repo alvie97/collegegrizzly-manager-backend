@@ -39,6 +39,7 @@ def create_app(config_class=config.Config):
     from app.api import programs
     from app.api import qualification_rounds
     from app.api import questions
+    from app.api import options
     from app.api import grades
     from app.api import grade_requirement_groups
 
@@ -52,6 +53,7 @@ def create_app(config_class=config.Config):
     app.register_blueprint(users.bp, url_prefix="/api/users")
     app.register_blueprint(submissions.bp, url_prefix="/api/submissions")
     app.register_blueprint(questions.bp, url_prefix="/api/questions")
+    app.register_blueprint(options.bp, url_prefix="/api/options")
     app.register_blueprint(details.bp, url_prefix="/api/details")
     app.register_blueprint(
         grade_requirement_groups.bp,

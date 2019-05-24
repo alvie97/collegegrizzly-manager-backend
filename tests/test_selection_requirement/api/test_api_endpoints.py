@@ -179,10 +179,10 @@ def test_get_selection_requirements_from_scholarship_failure(
     assert response.status_code == 404
 
 
-def test_add_option_to_selection_requirement_succes(
+def test_add_options_to_selection_requirement_succes(
         app, client, auth, scholarships, questions, options):
     """
-    Tests add option to selection requirement, success cases
+    Tests add options to selection requirement, success cases
     """
     auth.login()
 
@@ -210,10 +210,10 @@ def test_add_option_to_selection_requirement_succes(
             assert option.id == json[index]
 
 
-def test_add_option_to_selection_requirement_failure(
+def test_add_options_to_selection_requirement_failure(
         app, client, auth, questions, scholarships, options):
     """
-    Tests add option to selection requirement failure cases
+    Tests add options to selection requirement failure cases
     """
     auth.login()
 
@@ -267,7 +267,7 @@ def test_add_option_to_selection_requirement_failure(
 def test_delete_options_from_selection_requirement_success(
         app, client, auth, questions, scholarships, options):
     """
-    Tests add option to selection requirement failure cases
+    Tests delete options from selection requirement failure cases
     """
     auth.login()
 
@@ -302,3 +302,125 @@ def test_delete_options_from_selection_requirement_success(
                 assert selection_requirement.has_option(index)
             else:
                 assert not selection_requirement.has_option(index)
+
+
+def test_delete_options_from_selection_requirement_failure(
+        app, client, auth, questions, scholarships, options):
+    """
+    Tests delete options from selection requirement failure cases
+    """
+    auth.login()
+
+    with app.app_context():
+        scholarship = scholarship_model.Scholarship.query.first()
+        question = question_model.Question.query.first()
+        options_array = option_model.Option.query.limit(5)
+        scholarship.add_selection_requirement(question)
+        selection_requirement = scholarship.selection_requirements.first()
+        for option in options_array:
+            selection_requirement.add_option(option)
+
+        application.db.session.commit()
+
+        assert selection_requirement.options.count() == 5
+
+    json = {"option_id": 1}
+    response = client.delete(
+        url + "/1/selection_requirements/1/options", json=json)
+    assert response.status_code == 400
+    assert response.get_json(
+    )["message"] == "no data provided or bad structure"
+
+    json = []
+    response = client.delete(
+        url + "/1/selection_requirements/1/options", json=json)
+    assert response.status_code == 400
+    assert response.get_json(
+    )["message"] == "no data provided or bad structure"
+
+    json = [2, 3]
+    response = client.delete(
+        url + "/9999/selection_requirements/1/options", json=json)
+    assert response.status_code == 404
+
+    response = client.delete(
+        url + "/1/selection_requirements/9999/options", json=json)
+    assert response.status_code == 404
+    assert response.get_json(
+    )["message"] == "scholarship doesn't have selection requirement with question"
+
+    json = ["asdf", 3]
+    response = client.delete(
+        url + "/1/selection_requirements/1/options", json=json)
+    assert response.status_code == 400
+    assert response.get_json()["message"] == "invalid id"
+
+    with app.app_context():
+        scholarship = scholarship_model.Scholarship.query.first()
+        selection_requirement = scholarship.selection_requirements.first()
+
+        assert selection_requirement.options.count() == 5
+
+
+def test_get_options_from_selection_requirement_success(
+        app, client, auth, questions, scholarships, options):
+    """
+    Tests get options from selection requirement success cases
+    """
+    auth.login()
+
+    with app.app_context():
+        scholarship = scholarship_model.Scholarship.query.first()
+        question = question_model.Question.query.first()
+        options_array = option_model.Option.query.limit(5)
+        scholarship.add_selection_requirement(question)
+        selection_requirement = scholarship.selection_requirements.first()
+        for option in options_array:
+            selection_requirement.add_option(option)
+
+        application.db.session.commit()
+
+        assert selection_requirement.options.count() == 5
+
+    response = client.get(url + "/1/selection_requirements/1/options")
+
+    assert response.status_code == 200
+
+    options_json = response.get_json()
+
+    with app.test_request_context():
+        scholarship = scholarship_model.Scholarship.query.first()
+        selection_requirement = scholarship.selection_requirements.first()
+        options_array = selection_requirement.options.all()
+
+        for id, option in enumerate(options_json):
+            assert option == options_array[id].to_dict()
+
+
+def test_get_options_from_selection_requirement_failure(
+        app, client, auth, questions, scholarships, options):
+    """
+    Tests get options from selection requirement failure cases
+    """
+    auth.login()
+
+    with app.app_context():
+        scholarship = scholarship_model.Scholarship.query.first()
+        question = question_model.Question.query.first()
+        options_array = option_model.Option.query.limit(5)
+        scholarship.add_selection_requirement(question)
+        selection_requirement = scholarship.selection_requirements.first()
+        for option in options_array:
+            selection_requirement.add_option(option)
+
+        application.db.session.commit()
+
+        assert selection_requirement.options.count() == 5
+
+    response = client.get(url + "/9999/selection_requirements/1/options")
+    assert response.status_code == 404
+
+    response = client.get(url + "/1/selection_requirements/9999/options")
+    assert response.status_code == 404
+    assert response.get_json(
+    )["message"] == "scholarship doesn't have selection requirement with question"
