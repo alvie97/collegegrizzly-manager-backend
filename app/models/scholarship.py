@@ -269,7 +269,6 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
             self.grade_requirement_groups.remove(group)
             app.db.session.delete(group)
 
-<<<<<<< HEAD
     def has_location_requirement(self, location):
         """
         Checks if location requirement exists.
@@ -300,7 +299,7 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
 
         if self.has_location_requirement(location):
             self.location_requirements.remove(location)
-=======
+
     def has_selection_requirement(self, question_id):
         """
         Checks if scholarship has question as boolean requirement.
@@ -342,7 +341,6 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
 
         if self.has_selection_requirement(selection_requirement.question.id):
             self.selection_requirements.remove(selection_requirement)
->>>>>>> feature/selection_requirement
 
     def for_pagination(self):
         """ Serializes model for pagination.
