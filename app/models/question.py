@@ -18,7 +18,7 @@ class Question(app.db.Model, base_mixin.BaseMixin,
     options = app.db.relationship(
         "Option",
         secondary=association_tables.question_option,
-        backref=app.db.backref("question", lazy="dynamic"),
+        backref=app.db.backref("questions", lazy="dynamic"),
         lazy="dynamic")
 
     str_repr = "question"

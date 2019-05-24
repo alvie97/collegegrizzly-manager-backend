@@ -109,39 +109,7 @@ def create_option():
     app.db.session.add(option)
     app.db.session.commit()
 
-    return flask.jsonify({
-        "option":
-        flask.url_for("options.get_option", id=option.id)
-    }), 201
-
-
-@options_module.bp.route("/<int:id>")
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
-def get_option(id):
-    """Gets option.
-
-    Retrieves single option from database.
-
-    GET:
-        Params:
-            name (string) (required): option name.
-
-    Responses:
-        200:
-            Successfully retrieves option. Returns option.
-
-            produces:
-                Application/json.
-
-        404:
-            College not found, returns message.
-
-            produces:
-                Application/json.
-    """
-    option = option_model.Option.query.get_or_404(id)
-
-    return flask.jsonify(option.to_dict())
+    return flask.jsonify({"message": "option created"}), 201
 
 
 @options_module.bp.route("/<int:id>", methods=["DELETE"])

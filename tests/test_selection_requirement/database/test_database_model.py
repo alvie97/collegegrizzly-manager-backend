@@ -5,35 +5,6 @@ from app.models import association_tables
 from app.models import scholarship as scholarship_model
 
 
-def test_option_question_relationship(app, questions, options):
-    """
-    test option and question schema.
-    """
-
-    with app.app_context():
-        question = question_model.Question.query.first()
-        options_array = option_model.Option.query.limit(5).all()
-
-        for option in options_array:
-            question.add_option(option)
-
-        application.db.session.commit()
-        assert question.options.count() == 5
-
-        question.remove_option(options_array[2])
-        question.remove_option(options_array[4])
-
-        application.db.session.commit()
-
-        assert question.options.count() == 3
-
-        for id, option in enumerate(options_array):
-            if (id == 2 or id == 4):
-                assert not question.has_option(option.id)
-            else:
-                assert question.has_option(option.id)
-
-
 def test_selection_requirement(app, scholarships, questions, options):
     """
     Test selection requirement
