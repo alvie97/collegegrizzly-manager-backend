@@ -4,6 +4,7 @@ import marshmallow
 
 from app.api import questions as questions_module
 from app.models import question as question_model
+from app.models import option as option_model
 from app.api import errors
 from app.schemas import question_schema as question_schema_class
 from app import security
@@ -50,8 +51,8 @@ def get_questions():
             query, page, per_page, "questions.get_questions", search=search)
     else:
         query = question_model.Question.query
-        data = question_model.Question.to_collection_dict(query, page, per_page,
-                                                    "questions.get_questions")
+        data = question_model.Question.to_collection_dict(
+            query, page, per_page, "questions.get_questions")
 
     return flask.jsonify(data)
 
@@ -111,7 +112,7 @@ def create_question():
 
     return flask.jsonify({
         "question":
-            flask.url_for("questions.get_question", id=question.id)
+        flask.url_for("questions.get_question", id=question.id)
     }), 201
 
 
@@ -173,3 +174,141 @@ def delete_question(id):
     app.db.session.commit()
 
     return flask.jsonify({"message": "question deleted"})
+
+
+@questions_module.bp.route("/<int:id>/options")
+def get_options(id):
+    """Gets question options in database
+
+    Retrieves paginated list of all question options from database.
+
+    GET:
+        Request params:
+            page (int) (optional): Page number in paginated resource, defaults
+            to one.
+            per_page (int) (optional): Number of items to retrieve per page,
+            defaults to configuration constant PER_PAGE.
+            search (string) (optional): Search query keyword, defaults to "".
+
+    Responses:
+        200:
+            Successfully retrieves items from database. Returns paginated list
+            of questions. See PaginatedAPIMixin.
+
+            produces:
+                Application/json.
+    """
+    question = question_model.Question.query.get_or_404(id)
+
+    page = flask.request.args.get("page", 1, type=int)
+    per_page = flask.request.args.get(
+        "per_page", flask.current_app.config["PER_PAGE"], type=int)
+
+    return flask.jsonify(
+        option_model.Option.to_collection_dict(
+            question.options, page, per_page, "questions.get_options", id=id))
+
+
+@questions_module.bp.route("/<int:id>/options", methods=["POST"])
+def add_options(id):
+    """Adds options to question
+
+    POST:
+        params:
+            id (int): question id.
+
+        Request body:
+            list of options id.
+
+            consumes:
+                application/json.
+
+    Returns:
+        200:
+            link to get question options.
+
+            produces:
+                application/json.
+        404:
+            no question found
+
+            produces:
+                application/json.
+    """
+    data = flask.request.get_json() or []
+
+    if not data or not isinstance(data, list):
+        return errors.bad_request("no data provided or bad structure")
+
+    question = question_model.Question.query.get_or_404(id)
+
+    for option_id in data:
+        try:
+            option_id = int(option_id)
+        except ValueError:
+            return errors.bad_request("option id must be an integer")
+
+        option = option_model.Option.get(option_id)
+
+        if option is not None:
+            question.add_option(option)
+
+    app.db.session.commit()
+
+    return flask.jsonify({
+        "options":
+        flask.url_for("questions.get_options", id=id)
+    })
+
+
+@questions_module.bp.route("/<int:id>/options", methods=["DELETE"])
+def delete_options(id):
+    """removes options from question
+
+    DELETE:
+        params:
+            id (int): question id.
+
+        Request body:
+            list of options id.
+
+            consumes:
+                application/json.
+
+    Returns:
+        200:
+            link to get question options.
+
+            produces:
+                application/json.
+        404:
+            no question found
+
+            produces:
+                application/json.
+    """
+    data = flask.request.get_json() or []
+
+    if not data or not isinstance(data, list):
+        return errors.bad_request("no data provided or bad structure")
+
+    question = question_model.Question.query.get_or_404(id)
+
+    for option_id in data:
+
+        try:
+            option_id = int(option_id)
+        except ValueError:
+            return errors.bad_request("option id must be an integer")
+
+        option = option_model.Option.get(option_id)
+
+        if option is not None:
+            question.remove_option(option)
+
+    app.db.session.commit()
+
+    return flask.jsonify({
+        "options":
+        flask.url_for("questions.get_options", id=id)
+    })

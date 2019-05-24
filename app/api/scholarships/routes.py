@@ -12,6 +12,7 @@ from app.models import association_tables
 from app.models import program as program_model
 from app.models import question as question_model
 from app.models import location as location_model
+from app.models import option as option_model
 from app.schemas import scholarship_schema as scholarship_schema_class
 from app.schemas import detail_schema as detail_schema_class
 from app.api import errors
@@ -1338,6 +1339,7 @@ def delete_grade_requirement_group(scholarship_id, group_id):
     })
 
 
+<<<<<<< HEAD
 @scholarships_module.bp.route(
     "/<int:id>/location_requirements", methods=["POST"])
 def add_location_requirement(id):
@@ -1368,6 +1370,47 @@ def add_location_requirement(id):
 
         200:
             Successfully adds location requirement.
+=======
+
+
+@scholarships_module.bp.route(
+    "/<int:id>/selection_requirements", methods=["POST"])
+def add_selection_requirement(id):
+    """
+    Adds selection requirement to scholarship.
+
+    POST:
+        Args:
+            id: scholarship id.
+
+        Consumes:
+            Application/json.
+
+        Request Body:
+            question id.
+
+            Example::
+                { "question_id": question id., "description": question description}
+
+    Responses:
+        200:
+            selection requirement added successfully.
+
+            Produces:
+                Application/json.
+
+        400:
+            badly structured data, invalid id.
+
+            Produces:
+                Application/json.
+
+        404:
+            scholarship or question not found.
+
+            Produces:
+                Application/json.
+>>>>>>> feature/selection_requirement
     """
 
     data = flask.request.get_json() or {}
@@ -1376,6 +1419,7 @@ def add_location_requirement(id):
         return errors.bad_request("no data provided or bad structure")
 
     try:
+<<<<<<< HEAD
         state = data["state"]
         county = data["county"]
         place = data["place"]
@@ -1419,10 +1463,165 @@ def add_location_requirement(id):
     app.db.session.add(location)
 
     scholarship.add_location_requirement(location)
+=======
+
+        question_id = int(data["question_id"])
+        question = question_model.Question.query.get_or_404(question_id)
+        scholarship = scholarship_model.Scholarship.query.get_or_404(id)
+
+        scholarship.add_selection_requirement(question, data["description"])
+
+    except KeyError:
+        return errors.bad_request("missing fields")
+    except ValueError:
+        return errors.bad_request("invalid id")
 
     app.db.session.commit()
 
     return flask.jsonify({
+        "selection_requirements":
+        flask.url_for("scholarships.get_selection_requirements", id=id)
+    })
+
+@scholarships_module.bp.route(
+    "/<int:scholarship_id>/selection_requirements/<int:question_id>",
+    methods=["DELETE"])
+def delete_selection_requirement(scholarship_id, question_id):
+    """
+    DELETE:
+        Args:
+            scholarship_id: scholarship id.
+            question_id: question id.
+
+    Responses:
+        200:
+            Selection requirement removed successfully.
+
+            Produces:
+                Application/json.
+
+        404:
+            scholarship not found or does not have selection requirement.
+
+            Produces:
+                Application/json.
+    """
+    scholarship = scholarship_model.Scholarship.query.get_or_404(
+        scholarship_id)
+    selection_requirement = scholarship.selection_requirements.filter_by(
+        question_id=question_id).first()
+
+    if selection_requirement is None:
+        return errors.not_found(
+            "scholarship doesn't have selection requirement with question")
+
+    scholarship.remove_selection_requirement(selection_requirement)
+    app.db.session.commit()
+
+    return flask.jsonify({
+        "selection_requirements":
+        flask.url_for(
+            "scholarships.get_selection_requirements", id=scholarship_id)
+    })
+
+@scholarships_module.bp.route("/<int:id>/selection_requirements")
+def get_selection_requirements(id):
+    """
+    Gets selection requirements.
+
+    GET:
+        Args:
+            id: scholarship id.
+
+    Responses:
+        200:
+            Retrieves list of selection requirements.
+
+            Produces:
+                Application/json.
+        404:
+            scholarship not found.
+
+            Produces:
+                Application/json.
+    """
+
+    scholarship = scholarship_model.Scholarship.query.get_or_404(id)
+    selection_requirements = scholarship.selection_requirements.all()
+
+    return flask.jsonify(
+        [requirement.to_dict() for requirement in selection_requirements])
+
+
+@scholarships_module.bp.route(
+    "/<int:scholarship_id>/selection_requirements/<int:question_id>/options",
+    methods=["POST"])
+def add_options_to_selection_requirement(scholarship_id, question_id):
+    """
+    Adds options to selection requirement.
+
+    POST:
+        Args:
+            scholarship_id: scholarship id.
+            question_id: question id.
+
+        Consumes:
+            Application/json.
+
+        Request Body:
+            list of options to add.
+
+            Example::
+                [option id]
+
+    Response:
+        200:
+            Added options to selection requirement.
+
+            Produces:
+                Application/json.
+        400:
+            no data provided or bad structure, missing fields, data can't be
+            converted to string.
+
+            Produces:
+                Application/json.
+        404:
+            scholarship not found, or scholarship doesn't have selection
+            requirement.
+
+            Produces:
+                Application/json.
+    """
+    data = flask.request.get_json() or []
+
+    if not data or not isinstance(data, list):
+        return errors.bad_request("no data provided or bad structure")
+
+    scholarship = scholarship_model.Scholarship.query.get_or_404(
+        scholarship_id)
+    selection_requirement = scholarship.selection_requirements.filter_by(
+        question_id=question_id).first()
+
+    if selection_requirement is None:
+        return errors.not_found(
+            "scholarship doesn't have selection requirement with question")
+
+    try:
+        for option_id in data:
+            option = option_model.Option.query.get(int(option_id))
+
+            if option is not None:
+                selection_requirement.add_option(option)
+
+    except ValueError:
+        return errors.bad_request("option id must be an integer")
+>>>>>>> feature/selection_requirement
+
+    app.db.session.commit()
+
+    return flask.jsonify({
+<<<<<<< HEAD
         "location_requirements":
         flask.url_for("colleges.get_location_requirements", id=id)
     }), 201
@@ -1442,15 +1641,60 @@ def delete_location_requirement(scholarship_id, location_id):
     Responses:
         200:
             location removed successfully.
+=======
+        "selection_requirement_options":
+        flask.url_for(
+            "scholarships.get_selection_requirement_options",
+            scholarship_id=scholarship_id,
+            question_id=question_id)
+    })
+
+
+@scholarships_module.bp.route(
+    "/<int:scholarship_id>/selection_requirements/<int:question_id>/options",
+    methods=["DELETE"])
+def delete_options_from_selection_requirement(scholarship_id, question_id):
+    """
+    Removes options from selection requirement.
+
+    POST:
+        Args:
+            scholarship_id: scholarship id.
+            question_id: question id.
+
+        Consumes:
+            Application/json.
+
+        Request Body:
+            list of options to add.
+
+            Example::
+                [option id, ...]
+
+    Response:
+        200:
+            Added options to selection requirement.
+
+            Produces:
+                Application/json.
+        400:
+            no data provided or bad structure, invalid id
+>>>>>>> feature/selection_requirement
 
             Produces:
                 Application/json.
         404:
+<<<<<<< HEAD
             scholarship not found or scholarship does not have location requirement.
+=======
+            scholarship not found, scholarship doesn't have selection
+            requirement, option not found.
+>>>>>>> feature/selection_requirement
 
             Produces:
                 Application/json.
     """
+<<<<<<< HEAD
 
     scholarship = scholarship_model.Scholarship.query.get_or_404(
         scholarship_id)
@@ -1481,17 +1725,72 @@ def get_location_requirements(id):
     Responses:
         200:
             Gets list of location requirements.
+=======
+    data = flask.request.get_json() or []
+
+    if not data or not isinstance(data, list):
+        return errors.bad_request("no data provided or bad structure")
+
+    scholarship = scholarship_model.Scholarship.query.get_or_404(
+        scholarship_id)
+    selection_requirement = scholarship.selection_requirements.filter_by(
+        question_id=question_id).first()
+
+    if selection_requirement is None:
+        return errors.not_found(
+            "scholarship doesn't have selection requirement with question")
+
+    try:
+        for option_id in data:
+            option = option_model.Option.query.get_or_404(int(option_id))
+
+            selection_requirement.remove_option(option)
+    except ValueError:
+        return errors.bad_request("invalid id")
+
+    app.db.session.commit()
+
+    return flask.jsonify({
+        "selection_requirement_options":
+        flask.url_for(
+            "scholarships.get_selection_requirement_options",
+            scholarship_id=scholarship_id,
+            question_id=question_id)
+    })
+
+
+@scholarships_module.bp.route(
+    "/<int:scholarship_id>/selection_requirements/<int:question_id>/options")
+def get_selection_requirement_options(scholarship_id, question_id):
+    """
+    Gets selection requirement options.
+
+    GET:
+        Args:
+            scholarship_id: scholarship id.
+            question_id: question id.
+
+    Responses:
+        200:
+            Retrieves list of the selection requirement's options.
+>>>>>>> feature/selection_requirement
 
             Produces:
                 Application/json.
 
         404:
+<<<<<<< HEAD
             scholarship not found.
+=======
+            scholarship not found, scholarship doesn't have selection
+            requirement.
+>>>>>>> feature/selection_requirement
 
             Produces:
                 Application/json.
     """
 
+<<<<<<< HEAD
     scholarship = scholarship_model.Scholarship.query.get_or_404(id)
     accepted_locations = scholarship.location_requirements.filter_by(
         blacklist=False).all()
@@ -1503,3 +1802,17 @@ def get_location_requirements(id):
         "blacklisted":
         [location.to_dict() for location in blacklisted_locations],
     })
+=======
+    scholarship = scholarship_model.Scholarship.query.get_or_404(
+        scholarship_id)
+    selection_requirement = scholarship.selection_requirements.filter_by(
+        question_id=question_id).first()
+
+    if selection_requirement is None:
+        return errors.not_found(
+            "scholarship doesn't have selection requirement with question")
+
+    options = selection_requirement.options.all()
+
+    return flask.jsonify([option.to_dict() for option in options])
+>>>>>>> feature/selection_requirement

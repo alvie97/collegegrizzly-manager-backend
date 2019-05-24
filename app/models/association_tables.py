@@ -1,7 +1,8 @@
-import app
 import flask
+
+import app
+from app.models import option as option_model
 from app.models.common import base_mixin, date_audit, paginated_api_mixin
-from app.models import grade as grade_model
 
 college_major = app.db.Table(
     "college_major",
@@ -207,4 +208,96 @@ class GradeRequirement(app.db.Model, base_mixin.BaseMixin,
                 "max": self.max
             },
             "get_grade": flask.url_for("grades.get_grade", id=self.grade.id)
+        }
+
+
+selection_requirement_option = app.db.Table(
+    "selection_requirement_option",
+    app.db.Column("selection_requirement_id", app.db.Integer,
+                  app.db.ForeignKey("selection_requirement.id")),
+    app.db.Column("option_id", app.db.Integer, app.db.ForeignKey("option.id")))
+
+question_option = app.db.Table(
+    "question_option",
+    app.db.Column("question_id", app.db.Integer,
+                  app.db.ForeignKey("question.id")),
+    app.db.Column("option_id", app.db.Integer, app.db.ForeignKey("option.id")))
+
+
+class SelectionRequirement(app.db.Model, base_mixin.BaseMixin,
+                           paginated_api_mixin.PaginatedAPIMixin):
+    """
+    Selection requirement association table model.
+
+    id (integer): model id.
+    scholarship_id (integer): scholarship id.
+    question_id (integer): question id.
+    question (SQLAlchemy.relationship): question relationship.
+    options (SQLAlchemy.relationship):  options for question.
+    """
+
+    id = app.db.Column(app.db.Integer, primary_key=True)
+    scholarship_id = app.db.Column(app.db.Integer,
+                                   app.db.ForeignKey("scholarship.id"))
+    question_id = app.db.Column(app.db.Integer,
+                                app.db.ForeignKey("question.id"))
+    description = app.db.Column(app.db.String(512), nullable=True)
+    question = app.db.relationship("Question")
+    options = app.db.relationship(
+        "Option",
+        secondary=selection_requirement_option,
+        lazy="dynamic",
+        backref=app.db.backref("selection_requirements", lazy="dynamic"))
+
+    def __repr__(self):
+        return f"<SelectionRequirement {self.id}>"
+
+    def has_option(self, option_id):
+        """
+        Checks if selection requirement has option.
+
+        Args:
+            option: option to check.
+
+        Returns:
+            bool: True if requirement has option, False otherwise.
+        """
+        return self.options.filter(
+            selection_requirement_option.c.option_id == option_id).count() > 0
+
+    def add_option(self, option):
+        """
+        Adds option to selection requirement.
+
+        Args:
+            option: option to add.
+        """
+
+        if not self.has_option(option.id):
+            self.options.append(option)
+
+    def remove_option(self, option):
+        """
+        Removes option to selection requirement.
+
+        Args:
+            option: option to remove.
+        """
+
+        if self.has_option(option.id):
+            self.options.remove(option)
+
+    def to_dict(self):
+
+        return {
+            "id": self.id,
+            "links": {
+                "get_question":
+                flask.url_for("questions.get_question", id=self.question_id),
+                "get_options":
+                flask.url_for(
+                    "scholarships.get_selection_requirement_options",
+                    scholarship_id=self.scholarship_id,
+                    question_id=self.question_id)
+            }
         }
