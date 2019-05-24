@@ -2,6 +2,7 @@ import flask
 import app as application
 from app.models import question as question_model
 from app.models import scholarship as scholarship_model
+from app.models import option as option_model
 
 url = "/api/scholarships"
 
@@ -207,3 +208,97 @@ def test_add_option_to_selection_requirement_succes(
 
         for index, option in enumerate(options_array):
             assert option.id == json[index]
+
+
+def test_add_option_to_selection_requirement_failure(
+        app, client, auth, questions, scholarships, options):
+    """
+    Tests add option to selection requirement failure cases
+    """
+    auth.login()
+
+    with app.app_context():
+        scholarship = scholarship_model.Scholarship.query.first()
+        question = question_model.Question.query.first()
+
+        scholarship.add_selection_requirement(question)
+        application.db.session.commit()
+
+    json = {"option_id": 1}
+    response = client.post(
+        url + "/1/selection_requirements/1/options", json=json)
+    assert response.status_code == 400
+    assert response.get_json(
+    )["message"] == "no data provided or bad structure"
+
+    json = []
+    response = client.post(
+        url + "/1/selection_requirements/1/options", json=json)
+    assert response.status_code == 400
+    assert response.get_json(
+    )["message"] == "no data provided or bad structure"
+
+    json = [1, 2, 3]
+
+    response = client.post(
+        url + "/999/selection_requirements/1/options", json=json)
+    assert response.status_code == 404
+
+    response = client.post(
+        url + "/1/selection_requirements/999/options", json=json)
+    assert response.status_code == 404
+    assert response.get_json(
+    )["message"] == "scholarship doesn't have selection requirement with question"
+
+    json = [1, "ert", 3]
+
+    response = client.post(
+        url + "/1/selection_requirements/1/options", json=json)
+    assert response.status_code == 400
+    assert response.get_json()["message"] == "option id must be an integer"
+
+    with app.app_context():
+        scholarship = scholarship_model.Scholarship.query.first()
+        selection_requirement = scholarship.selection_requirements.first()
+
+        assert selection_requirement.options.count() == 0
+
+
+def test_delete_options_from_selection_requirement_success(
+        app, client, auth, questions, scholarships, options):
+    """
+    Tests add option to selection requirement failure cases
+    """
+    auth.login()
+
+    with app.app_context():
+        scholarship = scholarship_model.Scholarship.query.first()
+        question = question_model.Question.query.first()
+        options_array = option_model.Option.query.limit(5)
+        scholarship.add_selection_requirement(question)
+        selection_requirement = scholarship.selection_requirements.first()
+        for option in options_array:
+            selection_requirement.add_option(option)
+
+        application.db.session.commit()
+
+        assert selection_requirement.options.count() == 5
+
+    json = [1, 3, 5]
+
+    response = client.delete(
+        url + "/1/selection_requirements/1/options", json=json)
+
+    assert response.status_code == 200
+
+    with app.app_context():
+        scholarship = scholarship_model.Scholarship.query.first()
+        selection_requirement = scholarship.selection_requirements.first()
+
+        assert selection_requirement.options.count() == 2
+
+        for index in range(1, 6):
+            if index in [2, 4]:
+                assert selection_requirement.has_option(index)
+            else:
+                assert not selection_requirement.has_option(index)

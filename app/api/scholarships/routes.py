@@ -1534,8 +1534,6 @@ def add_options_to_selection_requirement(scholarship_id, question_id):
             if option is not None:
                 selection_requirement.add_option(option)
 
-    except KeyError:
-        return errors.bad_request("missing fields")
     except ValueError:
         return errors.bad_request("option id must be an integer")
 
