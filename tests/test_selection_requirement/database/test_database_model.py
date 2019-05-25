@@ -31,7 +31,6 @@ def test_selection_requirement(app, scholarships, questions, options):
         scholarship.remove_selection_requirement(selection_requirement)
 
         assert scholarship.selection_requirements.count() == 3
-        assert association_tables.SelectionRequirement.query.count() == 3
 
         for id, question in enumerate(questions_array):
             if (id == 2 or id == 4):

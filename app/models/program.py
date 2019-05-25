@@ -71,6 +71,7 @@ class Program(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
             "name": self.name,
             "description": self.description,
             "links": {
-                "get_qualification_rounds": flask.url_for("programs.get_qualification_rounds", id=self.id)
+                "get_qualification_rounds":
+                flask.url_for("programs.get_qualification_rounds", id=self.id)
             }
         }
