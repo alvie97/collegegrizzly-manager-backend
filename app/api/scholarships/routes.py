@@ -91,6 +91,7 @@ def post_scholarship():
 
             Example::
                 {
+                    "college_id": college id to add,
                     "name": "example name"
                 }
     Responses:
@@ -121,10 +122,12 @@ def post_scholarship():
     if not data:
         return errors.bad_request("no data provided")
 
-    college_id = flask.request.args.get("college_id", type=int)
-
-    if college_id is None:
-        return errors.bad_request("no college provided")
+    try:
+        college_id = int(data["college_id"])
+    except KeyError:
+        return errors.bad_request("missing college id")
+    except ValueError:
+        return errors.bad_request("college id must be an integer")
 
     try:
         scholarship_schema.load(data)

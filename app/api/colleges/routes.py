@@ -7,6 +7,7 @@ import app
 import re
 from app.api import colleges as colleges_module
 from app import security, utils
+from app.api import errors
 from app.models import college as college_model
 from app.models import college_details as college_details_model
 from app.models import major as major_model
@@ -111,7 +112,7 @@ def post_college():
     data = flask.request.get_json() or {}
 
     if not data:
-        return flask.jsonify({"message": "no data provided"}), 400
+        return errors.bad_request("no data provided")
 
     try:
         college_schema.load(data)
@@ -132,8 +133,7 @@ def post_college():
 
 @colleges_module.bp.route("/<int:id>", methods=["GET"])
 # @security.user_role([security.ADMINISTRATOR, security.BASIC])
-@utils.get_entity(college_model.College)
-def get_college(college):
+def get_college(id):
     """Gets college.
 
     Retrieves single college from database.
@@ -155,13 +155,13 @@ def get_college(college):
             produces:
                 Application/json.
     """
+    college = college_model.College.query.get_or_404(id)
     return flask.jsonify(college.to_dict())
 
 
 @colleges_module.bp.route("/<int:id>", methods=["PATCH"])
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
-@utils.get_entity(college_model.College)
-def patch_college(college):
+def patch_college(id):
     """Edits college.
 
     PATCH:
@@ -213,6 +213,8 @@ def patch_college(college):
     except marshmallow.ValidationError as err:
         return flask.jsonify(err.messages), 400
 
+    college = college_model.College.query.get_or_404(id)
+
     college_details = college.college_details
     college_details.update(data)
     app.db.session.commit()
@@ -224,8 +226,7 @@ def patch_college(college):
 
 @colleges_module.bp.route("/<int:id>", methods=["DELETE"])
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
-@utils.get_entity(college_model.College)
-def delete_college(college):
+def delete_college(id):
     """Deletes college.
 
     Deletes college from database.
@@ -246,6 +247,7 @@ def delete_college(college):
             produces:
                 Application/json.
     """
+    college = college_model.College.query.get_or_404(id)
     app.db.session.delete(college)
     app.db.session.commit()
 
@@ -769,3 +771,13 @@ def get_location_requirements(id):
         "blacklisted":
         [location.to_dict() for location in blacklisted_locations],
     })
+
+
+@colleges_module.bp.route("/<int:id>/scholarships")
+def get_scholarships(id):
+    pass
+
+
+@colleges_module.bp.route("/<int:id>/scholarships")
+def remove_scholarships(id):
+    pass
