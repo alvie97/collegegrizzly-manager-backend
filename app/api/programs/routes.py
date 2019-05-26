@@ -205,8 +205,10 @@ def patch_program(id):
     app.db.session.commit()
     return flask.jsonify({
         "program":
-            flask.url_for("programs.get_program", id=program.id)
+        flask.url_for("programs.get_program", id=program.id)
     })
+
+
 @programs_module.bp.route("/<int:id>", methods=["DELETE"])
 @security.user_role([security.ADMINISTRATOR, security.BASIC])
 def delete_program(id):
@@ -274,13 +276,16 @@ def add_qualification_rounds(id):
     program = program_model.Program.query.get_or_404(id)
 
     for qualification_round_id in data:
-        qualification_round = qualification_round_model.QualificationRound.get(qualification_round_id)
+        qualification_round = qualification_round_model.QualificationRound.query.get_or_404(
+            qualification_round_id)
 
-        if qualification_round is not None:
-            program.add_qualification_round(qualification_round)
+        program.add_qualification_round(qualification_round)
+
+    app.db.session.commit()
 
     return flask.jsonify({
-        "qualification_rounds": flask.url_for("programs.get_qualification_rounds", id=id)
+        "qualification_rounds":
+        flask.url_for("programs.get_qualification_rounds", id=id)
     })
 
 
@@ -316,7 +321,11 @@ def get_qualification_rounds(id):
 
     return flask.jsonify(
         qualification_round_model.QualificationRound.to_collection_dict(
-            program.qualification_rounds, page, per_page, "programs.get_qualification_rounds", id=id))
+            program.qualification_rounds,
+            page,
+            per_page,
+            "programs.get_qualification_rounds",
+            id=id))
 
 
 # remove qualification_rounds
@@ -355,11 +364,15 @@ def remove_qualification_rounds(id):
     program = program_model.Program.query.get_or_404(id)
 
     for qualification_round_id in data:
-        qualification_round = qualification_round_model.QualificationRound.get(qualification_round_id)
+        qualification_round = qualification_round_model.QualificationRound.get(
+            qualification_round_id)
 
         if qualification_round is not None:
             program.remove_qualification_round(qualification_round)
 
+    app.db.session.commit()
+
     return flask.jsonify({
-        "qualification_rounds": flask.url_for("programs.get_qualification_rounds", id=id)
+        "qualification_rounds":
+        flask.url_for("programs.get_qualification_rounds", id=id)
     })

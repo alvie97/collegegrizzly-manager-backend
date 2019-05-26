@@ -39,8 +39,8 @@ class Program(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
 
         """
         return self.qualification_rounds.filter(
-            qualification_round_model.QualificationRound.id ==
-            qualification_round_id).count() > 0
+            association_tables.program_qualification_round.c.
+            qualification_round_id == qualification_round_id).count() > 0
 
     def add_qualification_round(self, qualification_round):
         """Adds qualification_round to program.

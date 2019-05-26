@@ -128,23 +128,25 @@ def test_program_qualification_rounds(app, client, auth):
         program = Program(name="test program")
         db.session.add(program)
 
-        for i in range(5):
+        for i in range(1, 6):
             db.session.add(
                 QualificationRound(name=f"test qualification_round {i}"))
 
         db.session.commit()
 
-        response = client.post(
-            url + f"/{program.id}/qualification_rounds",
-            json=[x for x in range(5)])
+    response = client.post(
+        url + "/1/qualification_rounds", json=[x for x in range(1, 6)])
 
+    assert response.status_code == 200
+
+    with app.app_context():
+        program = Program.query.first()
         assert program.qualification_rounds.count() == 5
-
-        assert response.status_code == 200
 
     qualification_rounds_url = response.get_json()["qualification_rounds"]
 
     response = client.get(qualification_rounds_url)
+    assert response.status_code == 200
 
     qualification_rounds = response.get_json()["items"]
 
@@ -155,15 +157,18 @@ def test_program_qualification_rounds(app, client, auth):
         for qualification_round in qualification_rounds:
             assert program.qualification_rounds.filter(
                 program_qualification_round.c.qualification_round_id ==
-                qualification_round["id"]) > 0
+                qualification_round["id"]).count() > 0
 
     response = client.delete(
-        url + f"/{program.id}/qualification_rounds",
-        json=[x for x in range(3)])
+        url + "/1/qualification_rounds", json=[x for x in range(1, 4)])
+
+    assert response.status_code == 200
 
     qualification_rounds_url = response.get_json()["qualification_rounds"]
 
     response = client.get(qualification_rounds_url)
+
+    assert response.status_code == 200
 
     qualification_rounds = response.get_json()["items"]
 
@@ -176,4 +181,4 @@ def test_program_qualification_rounds(app, client, auth):
         for qualification_round in qualification_rounds:
             assert program.qualification_rounds.filter(
                 program_qualification_round.c.qualification_round_id ==
-                qualification_round["id"]) > 0
+                qualification_round["id"]).count() > 0
