@@ -62,9 +62,19 @@ def test_create_grade(app, client, auth):
     response = client.post(url, json=data)
     assert response.status_code == 400
 
+    data = {"name": "test post grade", "max": -1, "min": -3}
+
+    response = client.post(url, json=data)
+    assert response.status_code == 400
+    messages = response.get_json()
+    assert messages["max"][0] == "grade max should be bigger or equal to 0"
+    assert messages["min"][0] == "grade min should be bigger or equal to 0"
+
+    data["max"] = 200
     data["min"] = 100
 
     response = client.post(url, json=data)
+    assert response.status_code == 201
     response_data = response.get_json()
     grade_url = response_data["grade"]
 

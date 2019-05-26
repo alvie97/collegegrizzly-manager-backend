@@ -14,3 +14,15 @@ class GradeSchema(marshmallow.Schema):
     min = marshmallow.fields.Decimal(
         2, required=True, error_messages={"required": "min required"})
     description = marshmallow.fields.String()
+
+    @marshmallow.validates("max")
+    def validate_max(self, value):
+        if value < 0:
+            raise marshmallow.ValidationError(
+                "grade max should be bigger or equal to 0")
+
+    @marshmallow.validates("min")
+    def validate_min(self, value):
+        if value < 0:
+            raise marshmallow.ValidationError(
+                "grade min should be bigger or equal to 0")
