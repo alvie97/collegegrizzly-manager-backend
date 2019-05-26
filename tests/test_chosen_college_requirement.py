@@ -270,12 +270,16 @@ def test_get_scholarship_chosen_college_requirement(app, client, auth,
         scholarship.chosen_college_requirement = questions_for_scholarship
         application.db.session.commit()
 
-        auth.login()
+    auth.login()
 
-        url = "/api/scholarships/1/chosen_college_requirement"
-        response = client.get(url)
-        data = response.get_json()
+    url = "/api/scholarships/1/chosen_college_requirement"
+    response = client.get(url)
 
+    assert response.status_code == 200
+    data = response.get_json()
+    assert len(data) > 0
+
+    with app.test_request_context():
         for question_requirement in data:
             question = question_model.Question.first(
                 id=question_requirement["id"])
