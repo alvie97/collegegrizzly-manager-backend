@@ -28,6 +28,7 @@ def create_app(config_class=config.Config):
     cors.init_app(app)
     flask_uploads.configure_uploads(app, photos)
 
+    from app.security import utils as security_utils
     from app import auth
     from app import site
     from app.api import colleges
@@ -43,23 +44,47 @@ def create_app(config_class=config.Config):
     from app.api import grades
     from app.api import grade_requirement_groups
 
+    security_utils.protect_blueprint(colleges.bp)
     app.register_blueprint(colleges.bp, url_prefix="/api/colleges")
+
+    security_utils.protect_blueprint(scholarships.bp)
     app.register_blueprint(scholarships.bp, url_prefix="/api/scholarships")
+
+    security_utils.protect_blueprint(majors.bp)
     app.register_blueprint(majors.bp, url_prefix="/api/majors")
+
+    security_utils.protect_blueprint(qualification_rounds.bp)
     app.register_blueprint(
         qualification_rounds.bp, url_prefix="/api/qualification_rounds")
+
+    security_utils.protect_blueprint(programs.bp)
     app.register_blueprint(programs.bp, url_prefix="/api/programs")
+
+    security_utils.protect_blueprint(grades.bp)
     app.register_blueprint(grades.bp, url_prefix="/api/grades")
+
+    security_utils.protect_blueprint(users.bp)
     app.register_blueprint(users.bp, url_prefix="/api/users")
+
+    security_utils.protect_blueprint(submissions.bp)
     app.register_blueprint(submissions.bp, url_prefix="/api/submissions")
+
+    security_utils.protect_blueprint(questions.bp)
     app.register_blueprint(questions.bp, url_prefix="/api/questions")
+
+    security_utils.protect_blueprint(options.bp)
     app.register_blueprint(options.bp, url_prefix="/api/options")
+
+    security_utils.protect_blueprint(details.bp)
     app.register_blueprint(details.bp, url_prefix="/api/details")
+
+    security_utils.protect_blueprint(grade_requirement_groups.bp)
     app.register_blueprint(
         grade_requirement_groups.bp,
         url_prefix="/api/grade_requirement_groups")
 
     app.register_blueprint(auth.bp, url_prefix="/auth")
+
     app.register_blueprint(site.bp)
 
     from app.errors import error_404

@@ -110,3 +110,23 @@ def user_role(roles):
         return f_wrapper
 
     return user_role_decorator
+
+
+def protect_blueprint(blueprint):
+    """
+    applies login decorators to blueprint routes
+    """
+
+    @blueprint.before_request
+    @token_auth.authentication_required
+    def before_request():
+        pass
+
+    @blueprint.after_request
+    def after_request(response):
+
+        if hasattr(flask.g, "new_access_token") and flask.g.new_access_token:
+            token_auth.set_access_token_cookie(response,
+                                               flask.g.new_access_token)
+
+        return response
