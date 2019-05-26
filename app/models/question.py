@@ -28,7 +28,7 @@ class Question(app.db.Model, base_mixin.BaseMixin,
 
         Args:
             self (class): question class.
-            option (Option): option.
+            option_id (int): option id.
         Returns:
             Boolean: true if question has option, false otherwise.
 

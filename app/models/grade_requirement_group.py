@@ -28,17 +28,17 @@ class GradeRequirementGroup(app.db.Model, base_mixin.BaseMixin,
     def __repr__(self):
         return f"<GradeRequirementGroup {self.id}>"
 
-    def has_grade_requirement(self, grade):
+    def has_grade_requirement(self, grade_id):
         """checks if grade requirement group has grade requirement.
 
         Args:
-            grade (grade_model.Grade): grade model instance.
+            grade_id (int): grade id.
         Returns:
             bool: True if grade requirement group has grade requirement.
         """
         return self.grade_requirements.filter(
-            association_tables.GradeRequirement.grade_id == grade.
-            id).count() > 0
+            association_tables.GradeRequirement.grade_id ==
+            grade_id).count() > 0
 
     def add_grade_requirement(self, grade, min=None, max=None):
         """Adds grade requirement to grade requirement group.
@@ -58,7 +58,7 @@ class GradeRequirementGroup(app.db.Model, base_mixin.BaseMixin,
             if min > max:
                 return
 
-        if not self.has_grade_requirement(grade):
+        if not self.has_grade_requirement(grade.id):
             grade_requirement = association_tables.GradeRequirement(
                 min=min, max=max)
             app.db.session.add(grade_requirement)
@@ -71,7 +71,7 @@ class GradeRequirementGroup(app.db.Model, base_mixin.BaseMixin,
         Args:
             grade (grade_model.Grade): grade model instance.
         """
-        if self.has_grade_requirement(grade):
+        if self.has_grade_requirement(grade.id):
             grade_requirement = self.grade_requirements.filter(
                 association_tables.GradeRequirement.grade_id == grade.
                 id).first()

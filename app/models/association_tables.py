@@ -77,18 +77,18 @@ class ProgramRequirement(app.db.Model, base_mixin.BaseMixin,
         return f"<ProgramRequirement {self.program.name} " \
             f"for scholarship {self.scholarship_id}>"
 
-    def has_qualification_round(self, qualification_round):
+    def has_qualification_round(self, qualification_round_id):
         """Checks if program requirement has qualification round.
 
         Args:
-            qualification_round (QualificationRound): qualification round.
+            qualification_round_id (int): qualification round id.
 
         Returns:
             bool: True if program has qualification round, false otherwise.
         """
         return self.qualification_rounds.filter(
             program_requirement_qualification_round.c.qualification_round_id ==
-            qualification_round.id).count() > 0
+            qualification_round_id).count() > 0
 
     def add_qualification_round(self, qualification_round):
         """Adds qualification round to program requirement.
@@ -96,7 +96,7 @@ class ProgramRequirement(app.db.Model, base_mixin.BaseMixin,
         Args:
             qualification_round (QualificationRound): qualification round
         """
-        if not self.has_qualification_round(qualification_round):
+        if not self.has_qualification_round(qualification_round.id):
             self.qualification_rounds.append(qualification_round)
 
     def remove_qualification_round(self, qualification_round):
@@ -105,7 +105,7 @@ class ProgramRequirement(app.db.Model, base_mixin.BaseMixin,
         Args:
             qualification_round (QualificationRound): qualification round
         """
-        if self.has_qualification_round(qualification_round):
+        if self.has_qualification_round(qualification_round.id):
             self.qualification_rounds.remove(qualification_round)
 
     def to_dict(self):
@@ -258,7 +258,7 @@ class SelectionRequirement(app.db.Model, base_mixin.BaseMixin,
         Checks if selection requirement has option.
 
         Args:
-            option: option to check.
+            option_id (int): option id to check.
 
         Returns:
             bool: True if requirement has option, False otherwise.

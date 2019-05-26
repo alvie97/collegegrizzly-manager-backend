@@ -24,8 +24,8 @@ def test_chosen_college_requirement_scholarship_schema(app):
         questions = question_model.Question.get_all()
 
         for question in questions:
-            assert scholarship.has_chosen_college_requirement(question) == (
-                not question.name == "question 9")
+            assert scholarship.has_chosen_college_requirement(
+                question.id) == (not (question.name == "question 9"))
 
         for question in questions:
             scholarship.remove_chosen_college_requirement(question)

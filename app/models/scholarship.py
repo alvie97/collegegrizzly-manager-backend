@@ -150,11 +150,11 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
             association_tables.scholarships_needed.c.needed_id ==
             scholarship_needed.id).count() > 0
 
-    def has_chosen_college_requirement(self, question):
+    def has_chosen_college_requirement(self, question_id):
         """
         Checks if scholarship has question as chosen college requirement.
         Args:
-            question (object:Question): question to check.
+            question_id (int): question id to check.
 
         Returns:
             bool: true if question is in chosen_college_requirement, false
@@ -163,7 +163,7 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
 
         return self.chosen_college_requirement.filter(
             association_tables.chosen_college_requirement.c.question_id ==
-            question.id).count() > 0
+            question_id).count() > 0
 
     def add_chosen_college_requirement(self, question):
         """
@@ -173,7 +173,7 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
             question (obj:Question): question to add.
         """
 
-        if not self.has_chosen_college_requirement(question):
+        if not self.has_chosen_college_requirement(question.id):
             self.chosen_college_requirement.append(question)
 
     def remove_chosen_college_requirement(self, question):
@@ -184,14 +184,14 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
             question (obj:Question): question to remove.
         """
 
-        if self.has_chosen_college_requirement(question):
+        if self.has_chosen_college_requirement(question.id):
             self.chosen_college_requirement.remove(question)
 
-    def has_boolean_requirement(self, question):
+    def has_boolean_requirement(self, question_id):
         """
         Checks if scholarship has question as boolean requirement.
         Args:
-            question (object:Question): question to check.
+            question_id (int): question id to check.
 
         Returns:
             bool: true if question is in boolean_requirement, false
@@ -199,8 +199,8 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
         """
 
         return self.boolean_requirement.filter(
-            association_tables.BooleanRequirement.question_id == question.
-            id).count() > 0
+            association_tables.BooleanRequirement.question_id ==
+            question_id).count() > 0
 
     def add_boolean_requirement(self, question, required_value):
         """
@@ -211,7 +211,7 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
             required_value (boolean): required boolean value.
         """
 
-        if not self.has_boolean_requirement(question):
+        if not self.has_boolean_requirement(question.id):
             boolean_requirement = association_tables.BooleanRequirement(
                 required_value=required_value)
             boolean_requirement.question = question
@@ -226,23 +226,22 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
             question (obj:Question): question to remove.
         """
 
-        if self.has_boolean_requirement(question):
+        if self.has_boolean_requirement(question.id):
             requirement = self.boolean_requirement.filter(
                 question_model.Question.id == question.id).first()
             self.boolean_requirement.remove(requirement)
 
-    def has_grade_requirement_group(self, group):
+    def has_grade_requirement_group(self, group_id):
         """
         checks if scholarship has grade requirement group.
 
         Args:
-            group (association_tables.GradeRequirementGroup): grade requirement
-                group.
+            group_id (int): grade requirement group id.
 
         Returns:
             bool: True if scholarship has grade requirement group.
         """
-        return self.grade_requirement_groups.filter_by(id=group.id).count() > 0
+        return self.grade_requirement_groups.filter_by(id=group_id).count() > 0
 
     def create_grade_requirement_group(self):
         """creates and adds grade requirement group to scholarship.
@@ -264,18 +263,18 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
             group (association_tables.GradeRequirementGroup): grade requirement
                 group.
         """
-        if self.has_grade_requirement_group(group):
+        if self.has_grade_requirement_group(group.id):
             self.grade_requirement_groups.remove(group)
             app.db.session.delete(group)
 
-    def has_location_requirement(self, location):
+    def has_location_requirement(self, location_id):
         """
         Checks if location requirement exists.
 
-        location: location to check.
+        location_id (int): location id to check.
         """
 
-        return self.location_requirements.filter_by(id=location.id).count() > 0
+        return self.location_requirements.filter_by(id=location_id).count() > 0
 
     def add_location_requirement(self, location):
         """
@@ -285,7 +284,7 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
             location: location model instance to add.
         """
 
-        if not self.has_location_requirement(location):
+        if not self.has_location_requirement(location.id):
             self.location_requirements.append(location)
 
     def remove_location_requirement(self, location):
@@ -296,7 +295,7 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
             location: location model instance to remove.
         """
 
-        if self.has_location_requirement(location):
+        if self.has_location_requirement(location.id):
             self.location_requirements.remove(location)
 
     def has_selection_requirement(self, question_id):

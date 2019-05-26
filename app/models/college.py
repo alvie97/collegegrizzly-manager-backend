@@ -142,20 +142,19 @@ class College(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
         if self.has_detail(detail.name):
             self.additional_details.remove(detail)
 
-    def has_grade_requirement_group(self, group):
+    def has_grade_requirement_group(self, group_id):
         """
         checks if college has grade requirement group.
 
         Args:
-            group (association_tables.GradeRequirementGroup): grade requirement
-                group.
+            group_id (int): grade requirement group id.
 
         Returns:
             bool: True if college has grade requirement group.
         """
         return self.grade_requirement_groups.filter(
-            grade_requirement_group.GradeRequirementGroup.id == group.
-            id).count() > 0
+            grade_requirement_group.GradeRequirementGroup.id ==
+            group_id).count() > 0
 
     def create_grade_requirement_group(self):
         """creates and adds grade requirement group to college."""
@@ -171,18 +170,18 @@ class College(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
             group (association_tables.GradeRequirementGroup): grade requirement
                 group.
         """
-        if self.has_grade_requirement_group(group):
+        if self.has_grade_requirement_group(group.id):
             self.grade_requirement_groups.remove(group)
             app.db.session.delete(group)
 
-    def has_location_requirement(self, location):
+    def has_location_requirement(self, location_id):
         """
         Checks if location requirement exists.
 
-        location: location to check.
+        location_id (int): location id to check.
         """
 
-        return self.location_requirements.filter_by(id=location.id).count() > 0
+        return self.location_requirements.filter_by(id=location_id).count() > 0
 
     def add_location_requirement(self, location):
         """
@@ -192,7 +191,7 @@ class College(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
             location: location model instance to add.
         """
 
-        if not self.has_location_requirement(location):
+        if not self.has_location_requirement(location.id):
             self.location_requirements.append(location)
 
     def remove_location_requirement(self, location):
@@ -203,7 +202,7 @@ class College(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
             location: location model instance to remove.
         """
 
-        if self.has_location_requirement(location):
+        if self.has_location_requirement(location.id):
             self.location_requirements.remove(location)
 
     def for_pagination(self):
