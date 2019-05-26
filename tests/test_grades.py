@@ -123,12 +123,11 @@ def test_delete_grade(app, client, auth):
     auth.login()
 
     with app.app_context():
-        grade = Grade(name="test grade")
+        grade = Grade(name="test grade", min=1, max=2)
         db.session.add(grade)
         db.session.commit()
+        assert Grade.query.count() == 1
 
-        client.delete(url + f"/{grade.id}")
-
-        grade = Grade.get(grade.id)
-
-        assert grade is None
+        response = client.delete(url + "/1")
+        assert response.status_code == 200
+        assert Grade.query.count() == 0
