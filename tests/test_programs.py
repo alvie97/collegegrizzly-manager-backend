@@ -1,6 +1,7 @@
 from app import db
 from app.models.qualification_round import QualificationRound
 from app.models.program import Program
+from app.models.association_tables import program_qualification_round
 
 url = "/api/programs"
 
@@ -69,12 +70,16 @@ def test_create_program(app, client, auth):
         assert program is not None
         assert program.to_dict() == response_data
 
+
 def test_patch_program(app, client, auth):
     # update program
 
     auth.login()
 
-    patch_data = {"name": "test patch program", "description": "test description"}
+    patch_data = {
+        "name": "test patch program",
+        "description": "test description"
+    }
 
     with app.app_context():
         program = Program(name="test program")
@@ -96,6 +101,7 @@ def test_patch_program(app, client, auth):
         assert program is not None
         assert program.name == patch_data["name"]
 
+
 def test_delete_program(app, client, auth):
     """ create programs and edit them"""
 
@@ -113,6 +119,7 @@ def test_delete_program(app, client, auth):
 
         assert program is None
 
+
 def test_program_qualification_rounds(app, client, auth):
     """ tests add, read and remove qualification_rounds """
     auth.login()
@@ -122,32 +129,51 @@ def test_program_qualification_rounds(app, client, auth):
         db.session.add(program)
 
         for i in range(5):
-            db.session.add(QualificationRound(name=f"test qualification_round {i}"))
+            db.session.add(
+                QualificationRound(name=f"test qualification_round {i}"))
 
         db.session.commit()
 
         response = client.post(
-            url + f"/{program.id}/qualification_rounds", json=[x for x in range(5)])
+            url + f"/{program.id}/qualification_rounds",
+            json=[x for x in range(5)])
 
-        qualification_rounds_url = response.get_json()["qualification_rounds"]
+        assert program.qualification_rounds.count() == 5
 
-        response = client.get(qualification_rounds_url)
+        assert response.status_code == 200
 
-        qualification_rounds = response.get_json()["items"]
+    qualification_rounds_url = response.get_json()["qualification_rounds"]
+
+    response = client.get(qualification_rounds_url)
+
+    qualification_rounds = response.get_json()["items"]
+
+    assert len(qualification_rounds) > 0
+
+    with app.app_context():
+        program = Program.query.first()
+        for qualification_round in qualification_rounds:
+            assert program.qualification_rounds.filter(
+                program_qualification_round.c.qualification_round_id ==
+                qualification_round["id"]) > 0
+
+    response = client.delete(
+        url + f"/{program.id}/qualification_rounds",
+        json=[x for x in range(3)])
+
+    qualification_rounds_url = response.get_json()["qualification_rounds"]
+
+    response = client.get(qualification_rounds_url)
+
+    qualification_rounds = response.get_json()["items"]
+
+    assert len(qualification_rounds) > 0
+
+    with app.app_context():
+        program = Program.query.first()
+        assert program.qualification_rounds.count() == 2
 
         for qualification_round in qualification_rounds:
-            qualification_round_record = QualificationRound.get(qualification_round["id"])
-
-            assert qualification_round_record is not None
-
-        response = client.delete(
-            url + f"/{program.id}/qualification_rounds", json=[x for x in range(3)])
-
-        qualification_rounds_url = response.get_json()["qualification_rounds"]
-
-        response = client.get(qualification_rounds_url)
-
-        qualification_rounds = response.get_json()["items"]
-
-        for qualification_round in qualification_rounds:
-            assert qualification_round["id"] in [3, 4]
+            assert program.qualification_rounds.filter(
+                program_qualification_round.c.qualification_round_id ==
+                qualification_round["id"]) > 0
