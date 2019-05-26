@@ -86,8 +86,9 @@ class ProgramRequirement(app.db.Model, base_mixin.BaseMixin,
         Returns:
             bool: True if program has qualification round, false otherwise.
         """
-        return self.qualification_rounds.filter_by(
-            id=qualification_round.id).count() > 0
+        return self.qualification_rounds.filter(
+            program_requirement_qualification_round.c.qualification_round_id ==
+            qualification_round.id).count() > 0
 
     def add_qualification_round(self, qualification_round):
         """Adds qualification round to program requirement.

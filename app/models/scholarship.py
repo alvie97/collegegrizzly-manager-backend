@@ -242,9 +242,7 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
         Returns:
             bool: True if scholarship has grade requirement group.
         """
-        return self.grade_requirement_groups.filter(
-            grade_requirement_group.GradeRequirementGroup.id == group.
-            id).count() > 0
+        return self.grade_requirement_groups.filter_by(id=group.id).count() > 0
 
     def create_grade_requirement_group(self):
         """creates and adds grade requirement group to scholarship.

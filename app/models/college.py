@@ -76,7 +76,8 @@ class College(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
             Boolean: true if college has major, false otherwise.
 
         """
-        return self.majors.filter(major_model.Major.id == major_id).count() > 0
+        return self.majors.filter(association_tables.college_major.c.major_id
+                                  == major_id).count() > 0
 
     def add_major(self, major):
         """Adds major to college.

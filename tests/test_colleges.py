@@ -218,6 +218,8 @@ def test_get_college_scholarships(app, client, auth, scholarships, colleges):
         for scholarship in scholarships:
             college.scholarships.append(scholarship)
 
+        db.session.commit()
+
         assert college.scholarships.count() == 5
 
     auth.login()
@@ -228,11 +230,11 @@ def test_get_college_scholarships(app, client, auth, scholarships, colleges):
 
     scholarships = response.get_json()["items"]
 
-    assert len(scholarship) > 0
+    assert len(scholarships) > 0
 
     with app.app_context():
         college = College.query.first()
 
         for scholarship in scholarships:
             assert college.scholarships.filter_by(
-                id=scholarship["id"], name=scholarship["name"]).count() == 1
+                id=scholarship["id"]).count() == 1
