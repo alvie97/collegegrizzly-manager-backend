@@ -13,7 +13,6 @@ program_schema = program_schema_class.ProgramSchema()
 
 
 @programs_module.bp.route("/", strict_slashes=False)
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_programs():
     """Gets programs in database
 
@@ -58,7 +57,6 @@ def get_programs():
 
 
 @programs_module.bp.route("/", strict_slashes=False, methods=["POST"])
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def create_program():
     """ Creates program
 
@@ -117,7 +115,6 @@ def create_program():
 
 
 @programs_module.bp.route("/<int:id>")
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_program(id):
     """Gets program.
 
@@ -146,7 +143,6 @@ def get_program(id):
 
 
 @programs_module.bp.route("/<int:id>", methods=["PATCH"])
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def patch_program(id):
     """Edits program.
 
@@ -210,7 +206,6 @@ def patch_program(id):
 
 
 @programs_module.bp.route("/<int:id>", methods=["DELETE"])
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def delete_program(id):
     """Deletes program.
 
@@ -242,7 +237,6 @@ def delete_program(id):
 
 # add qualification_rounds
 @programs_module.bp.route("/<int:id>/qualification_rounds", methods=["POST"])
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def add_qualification_rounds(id):
     """Adds qualification_rounds to program
 
@@ -291,7 +285,6 @@ def add_qualification_rounds(id):
 
 # read qualification_rounds
 @programs_module.bp.route("/<int:id>/qualification_rounds")
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_qualification_rounds(id):
     """Gets program qualification_rounds in database
 
@@ -330,7 +323,6 @@ def get_qualification_rounds(id):
 
 # remove qualification_rounds
 @programs_module.bp.route("/<int:id>/qualification_rounds", methods=["DELETE"])
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def remove_qualification_rounds(id):
     """removes qualification_rounds to program
 

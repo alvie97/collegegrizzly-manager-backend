@@ -13,7 +13,6 @@ detail_schema = detail_schema_class.DetailSchema()
 
 
 @details_module.bp.route("/", strict_slashes=False)
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_details():
     """Gets details in database
 
@@ -58,7 +57,6 @@ def get_details():
 
 
 @details_module.bp.route("/<int:id>")
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_detail(id):
     """Gets detail.
 
@@ -87,7 +85,6 @@ def get_detail(id):
 
 
 @details_module.bp.route("/<int:id>", methods=["PATCH"])
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def patch_detail(id):
     """Edits detail.
 
@@ -166,7 +163,6 @@ def patch_detail(id):
 
 
 @details_module.bp.route("/<int:id>/college")
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_college(id):
     """Retrieves college that owns this detail.
 

@@ -13,7 +13,6 @@ major_schema = major_schema_class.MajorSchema()
 
 
 @majors_module.bp.route("/", strict_slashes=False)
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_majors():
     """Gets majors in database
 
@@ -58,7 +57,6 @@ def get_majors():
 
 
 @majors_module.bp.route("/", strict_slashes=False, methods=["POST"])
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def create_major():
     """ Creates major
 
@@ -117,7 +115,6 @@ def create_major():
 
 
 @majors_module.bp.route("/<int:id>")
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_major(id):
     """Gets major.
 
@@ -146,7 +143,6 @@ def get_major(id):
 
 
 @majors_module.bp.route("/<int:id>", methods=["PATCH"])
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def patch_major(id):
     """Edits major.
 
@@ -210,7 +206,6 @@ def patch_major(id):
 
 
 @majors_module.bp.route("/<int:id>", methods=["DELETE"])
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def delete_major(id):
     """Deletes major.
 
@@ -241,7 +236,6 @@ def delete_major(id):
 
 
 @majors_module.bp.route("/<int:id>/colleges")
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_colleges(id):
     """Retrieves colleges that has this major.
 

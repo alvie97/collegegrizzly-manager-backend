@@ -12,7 +12,6 @@ grade_schema = grade_schema_class.GradeSchema()
 
 
 @grades_module.bp.route("/", strict_slashes=False)
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_grades():
     """Gets grades in database
 
@@ -51,13 +50,12 @@ def get_grades():
     else:
         query = grade_model.Grade.query
         data = grade_model.Grade.to_collection_dict(query, page, per_page,
-                                                          "grades.get_grades")
+                                                    "grades.get_grades")
 
     return flask.jsonify(data)
 
 
 @grades_module.bp.route("/", strict_slashes=False, methods=["POST"])
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def create_grade():
     """ Creates grade
 
@@ -107,7 +105,6 @@ def create_grade():
     if grade is not None:
         return errors.bad_request(f"grade '{data['name']}' already exists")
 
-
     grade = grade_model.Grade(**data)
 
     app.db.session.add(grade)
@@ -115,12 +112,11 @@ def create_grade():
 
     return flask.jsonify({
         "grade":
-            flask.url_for("grades.get_grade", id=grade.id)
+        flask.url_for("grades.get_grade", id=grade.id)
     }), 201
 
 
 @grades_module.bp.route("/<int:id>")
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_grade(id):
     """Gets grade.
 
@@ -146,8 +142,9 @@ def get_grade(id):
     grade = grade_model.Grade.query.get_or_404(id)
 
     return flask.jsonify(grade.to_dict())
+
+
 @grades_module.bp.route("/<int:id>", methods=["PATCH"])
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def patch_grade(id):
     """Edits grade.
     PATCH:
@@ -188,7 +185,6 @@ def patch_grade(id):
     if not data:
         return flask.jsonify({"message": "no data provided"}), 400
 
-
     try:
         grade_schema.load(data, partial=True)
     except marshmallow.ValidationError as err:
@@ -200,12 +196,11 @@ def patch_grade(id):
     app.db.session.commit()
     return flask.jsonify({
         "grade":
-            flask.url_for("grades.get_grade", id=grade.id)
+        flask.url_for("grades.get_grade", id=grade.id)
     })
 
 
 @grades_module.bp.route("/<int:id>", methods=["DELETE"])
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def delete_grade(id):
     """Deletes grade.
 

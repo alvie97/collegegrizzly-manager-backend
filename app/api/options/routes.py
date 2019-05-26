@@ -12,7 +12,6 @@ option_schema = option_schema_class.OptionSchema()
 
 
 @options_module.bp.route("/", strict_slashes=False)
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_options():
     """Gets options in database
 
@@ -57,7 +56,6 @@ def get_options():
 
 
 @options_module.bp.route("/", strict_slashes=False, methods=["POST"])
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def create_option():
     """ Creates option
 
@@ -113,7 +111,6 @@ def create_option():
 
 
 @options_module.bp.route("/<int:id>", methods=["DELETE"])
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def delete_option(id):
     """Deletes option.
 
@@ -144,7 +141,6 @@ def delete_option(id):
 
 
 @options_module.bp.route("/<int:id>/questions")
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_questions(id):
     """Retrieves questions that has this option.
 

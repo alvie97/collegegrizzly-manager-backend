@@ -23,7 +23,6 @@ detail_schema = detail_schema_class.DetailSchema()
 
 
 @scholarships_module.bp.route("/", methods=["GET"], strict_slashes=False)
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_scholarships():
     """Gets scholarships in database
 
@@ -77,7 +76,6 @@ def get_scholarships():
 
 
 @scholarships_module.bp.route("/", methods=["POST"], strict_slashes=False)
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def post_scholarship():
     """Creates scholarship.
 
@@ -150,7 +148,6 @@ def post_scholarship():
 
 
 @scholarships_module.bp.route("/<int:id>", methods=["GET"])
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_scholarship(id):
     """Gets scholarship.
 
@@ -178,7 +175,6 @@ def get_scholarship(id):
 
 
 @scholarships_module.bp.route("/<int:id>", methods=["PATCH"])
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def patch_scholarship(id):
     """Edits scholarship.
 
@@ -243,7 +239,6 @@ def patch_scholarship(id):
 
 
 @scholarships_module.bp.route("/<int:id>", methods=["DELETE"])
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def delete_scholarship(id):
     """Deletes scholarship.
 
@@ -274,7 +269,7 @@ def delete_scholarship(id):
 
 
 @scholarships_module.bp.route("/<int:id>/additional_details")
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
+
 def get_scholarship_additional_details(id):
     """Gets scholarship additional details.
 
@@ -300,7 +295,7 @@ def get_scholarship_additional_details(id):
 
 
 @scholarships_module.bp.route("/<int:id>/additional_details", methods=["POST"])
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
+
 def post_scholarship_additional_details(id):
     """Adds scholarship additional detail.
 
@@ -374,7 +369,7 @@ def post_scholarship_additional_details(id):
 @scholarships_module.bp.route(
     "/<int:scholarship_id>/additional_details/<int:detail_id>",
     methods=["DELETE"])
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
+
 def delete_scholarship_additional_details(scholarship_id, detail_id):
     """Adds scholarship additional detail.
 
@@ -415,7 +410,7 @@ def delete_scholarship_additional_details(scholarship_id, detail_id):
 
 
 @scholarships_module.bp.route("/<string:id>/scholarships_needed")
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
+
 def get_scholarships_needed(id):
     """Gets scholarships needed for scholarship.
 
@@ -471,7 +466,7 @@ def get_scholarships_needed(id):
 
 @scholarships_module.bp.route(
     "/<string:id>/scholarships_needed", methods=["POST"])
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
+
 def post_scholarships_needed(id):
     """adds scholarship needed to scholarship.
 
@@ -534,7 +529,7 @@ def post_scholarships_needed(id):
 
 @scholarships_module.bp.route(
     "/<string:id>/scholarships_needed", methods=["DELETE"])
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
+
 def delete_scholarships_needed(id):
     """removes scholarship needed to scholarship.
 

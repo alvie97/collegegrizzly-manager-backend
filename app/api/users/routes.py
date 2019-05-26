@@ -8,13 +8,12 @@ from sqlalchemy import and_, not_
 from app import db
 from app.utils import get_entity
 from app.models.user import User
-from app.security.utils import ADMINISTRATOR, get_current_user, user_role
+from app.security.utils import ADMINISTRATOR, get_current_user
 
 from . import bp
 
 
 @bp.route("/", methods=["POST"], strict_slashes=False)
-@user_role([ADMINISTRATOR])
 def create_user():
 
     data = request.get_json() or {}
@@ -31,7 +30,6 @@ def create_user():
 
 
 @bp.route("/", strict_slashes=False)
-@user_role([ADMINISTRATOR])
 def get_users():
 
     user_id = int(get_current_user())
@@ -59,14 +57,12 @@ def get_users():
 
 
 @bp.route("/<string:username>")
-@user_role([ADMINISTRATOR])
 @get_entity(User, "username")
 def get_user(user):
     return jsonify({"user": user.to_dict()})
 
 
 @bp.route("/<string:username>", methods=["PATCH"])
-@user_role([ADMINISTRATOR])
 @get_entity(User, "username")
 def edit_user(user: User):
     data = request.get_json() or {}
@@ -80,7 +76,6 @@ def edit_user(user: User):
 
 
 @bp.route("/<string:username>", methods=["DELETE"])
-@user_role([ADMINISTRATOR])
 @get_entity(User, "username")
 def delete_user(user):
     db.session.delete(user)

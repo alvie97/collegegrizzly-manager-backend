@@ -13,7 +13,6 @@ question_schema = question_schema_class.QuestionSchema()
 
 
 @questions_module.bp.route("/", strict_slashes=False)
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_questions():
     """Gets questions in database
 
@@ -58,7 +57,6 @@ def get_questions():
 
 
 @questions_module.bp.route("/", strict_slashes=False, methods=["POST"])
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def create_question():
     """ Creates question
 
@@ -117,7 +115,6 @@ def create_question():
 
 
 @questions_module.bp.route("/<int:id>")
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_question(id):
     """Gets question.
 
@@ -146,7 +143,6 @@ def get_question(id):
 
 
 @questions_module.bp.route("/<int:id>", methods=["DELETE"])
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def delete_question(id):
     """Deletes question.
 

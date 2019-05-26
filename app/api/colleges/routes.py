@@ -21,7 +21,6 @@ detail_schema = detail_schema_class.DetailSchema()
 
 
 @colleges_module.bp.route("/", methods=["GET"], strict_slashes=False)
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_colleges():
     """Gets colleges in database
 
@@ -69,7 +68,6 @@ def get_colleges():
 
 
 @colleges_module.bp.route("/", methods=["POST"], strict_slashes=False)
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def post_college():
     """Creates college.
 
@@ -131,7 +129,6 @@ def post_college():
 
 
 @colleges_module.bp.route("/<int:id>", methods=["GET"])
-# @security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_college(id):
     """Gets college.
 
@@ -159,7 +156,6 @@ def get_college(id):
 
 
 @colleges_module.bp.route("/<int:id>", methods=["PATCH"])
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def patch_college(id):
     """Edits college.
 
@@ -224,7 +220,6 @@ def patch_college(id):
 
 
 @colleges_module.bp.route("/<int:id>", methods=["DELETE"])
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def delete_college(id):
     """Deletes college.
 
@@ -255,7 +250,6 @@ def delete_college(id):
 
 # add majors
 @colleges_module.bp.route("/<int:id>/majors", methods=["POST"])
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def add_majors(id):
     """Adds majors to college
 
@@ -301,7 +295,6 @@ def add_majors(id):
 
 # read majors
 @colleges_module.bp.route("/<int:id>/majors")
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_majors(id):
     """Gets college majors in database
 
@@ -336,7 +329,6 @@ def get_majors(id):
 
 # remove majors
 @colleges_module.bp.route("/<int:id>/majors", methods=["DELETE"])
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def remove_majors(id):
     """removes majors to college
 
@@ -381,7 +373,6 @@ def remove_majors(id):
 
 
 @colleges_module.bp.route("/<int:id>/additional_details")
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def get_college_additional_details(id):
     """Gets college additional details.
 
@@ -407,7 +398,6 @@ def get_college_additional_details(id):
 
 
 @colleges_module.bp.route("/<int:id>/additional_details", methods=["POST"])
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def post_college_additional_details(id):
     """Adds college addtional detail.
 
@@ -479,7 +469,6 @@ def post_college_additional_details(id):
 
 @colleges_module.bp.route(
     "/<int:college_id>/additional_details/<int:detail_id>", methods=["DELETE"])
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 def delete_college_additional_details(college_id, detail_id):
     """Adds college addtional detail.
 

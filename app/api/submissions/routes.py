@@ -10,7 +10,6 @@ from app.api import submissions
 
 
 @submissions.bp.route("/submit/<string:public_id>", methods=["POST"])
-@security.user_role([security.ADMINISTRATOR, security.BASIC])
 @utils.get_entity(college_model.College, "public_id")
 def submit(college):
     """Creates submission.
@@ -55,7 +54,6 @@ def submit(college):
 
 
 @submissions.bp.route("/", strict_slashes=False)
-@security.user_role([security.ADMINISTRATOR])
 def get_submissions():
     """Gets submissions in database
 
@@ -91,7 +89,6 @@ def get_submissions():
 
 @submissions.bp.route(
     "/assign_submission/<string:public_id>", methods=["POST"])
-@security.user_role([security.ADMINISTRATOR])
 @utils.get_entity(submission_model.Submission, "public_id")
 def assign_submission(submission):
     """Assigns submission to user.
@@ -125,7 +122,6 @@ def assign_submission(submission):
 
 
 @submissions.bp.route("/<string:public_id>/approve", methods=["POST"])
-@security.user_role([security.ADMINISTRATOR])
 @utils.get_entity(submission_model.Submission, "public_id")
 def approve_submission(submission):
     """Approves submission.
@@ -174,7 +170,6 @@ def approve_submission(submission):
 
 
 @submissions.bp.route("/<string:public_id>/decline", methods=["POST"])
-@security.user_role([security.ADMINISTRATOR])
 @utils.get_entity(submission_model.Submission, "public_id")
 def decline_submission(submission):
     """Declines submission.
