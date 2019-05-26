@@ -351,7 +351,10 @@ class Scholarship(app.db.Model, paginated_api_mixin.PaginatedAPIMixin,
             "id": self.id,
             "name": self.scholarship_details.name,
             "audit_dates": self.audit_dates(),
-            "links": {}
+            "links": {
+                "get_scholarship":
+                flask.url_for("scholarships.get_scholarship", id=self.id)
+            }
         }
 
     def to_dict(self):
