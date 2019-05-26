@@ -129,14 +129,14 @@ def post_scholarship():
     except ValueError:
         return errors.bad_request("college id must be an integer")
 
-    try:
-        scholarship_schema.load(data)
-    except marshmallow.ValidationError as err:
-        return flask.jsonify(err.messages), 400
-
     college = college_model.College.query.get_or_404(college_id)
 
-    scholarship_details = scholarship_details_model.ScholarshipDetails(**data)
+    try:
+        scholarship_details = scholarship_details_model.ScholarshipDetails(
+            name=data["name"])
+    except KeyError:
+        return errors.bad_request("missing scholarship name")
+
     scholarship = scholarship_model.Scholarship(
         scholarship_details=scholarship_details, college=college)
     app.db.session.add(scholarship_details)

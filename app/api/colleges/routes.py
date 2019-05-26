@@ -1,5 +1,3 @@
-#TODO: use common errors from errors module
-#TODO: remove get_entity and use first_or_404 or get_or_404
 import flask
 import marshmallow
 
@@ -13,6 +11,7 @@ from app.models import college_details as college_details_model
 from app.models import major as major_model
 from app.models import detail as detail_model
 from app.models import location as location_model
+from app.models import scholarship as scholarship_model
 from app.schemas import college_schema as college_schema_class
 from app.schemas import detail_schema as detail_schema_class
 from app.api import errors
@@ -206,7 +205,7 @@ def patch_college(id):
     data = flask.request.get_json() or {}
 
     if not data:
-        return flask.jsonify({"message": "no data provided"}), 400
+        return errors.bad_request("no data provided")
 
     try:
         college_schema.load(data, partial=True)
@@ -775,9 +774,36 @@ def get_location_requirements(id):
 
 @colleges_module.bp.route("/<int:id>/scholarships")
 def get_scholarships(id):
-    pass
+    """Gets college scholarships in database
 
+    Retrieves paginated list of all college scholarships from database.
 
-@colleges_module.bp.route("/<int:id>/scholarships")
-def remove_scholarships(id):
-    pass
+    GET:
+        Request params:
+            page (int) (optional): Page number in paginated resource, defaults 
+            to one.
+            per_page (int) (optional): Number of items to retrieve per page, 
+            defaults to configuration constant PER_PAGE.
+            search (string) (optional): Search query keyword, defaults to "".
+    
+    Responses:
+        200:
+            Successfully retrieves items from database. Returns paginated list
+            of colleges. See PaginatedAPIMixin.
+
+            produces:
+                Application/json.
+    """
+    college = college_model.College.query.get_or_404(id)
+
+    page = flask.request.args.get("page", 1, type=int)
+    per_page = flask.request.args.get(
+        "per_page", flask.current_app.config["PER_PAGE"], type=int)
+
+    return flask.jsonify(
+        scholarship_model.Scholarship.to_collection_dict(
+            college.scholarships,
+            page,
+            per_page,
+            "colleges.get_scholarships",
+            id=id))

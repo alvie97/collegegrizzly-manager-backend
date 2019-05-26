@@ -3,6 +3,7 @@ from app.models.college import College
 from app.models.college_details import CollegeDetails
 from app.models.detail import Detail
 from app.models.major import Major
+from app.models.scholarship import Scholarship
 
 url = "/api/colleges"
 
@@ -203,3 +204,35 @@ def test_college_additional_details(app, client, auth):
         additional_details = response.get_json()
 
         assert len(additional_details) == 0
+
+
+def test_get_college_scholarships(app, client, auth, scholarships, colleges):
+    """
+    Tests get_scholarships endpoint
+    """
+
+    with app.app_context():
+        college = College.query.first()
+        scholarships = Scholarship.query.limit(5)
+
+        for scholarship in scholarships:
+            college.scholarships.append(scholarship)
+
+        assert college.scholarships.count() == 5
+
+    auth.login()
+
+    response = client.get(url + "/1/scholarships")
+
+    assert response.status_code == 200
+
+    scholarships = response.get_json()["items"]
+
+    assert len(scholarship) > 0
+
+    with app.app_context():
+        college = College.query.first()
+
+        for scholarship in scholarships:
+            assert college.scholarships.filter_by(
+                id=scholarship["id"], name=scholarship["name"]).count() == 1

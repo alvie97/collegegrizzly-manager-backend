@@ -68,11 +68,7 @@ def test_create_scholarship(app, client, auth):
 
     # create scholarship
 
-    data = {
-        "college_id": college_id,
-        "name": "test post scholarship",
-        "amount": "test scholarship amount"
-    }
+    data = {"college_id": college_id, "name": "test post scholarship"}
 
     response = client.post(url, json=data)
     response_data = response.get_json()
