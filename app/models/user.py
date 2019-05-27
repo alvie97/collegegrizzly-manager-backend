@@ -48,7 +48,6 @@ class User(PaginatedAPIMixin, BaseMixin, DateAudit, db.Model):
             "username": self.username,
             "email": self.email,
             "role": self.role,
-            "created_at": self.created_at.isoformat() + "Z",
-            "updated_at": self.updated_at.isoformat() + "Z",
+            "audit_dates": self.audit_dates(),
             "last_session": self.last_session.isoformat() + "Z"
         }

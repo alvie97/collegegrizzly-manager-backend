@@ -1,12 +1,12 @@
 # create CRUD of users and protect the routes for admin only
 # admins can't change other administrators
 #TODO: add user schema validation
+#TODO: document routes
 
 from flask import current_app, jsonify, request
 from sqlalchemy import and_, not_
 
 from app import db
-from app.utils import get_entity
 from app.models.user import User
 from app.security.utils import ADMINISTRATOR, get_current_user
 
@@ -57,18 +57,19 @@ def get_users():
 
 
 @bp.route("/<string:username>")
-@get_entity(User, "username")
-def get_user(user):
+def get_user(username):
+    user = User.query.filter_by(username=username).first_or_404()
     return jsonify({"user": user.to_dict()})
 
 
 @bp.route("/<string:username>", methods=["PATCH"])
-@get_entity(User, "username")
-def edit_user(user: User):
+def edit_user(username):
     data = request.get_json() or {}
 
     if not data:
         return jsonify({"message": "no data provided"}), 400
+
+    user = User.query.filter_by(username=username).first_or_404()
 
     user.update(data)
     db.session.commit()
@@ -76,8 +77,8 @@ def edit_user(user: User):
 
 
 @bp.route("/<string:username>", methods=["DELETE"])
-@get_entity(User, "username")
-def delete_user(user):
+def delete_user(username):
+    user = User.query.filter_by(username=username).first_or_404()
     db.session.delete(user)
     db.session.commit()
 
