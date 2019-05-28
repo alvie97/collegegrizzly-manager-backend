@@ -1,29 +1,24 @@
 from datetime import datetime
-from hashlib import md5
+from werkzeug import security
 
-from werkzeug.security import check_password_hash, generate_password_hash
-
-from app import db
-from app.utils import generate_public_id
-
-from .common.base_mixin import BaseMixin
-from .common.date_audit import DateAudit
-from .common.paginated_api_mixin import PaginatedAPIMixin
+import app
+from app.models.common import base_mixin, date_audit, paginated_api_mixin
 
 
-class User(PaginatedAPIMixin, BaseMixin, DateAudit, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    public_id = db.Column(
-        db.String(50), index=True, unique=True, default=generate_public_id)
-    username = db.Column(db.String(120), index=True, unique=True)
-    email = db.Column(db.String(120), index=True, unique=True)
-    password_hash = db.Column(db.String(128))
-    last_session = db.Column(db.DateTime, default=datetime.utcnow)
-    role = db.Column(db.String(256), default="basic")
-    submissions = db.relationship("Submission", backref="user", lazy="dynamic")
-    __str_repr__ = "user"
+class User(paginated_api_mixin.PaginatedAPIMixin, base_mixin.BaseMixin,
+           date_audit.DateAudit, app.db.Model):
+    id = app.db.Column(app.db.Integer, primary_key=True)
+    username = app.db.Column(app.db.String(120), index=True, unique=True)
+    email = app.db.Column(app.db.String(120), index=True, unique=True)
+    password_hash = app.db.Column(app.db.String(128))
+    first_name = app.db.Column(app.db.String(256))
+    last_name = app.db.Column(app.db.String(256))
+    last_session = app.db.Column(app.db.DateTime, default=datetime.utcnow)
+    role = app.db.Column(app.db.String(256), default="basic")
+    submissions = app.db.relationship(
+        "Submission", backref="user", lazy="dynamic")
 
-    ATTR_FIELDS = ["email", "role"]
+    ATTR_FIELDS = ["first_name", "last_name", "email", "role"]
 
     def __repr__(self):
         return f"<User {self.username}>"
@@ -34,19 +29,20 @@ class User(PaginatedAPIMixin, BaseMixin, DateAudit, db.Model):
 
     @password.setter
     def password(self, password):
-        self.password_hash = generate_password_hash(password)
+        self.password_hash = security.generate_password_hash(password)
 
     def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
+        return security.check_password_hash(self.password_hash, password)
 
     def for_pagination(self):
         return self.to_dict()
 
     def to_dict(self):
         return {
-            "public_id": self.public_id,
             "username": self.username,
             "email": self.email,
+            "first_name": self.first_name,
+            "last_name": self.last_name,
             "role": self.role,
             "audit_dates": self.audit_dates(),
             "last_session": self.last_session.isoformat() + "Z"

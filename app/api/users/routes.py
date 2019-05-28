@@ -1,85 +1,225 @@
-# create CRUD of users and protect the routes for admin only
-# admins can't change other administrators
 #TODO: add user schema validation
-#TODO: document routes
 
-from flask import current_app, jsonify, request
-from sqlalchemy import and_, not_
+import flask
+import sqlalchemy
 
-from app import db
-from app.models.user import User
-from app.security.utils import ADMINISTRATOR, get_current_user
+import app
+from app.models import user as user_model
+from app.security import utils
 
-from . import bp
+from app.api import users as users_module
 
 
-@bp.route("/", methods=["POST"], strict_slashes=False)
+@users_module.bp.route("/", methods=["POST"], strict_slashes=False)
 def create_user():
+    """creates user.
 
-    data = request.get_json() or {}
+    POST:
+        Consumes:
+            Application/json.
+        Request body:
+            dictionary with user data.
+        
+            Example::
+                {
+                    "username": "example_username",
+                    "email": "example_email@example.com",
+                    "password": "example_password"
+                }
+    Responses:
+        201:
+            Successfully created user. Returns link to get user.
+
+            produces:
+                Application/json.
+
+            Example::
+                {
+                    "user": link to get user
+                }
+        400:
+            Empty json object. Returns message "no data provided".
+
+            produces:
+                Application/json.
+        400:
+            some or all of the fields are invalid. Returns error of 
+            invalid fields.
+
+            produces:
+                Application/json.
+    """
+
+    data = flask.request.get_json() or {}
 
     if not data:
-        return jsonify({"message": "no data provided"}), 400
+        return flask.jsonify({"message": "no data provided"}), 400
 
-    user = User(**data)
+    user = user_model.User(**data)
 
-    db.session.add(user)
-    db.session.commit()
+    app.db.session.add(user)
+    app.db.session.commit()
 
-    return jsonify({"message": "user added successfully"})
+    return flask.jsonify({
+        "user":
+        flask.url_for("users.get_user", username=data["username"])
+    }), 201
 
 
-@bp.route("/", strict_slashes=False)
+@users_module.bp.route("/", strict_slashes=False)
 def get_users():
+    """Gets users in database
 
-    user_id = int(get_current_user())
+    Retrieves paginated list of all users from database or users that 
+    contains the search flask.request parameter if defined.
 
-    page = request.args.get("page", 1, type=int)
-    per_page = request.args.get(
-        "per_page", current_app.config["USERS_PER_PAGE"], type=int)
+    GET:
+        Request params:
+            page (int) (optional): Page number in paginated resource, defaults 
+            to one.
+            per_page (int) (optional): Number of items to retrieve per page, 
+            defaults to configuration constant COLLEGE_PER_PAGE.
+            search (string) (optional): Search query keyword, defaults to "".
+    
+    Responses:
+        200:
+            Successfully retrieves items from database. Returns paginated list
+            of users. See PaginatedAPIMixin.
 
-    search = request.args.get("search", "", type=str)
+            produces:
+                Application/json.
+    """
+    user_id = int(utils.get_current_user())
+
+    page = flask.request.args.get("page", 1, type=int)
+    per_page = flask.request.args.get(
+        "per_page", flask.current_app.config["PER_PAGE"], type=int)
+
+    search = flask.request.args.get("search", "", type=str)
 
     if search:
-        query = User.query.filter(
-            and_(
-                User.username.like("%{}%".format(search)),
-                not_(User.id == user_id)))
+        query = user_model.User.query.filter(
+            sqlalchemy.and_(
+                user_model.User.username.like("%{}%".format(search)),
+                sqlalchemy.not_(user_model.User.id == user_id)))
 
-        data = User.to_collection_dict(
+        data = user_model.User.to_collection_dict(
             query, page, per_page, "users.get_users", search=search)
     else:
-        query = User.query.filter(not_(User.id == user_id))
-        data = User.to_collection_dict(query, page, per_page,
-                                       "users.get_users")
+        query = user_model.User.query.filter(
+            sqlalchemy.not_(user_model.User.id == user_id))
+        data = user_model.User.to_collection_dict(query, page, per_page,
+                                                  "users.get_users")
 
-    return jsonify(data)
+    return flask.jsonify(data)
 
 
-@bp.route("/<string:username>")
+@users_module.bp.route("/<string:username>")
 def get_user(username):
-    user = User.query.filter_by(username=username).first_or_404()
-    return jsonify({"user": user.to_dict()})
+    """Gets user.
+
+    Retrieves single user from database.
+
+    GET:
+        Params:
+            username (string) (required): username.
+    
+    Responses:
+        200:
+            Successfully retieves user. Returns user.
+
+            produces:
+                Application/json.
+        
+        404:
+            User not found, returns message.
+
+            produces:
+                Application/json.
+    """
+    user = user_model.User.query.filter_by(username=username).first_or_404()
+    return flask.jsonify({"user": user.to_dict()})
 
 
-@bp.route("/<string:username>", methods=["PATCH"])
+@users_module.bp.route("/<string:username>", methods=["PATCH"])
 def edit_user(username):
-    data = request.get_json() or {}
+    """Edits user.
+
+    PATCH:
+        Params:
+            name (string) (required): name of user.
+
+        Consumes:
+            Application/json.
+        
+        Request Body:
+            Dictionary of user editable fields.
+        
+        Example::
+            {
+                "username": "username example"
+            }
+    
+    Responses:
+        200:
+            User successfully modified. Returns message.
+
+            Produces:
+                Application/json.
+        
+        400:
+            Empty json object. Returns message "no data provided".
+
+            produces:
+                Application/json.
+        404:
+            User not found, returns message.
+
+            produces:
+                Application/json.
+        400:
+            some or all of the fields are invalid. Returns error of 
+            invalid fields.
+
+            produces:
+                Application/json.
+    """
+    data = flask.request.get_json() or {}
 
     if not data:
-        return jsonify({"message": "no data provided"}), 400
+        return flask.jsonify({"message": "no data provided"}), 400
 
-    user = User.query.filter_by(username=username).first_or_404()
+    user = user_model.User.query.filter_by(username=username).first_or_404()
 
     user.update(data)
-    db.session.commit()
-    return jsonify("user saved successfully")
+    app.db.session.commit()
+    return flask.jsonify("user saved successfully")
 
 
-@bp.route("/<string:username>", methods=["DELETE"])
+@users_module.bp.route("/<string:username>", methods=["DELETE"])
 def delete_user(username):
-    user = User.query.filter_by(username=username).first_or_404()
-    db.session.delete(user)
-    db.session.commit()
+    """Deletes user.
 
-    return jsonify({"message": "user deleted"})
+    Deletes user from database.
+
+    DELETE:
+        Params:
+            name (string) (required): name of user.
+    
+    Responses:
+        200:
+            User successfully deleted from database. Return message.
+
+            Produces:
+                Application/json.
+        404:
+            User not found, returns message.
+
+            produces:
+                Application/json.
+    """
+    user = user_model.User.query.filter_by(username=username).first_or_404()
+    app.db.session.delete(user)
+    app.db.session.commit()
+
+    return flask.jsonify({"message": "user deleted"})
