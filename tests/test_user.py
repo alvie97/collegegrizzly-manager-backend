@@ -1,216 +1,109 @@
-from app import db
-from app.models.user import User
+# improve user tests
+from app.models import user as user_model
+import flask
+import app as application
 
 url = "/api/users"
 
 
-def test_crud_users(app, client, auth):
-    """ create, read, update and delete users """
-    user_admin = {
-        "username": "test_administrator",
-        "first_name": "admin name",
-        "last_name": "admin last name",
-        "email": "admin@gmail.com",
-        "password": "123456",
+def test_create_user_success(app, client, auth):
+    """
+    Tests create_user endpoint success.
+    """
+
+    json = {
+        "username": "test_user",
+        "email": "test_user@example.com",
+        "first_name": "test first name",
+        "last_name": "test last name",
+        "password": "Te$t0",
         "role": "administrator"
-    }
-
-    user_moderator = {
-        "username": "test_moderator",
-        "first_name": "moderator name",
-        "last_name": "moderator last name",
-        "email": "moderator@gmail.com",
-        "password": "123456",
-        "role": "moderator"
-    }
-
-    user_basic = {
-        "username": "test_basic",
-        "first_name": "basic name",
-        "last_name": "basic last name",
-        "email": "basic@gmail.com",
-        "password": "123456",
-        "role": "basic"
     }
 
     auth.login()
 
-    response = client.post(url, json=user_admin)
+    response = client.post(url, json=json)
+
     assert response.status_code == 201
-    response = client.post(url, json=user_moderator)
-    assert response.status_code == 201
-    response = client.post(url, json=user_basic)
-    assert response.status_code == 201
+    response_json = response.get_json()
 
-    response = client.get(url)
+    with app.test_request_context():
+        assert response_json["user"] == flask.url_for(
+            "users.get_user", username=json["username"])
 
-    users = response.get_json()["items"]
-
-    assert len(users) == 3
-
-    assert users[0]["username"] == user_admin["username"]
-    assert users[0]["role"] == user_admin["role"]
-    assert users[1]["username"] == user_moderator["username"]
-    assert users[1]["role"] == user_moderator["role"]
-    assert users[2]["username"] == user_basic["username"]
-    assert users[2]["role"] == user_basic["role"]
-
-    response = client.get(url + f"/{user_admin['username']}")
-    user = response.get_json()["user"]
-
-    assert user["username"] == user_admin["username"]
-    assert user["role"] == user_admin["role"]
-
-    response = client.get(url + f"/{user_moderator['username']}")
-    user = response.get_json()["user"]
-
-    assert user["username"] == user_moderator["username"]
-    assert user["role"] == user_moderator["role"]
-
-    response = client.get(url + f"/{user_basic['username']}")
-    user = response.get_json()["user"]
-
-    assert user["username"] == user_basic["username"]
-    assert user["role"] == user_basic["role"]
-
-    client.patch(
-        url + f"/{user_basic['username']}", json={"role": "administrator"})
-
-    response = client.get(url + f"/{user_basic['username']}")
-    user = response.get_json()["user"]
-
-    assert user["username"] == user_basic["username"]
-    assert user["role"] == "administrator"
-
-    client.delete(url + f"/{user_basic['username']}")
-
-    response = client.get(url)
-
-    users = response.get_json()["items"]
-
-    assert len(users) == 2
-
-    assert users[0]["username"] == user_admin["username"]
-    assert users[0]["role"] == user_admin["role"]
-    assert users[1]["username"] == user_moderator["username"]
-    assert users[1]["role"] == user_moderator["role"]
+    with app.app_context():
+        assert user_model.User.query.filter_by(
+            username=json["username"]).count() == 1
 
 
-# def test_user_role_protected_routes(app, client):
-#     """ test routes protected by user roles """
+def test_edit_user_success(app, client, auth):
+    """
+    Tests edit_user endpoint success.
+    """
 
-#     user_admin = {
-#         "username": "test_administrator",
-#         "email": "admin@gmail.com",
-#         "password": "123456",
-#         "role": "administrator"
-#     }
+    user_info = {
+        "username": "test_user",
+        "email": "test_user@example.com",
+        "first_name": "test first name",
+        "last_name": "test last name",
+        "password": "Te$t0",
+        "role": "administrator"
+    }
 
-#     user_moderator = {
-#         "username": "test_moderator",
-#         "email": "moderator@gmail.com",
-#         "password": "123456",
-#         "role": "moderator"
-#     }
+    with app.app_context():
+        user = user_model.User(**user_info)
+        application.db.session.add(user)
+        application.db.session.commit()
 
-#     user_basic = {
-#         "username": "test_basic",
-#         "email": "basic@gmail.com",
-#         "password": "123456",
-#         "role": "basic"
-#     }
+    auth.login()
 
-#     with app.app_context():
+    json = {"email": "email_edit@example.com"}
 
-#         user = User(**user_admin)
-#         db.session.add(user)
+    response = client.patch(url + f"/{user_info['username']}", json=json)
 
-#         user = User(**user_moderator)
-#         db.session.add(user)
+    assert response.status_code == 200
+    response_json = response.get_json()
 
-#         user = User(**user_basic)
-#         db.session.add(user)
+    with app.test_request_context():
+        assert response_json["user"] == flask.url_for(
+            "users.get_user", username=user_info["username"])
 
-#         db.session.commit()
+    with app.app_context():
+        assert user_model.User.query.filter_by(
+            username=user_info["username"]).count() == 1
+        assert user_model.User.query.filter_by(
+            username=user_info["username"], email=json["email"]).count() == 1
 
-#     # try only admin role routes
 
-#     client.post(
-#         "/auth/login",
-#         data={
-#             "id": user_admin["username"],
-#             "password": user_admin["password"]
-#         })
+def test_delete_user_success(app, client, auth):
+    """
+    Tests delete_user endpoint success.
+    """
 
-#     response = client.get("/api/users")
+    user_info = {
+        "username": "test_user",
+        "email": "test_user@example.com",
+        "first_name": "test first name",
+        "last_name": "test last name",
+        "password": "Te$t0",
+        "role": "administrator"
+    }
 
-#     assert response.status_code == 200
+    with app.app_context():
+        user = user_model.User(**user_info)
+        application.db.session.add(user)
+        application.db.session.commit()
 
-#     client.post("/auth/logout", headers={"X-XSRF-TOKEN": ""})
+        assert user_model.User.query.filter_by(
+            username=user_info["username"]).count() == 1
 
-#     client.post(
-#         "/auth/login",
-#         data={
-#             "id": user_moderator["username"],
-#             "password": user_moderator["password"]
-#         })
+    auth.login()
 
-#     response = client.get("/api/users")
+    response = client.delete(url + f"/{user_info['username']}")
 
-#     assert response.status_code == 403
+    assert response.status_code == 200
+    assert response.get_json()["message"] == "user deleted"
 
-#     client.post("/auth/logout", headers={"X-XSRF-TOKEN": ""})
-
-#     client.post(
-#         "/auth/login",
-#         data={
-#             "id": user_basic["username"],
-#             "password": user_basic["password"]
-#         })
-
-#     response = client.get("/api/users")
-
-#     assert response.status_code == 403
-
-#     client.post("/auth/logout", headers={"X-XSRF-TOKEN": ""})
-
-#     # try routes protected from moderator role
-
-#     client.post(
-#         "/auth/login",
-#         data={
-#             "id": user_admin["username"],
-#             "password": user_admin["password"]
-#         })
-
-#     response = client.post("/api/colleges", json={"name": "test college"})
-
-#     assert response.status_code == 200
-
-#     client.post("/auth/logout", headers={"X-XSRF-TOKEN": ""})
-
-#     client.post(
-#         "/auth/login",
-#         data={
-#             "id": user_moderator["username"],
-#             "password": user_moderator["password"]
-#         })
-
-#     response = client.post("/api/colleges", json={"name": "test college"})
-
-#     assert response.status_code == 403
-
-#     client.post("/auth/logout", headers={"X-XSRF-TOKEN": ""})
-
-#     client.post(
-#         "/auth/login",
-#         data={
-#             "id": user_basic["username"],
-#             "password": user_basic["password"]
-#         })
-
-#     response = client.post("/api/colleges", json={"name": "test college"})
-
-#     assert response.status_code == 200
-
-#     client.post("/auth/logout", headers={"X-XSRF-TOKEN": ""})
+    with app.app_context():
+        assert user_model.User.query.filter_by(
+            username=user_info["username"]).count() == 0

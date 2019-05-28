@@ -204,7 +204,10 @@ def edit_user(username):
 
     user.update(data)
     app.db.session.commit()
-    return flask.jsonify("user saved successfully")
+    return flask.jsonify({
+        "user":
+        flask.url_for("users.get_user", username=username)
+    })
 
 
 @users_module.bp.route("/<string:username>", methods=["DELETE"])
