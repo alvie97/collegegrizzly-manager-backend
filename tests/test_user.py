@@ -8,6 +8,8 @@ def test_crud_users(app, client, auth):
     """ create, read, update and delete users """
     user_admin = {
         "username": "test_administrator",
+        "first_name": "admin name",
+        "last_name": "admin last name",
         "email": "admin@gmail.com",
         "password": "123456",
         "role": "administrator"
@@ -15,6 +17,8 @@ def test_crud_users(app, client, auth):
 
     user_moderator = {
         "username": "test_moderator",
+        "first_name": "moderator name",
+        "last_name": "moderator last name",
         "email": "moderator@gmail.com",
         "password": "123456",
         "role": "moderator"
@@ -22,6 +26,8 @@ def test_crud_users(app, client, auth):
 
     user_basic = {
         "username": "test_basic",
+        "first_name": "basic name",
+        "last_name": "basic last name",
         "email": "basic@gmail.com",
         "password": "123456",
         "role": "basic"
@@ -29,9 +35,12 @@ def test_crud_users(app, client, auth):
 
     auth.login()
 
-    client.post(url, json=user_admin)
-    client.post(url, json=user_moderator)
-    client.post(url, json=user_basic)
+    response = client.post(url, json=user_admin)
+    assert response.status_code == 201
+    response = client.post(url, json=user_moderator)
+    assert response.status_code == 201
+    response = client.post(url, json=user_basic)
+    assert response.status_code == 201
 
     response = client.get(url)
 

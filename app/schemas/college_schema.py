@@ -1,7 +1,5 @@
 from marshmallow import Schema, ValidationError, fields, post_load, validates
 
-from app.models.college import College
-
 
 class CollegeSchema(Schema):
     name = fields.String(

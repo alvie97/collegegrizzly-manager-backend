@@ -71,6 +71,8 @@ def auth(app, client):
         user = User(
             username="test",
             email="test@test.com",
+            first_name="test name",
+            last_name="test last name",
             password="test",
             role="administrator")
         db.session.add(user)

@@ -1,13 +1,14 @@
-#TODO: add user schema validation
-
 import flask
 import sqlalchemy
+import marshmallow
 
 import app
 from app.models import user as user_model
 from app.security import utils
-
 from app.api import users as users_module
+from app.schemas import user_schema as user_schema_class
+
+user_schema = user_schema_class.UserSchema()
 
 
 @users_module.bp.route("/", methods=["POST"], strict_slashes=False)
@@ -54,6 +55,11 @@ def create_user():
 
     if not data:
         return flask.jsonify({"message": "no data provided"}), 400
+
+    try:
+        user_schema.load(data)
+    except marshmallow.ValidationError as err:
+        return flask.jsonify(err.messages), 400
 
     user = user_model.User(**data)
 
@@ -188,6 +194,11 @@ def edit_user(username):
 
     if not data:
         return flask.jsonify({"message": "no data provided"}), 400
+
+    try:
+        user_schema.load(data, partial=True)
+    except marshmallow.ValidationError as err:
+        return flask.jsonify(err.messages), 400
 
     user = user_model.User.query.filter_by(username=username).first_or_404()
 
