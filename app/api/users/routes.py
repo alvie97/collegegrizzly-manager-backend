@@ -6,6 +6,7 @@ import app
 from app.models import user as user_model
 from app.security import utils
 from app.api import users as users_module
+from app.api import errors
 from app.schemas import user_schema as user_schema_class
 
 user_schema = user_schema_class.UserSchema()
@@ -53,8 +54,8 @@ def create_user():
 
     data = flask.request.get_json() or {}
 
-    if not data:
-        return flask.jsonify({"message": "no data provided"}), 400
+    if not data or not isinstance(data, dict):
+        return errors.bad_request("no data provided or bad structure")
 
     try:
         user_schema.load(data)

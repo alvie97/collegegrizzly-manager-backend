@@ -1,9 +1,168 @@
 # improve user tests
+from app.schemas import user_schema
 from app.models import user as user_model
+import marshmallow
 import flask
 import app as application
+import pytest
 
 url = "/api/users"
+
+
+def test_user_schema(app, client, auth):
+    """
+    Tests user schema
+    """
+
+    user_schema_test = user_schema.UserSchema()
+
+    user_info = {"username": "test_user"}
+
+    with pytest.raises(marshmallow.ValidationError) as err:
+        user_schema_test.load(user_info)
+
+    assert err.value.messages["password"][0] == "password required"
+    assert err.value.messages["email"][0] == "email required"
+    assert err.value.messages["first_name"][0] == "first name required"
+    assert err.value.messages["last_name"][0] == "last name required"
+    assert err.value.messages["role"][0] == "role required"
+
+    user_info = {
+        "username": "test_user" * 120,
+        "email": "test_user@example.com",
+        "first_name": "test first name",
+        "last_name": "test last name",
+        "password": "Te$t0",
+        "role": "administrator"
+    }
+
+    with pytest.raises(marshmallow.ValidationError) as err:
+        user_schema_test.load(user_info)
+
+    assert err.value.messages["username"][
+        0] == "username must be shorter than 120 characters"
+
+    user_info["username"] = "a"
+    with pytest.raises(marshmallow.ValidationError) as err:
+        user_schema_test.load(user_info)
+    assert err.value.messages["username"][
+        0] == "username must be at least 4 characters long"
+
+    user_info["username"] = ".test_username"
+    with pytest.raises(marshmallow.ValidationError) as err:
+        user_schema_test.load(user_info)
+    assert err.value.messages["username"][0] == "invalid username"
+
+    user_info["username"] = "test._username"
+    with pytest.raises(marshmallow.ValidationError) as err:
+        user_schema_test.load(user_info)
+    assert err.value.messages["username"][0] == "invalid username"
+
+    user_info["username"] = "test__username"
+    with pytest.raises(marshmallow.ValidationError) as err:
+        user_schema_test.load(user_info)
+    assert err.value.messages["username"][0] == "invalid username"
+
+    user_info["username"] = "test_.username"
+    with pytest.raises(marshmallow.ValidationError) as err:
+        user_schema_test.load(user_info)
+    assert err.value.messages["username"][0] == "invalid username"
+
+    user_info["username"] = "test..username"
+    with pytest.raises(marshmallow.ValidationError) as err:
+        user_schema_test.load(user_info)
+    assert err.value.messages["username"][0] == "invalid username"
+
+    user_info["username"] = "testusername._"
+    with pytest.raises(marshmallow.ValidationError) as err:
+        user_schema_test.load(user_info)
+    assert err.value.messages["username"][0] == "invalid username"
+
+    user_info["username"] = "testusername."
+    with pytest.raises(marshmallow.ValidationError) as err:
+        user_schema_test.load(user_info)
+    assert err.value.messages["username"][0] == "invalid username"
+
+    user_info["username"] = "testusername_"
+    with pytest.raises(marshmallow.ValidationError) as err:
+        user_schema_test.load(user_info)
+    assert err.value.messages["username"][0] == "invalid username"
+
+    user_info["username"] = "test_user"
+    user_info["password"] = "a"
+
+    with pytest.raises(marshmallow.ValidationError) as err:
+        user_schema_test.load(user_info)
+    assert err.value.messages["password"][
+        0] == "password must be at least 8 characters long"
+
+    user_info["password"] = "a" * 8
+
+    with pytest.raises(marshmallow.ValidationError) as err:
+        user_schema_test.load(user_info)
+    assert err.value.messages["password"][
+        0] == "password must have at least 1 uppercase character"
+
+    user_info["password"] = "Aa" * 4
+
+    with pytest.raises(marshmallow.ValidationError) as err:
+        user_schema_test.load(user_info)
+    assert err.value.messages["password"][
+        0] == "password must have at least 1 number character"
+
+    user_info["password"] = "AA1234aa"
+
+    with pytest.raises(marshmallow.ValidationError) as err:
+        user_schema_test.load(user_info)
+    assert err.value.messages["password"][
+        0] == "password must have at least 1 special character"
+
+    user_info["password"] = "AA1234aa"
+
+    with pytest.raises(marshmallow.ValidationError) as err:
+        user_schema_test.load(user_info)
+    assert err.value.messages["password"][
+        0] == "password must have at least 1 special character"
+
+    user_info["password"] = "AA1234234$"
+
+    with pytest.raises(marshmallow.ValidationError) as err:
+        user_schema_test.load(user_info)
+    assert err.value.messages["password"][
+        0] == "password must have at least 1 lowercase character"
+
+    user_info["password"] = "AA12aaa234$"
+    user_info["email"] = "asdfasdf"
+
+    with pytest.raises(marshmallow.ValidationError) as err:
+        user_schema_test.load(user_info)
+    assert err.value.messages["email"][0] == "invalid email"
+
+    user_info["email"] = "a@ a . com"
+
+    with pytest.raises(marshmallow.ValidationError) as err:
+        user_schema_test.load(user_info)
+    assert err.value.messages["email"][0] == "invalid email"
+
+    user_info["email"] = "a @a.com"
+
+    with pytest.raises(marshmallow.ValidationError) as err:
+        user_schema_test.load(user_info)
+    assert err.value.messages["email"][0] == "invalid email"
+
+    user_info["email"] = "example@example.com"
+    user_info["first_name"] = "a" * 300
+    with pytest.raises(marshmallow.ValidationError) as err:
+        user_schema_test.load(user_info)
+    assert err.value.messages["first_name"][
+        0] == "first name must be shorter than 256 characters"
+
+    user_info["first_name"] = "test name"
+    user_info["last_name"] = "a" * 300
+    with pytest.raises(marshmallow.ValidationError) as err:
+        user_schema_test.load(user_info)
+    assert err.value.messages["last_name"][
+        0] == "last name must be shorter than 256 characters"
 
 
 def test_create_user_success(app, client, auth):
@@ -34,6 +193,49 @@ def test_create_user_success(app, client, auth):
     with app.app_context():
         assert user_model.User.query.filter_by(
             username=json["username"]).count() == 1
+
+
+def test_create_user_failure(app, client, auth):
+    """
+    Tests create_user endpoint failure cases
+    """
+
+    auth.login()
+
+    user_info = []
+
+    response = client.post(url, json=user_info)
+
+    assert response.status_code == 400
+    assert response.get_json(
+    )["message"] == "no data provided or bad structure"
+
+    user_info = {}
+
+    response = client.post(url, json=user_info)
+
+    assert response.status_code == 400
+    assert response.get_json(
+    )["message"] == "no data provided or bad structure"
+
+    user_info = {
+        "username": "test_user" * 120,
+        "email": "test_user@example.com",
+        "first_name": "test first name",
+        "last_name": "test last name",
+        "role": "administrator"
+    }
+
+    response = client.post(url, json=user_info)
+    assert response.status_code == 400
+
+    response_errors = response.get_json()
+    assert response_errors["username"][
+        0] == "username must be shorter than 120 characters"
+    assert response_errors["password"][0] == "password required"
+
+    with app.app_context():
+        assert user_model.User.query.count() == 1
 
 
 def test_edit_user_success(app, client, auth):
@@ -73,6 +275,27 @@ def test_edit_user_success(app, client, auth):
             username=user_info["username"]).count() == 1
         assert user_model.User.query.filter_by(
             username=user_info["username"], email=json["email"]).count() == 1
+
+
+def test_edit_user_failure(app, client, auth):
+    """
+    Tests edit_user endpoint failure cases.
+    """
+    user_info = {
+        "username": "test_user",
+        "email": "test_user@example.com",
+        "first_name": "test first name",
+        "last_name": "test last name",
+        "password": "Te$t0",
+        "role": "administrator"
+    }
+
+    with app.app_context():
+        user = user_model.User(**user_info)
+        application.db.session.add(user)
+        application.db.session.commit()
+
+    auth.login()
 
 
 def test_delete_user_success(app, client, auth):
