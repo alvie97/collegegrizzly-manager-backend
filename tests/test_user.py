@@ -175,7 +175,7 @@ def test_create_user_success(app, client, auth):
         "email": "test_user@example.com",
         "first_name": "test first name",
         "last_name": "test last name",
-        "password": "Te$t0",
+        "password": "AA12aaa234$",
         "role": "administrator"
     }
 
@@ -286,7 +286,7 @@ def test_edit_user_failure(app, client, auth):
         "email": "test_user@example.com",
         "first_name": "test first name",
         "last_name": "test last name",
-        "password": "Te$t0",
+        "password": "AA12aaa234$",
         "role": "administrator"
     }
 
@@ -296,6 +296,23 @@ def test_edit_user_failure(app, client, auth):
         application.db.session.commit()
 
     auth.login()
+
+    user_info_edit = {"username": "test_.__adsf"}
+
+    response = client.patch(
+        url + f"/{user_info['username']}", json=user_info_edit)
+    assert response.status_code == 400
+
+    response_json = response.get_json()
+    assert response_json["username"][0] == "invalid username"
+
+    with app.app_context():
+        user_count = user_model.User.query.filter_by(
+            username=user_info_edit['username']).count()
+        assert user_count == 0
+        user_count = user_model.User.query.filter_by(
+            username=user_info['username']).count()
+        assert user_count == 1
 
 
 def test_delete_user_success(app, client, auth):
@@ -332,6 +349,17 @@ def test_delete_user_success(app, client, auth):
             username=user_info["username"]).count() == 0
 
 
+def test_delete_user_failure(app, client, auth):
+    """
+    Tests delete_user endpoint failure cases.
+    """
+
+    auth.login()
+
+    response = client.delete(url + "/____user_not_found___")
+    assert response.status_code == 404
+
+
 def test_get_user_success(app, client, auth):
     """
     Test get user success
@@ -364,7 +392,18 @@ def test_get_user_success(app, client, auth):
         assert response_json["user"] == user.to_dict()
 
 
-def test_get_users_success(app, client, auth):
+def test_get_user_failure(app, client, auth):
+    """
+    Tests get_user endpoint failure cases.
+    """
+
+    auth.login()
+
+    response = client.get(url + "/____user_not_found___")
+    assert response.status_code == 404
+
+
+def test_get_users(app, client, auth):
     """ get all users and test search function """
 
     user_info = {
