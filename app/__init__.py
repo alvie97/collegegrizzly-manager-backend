@@ -33,7 +33,7 @@ def create_app(config_class=config.Config):
 
     from app.security import utils as security_utils
     from app import auth
-    from app import site
+    # from app import site
     from app.api import colleges
     from app.api import scholarships
     from app.api import users
@@ -88,7 +88,7 @@ def create_app(config_class=config.Config):
 
     app.register_blueprint(auth.bp, url_prefix="/auth")
 
-    app.register_blueprint(site.bp)
+    # app.register_blueprint(site.bp)
 
     from app.errors import error_404
 

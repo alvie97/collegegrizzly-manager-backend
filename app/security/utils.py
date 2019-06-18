@@ -1,11 +1,10 @@
 import functools
 
-import jwt
 import flask
 import flask_jwt_extended
 import datetime
 
-from app import jwt
+import app
 from app.api import errors
 from app.models import token_blacklist
 
@@ -19,7 +18,7 @@ def add_token_to_database(token):
     """
     decoded_token = flask_jwt_extended.decode_token(token)
     jti = decoded_token["jti"]
-    user = decoded_token["user"]
+    user = decoded_token[flask.current_app.config["JWT_IDENTITY_CLAIM"]]
     expires = datetime.datetime.fromtimestamp(decoded_token["exp"])
 
     db_token = token_blacklist.TokenBlacklist(
@@ -27,11 +26,11 @@ def add_token_to_database(token):
         user=user,
         expires=expires,
     )
-    db.session.add(db_token)
-    db.session.commit()
+    app.db.session.add(db_token)
+    app.db.session.commit()
 
 
-@jwt.token_in_blacklist_loader
+@app.jwt.token_in_blacklist_loader
 def is_token_revoked(token):
     """
     Checks if token is revoked or not. If token is not in the database
@@ -117,5 +116,5 @@ def prune_database():
         token_blacklist.TokenBlacklist.expires < now).all()
 
     for token in expired:
-        db.session.delete(token)
-    db.session.commit()
+        app.db.session.delete(token)
+    app.db.session.commit()

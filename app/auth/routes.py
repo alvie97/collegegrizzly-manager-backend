@@ -4,7 +4,6 @@ import sqlalchemy
 
 import app
 from app import auth
-from app.auth import utils as auth_utils
 from app.models import token_blacklist
 from app.models import user as user_model
 from app.api import errors
@@ -12,7 +11,6 @@ from app import security
 
 
 @auth.bp.route("/login", methods=["POST"])
-@auth_utils.user_not_logged
 def login():
     """ Loggs user to the application.
 
@@ -27,8 +25,13 @@ def login():
     Returns:
         redirects to application or loggin page if not successful
     """
-    id = flask.request.form["id"]
-    password = flask.request.form["password"]
+    data = flask.request.get_json() or {}
+
+    if not data:
+        return errors.bad_request("no data provided")
+
+    id = data.get("id")
+    password = data.get("password")
 
     if not id:
         return errors.bad_request("no username or email provided")
@@ -62,7 +65,7 @@ def login():
     return response
 
 
-@auth.bp.route("/token/refresh")
+@auth.bp.route("/token/refresh", methods=["POST"])
 @flask_jwt_extended.jwt_refresh_token_required
 def refresh_token():
     current_user = flask_jwt_extended.get_jwt_identity()
@@ -85,16 +88,16 @@ def logout():
     Returns:
         Json response.
     """
-    username = flask_jwt_extended.get_current_user()
+    username = flask_jwt_extended.get_jwt_identity()
     user_count = user_model.User.query.filter_by(username=username).count()
 
     if user_count == 0:
         # if this occurs, the secret key got leaked
         return errors.not_found("user not found")
 
-    token_claims = flask_jwt_extended.get_jwt_claims()
+    token = flask_jwt_extended.get_raw_jwt()
     token = token_blacklist.TokenBlacklist.query.filter_by(
-        jti=token_claims["jti"], user=username).first()
+        jti=token["jti"], user=username).first()
 
     if token is None:
         # if this occurs, the secret key got leaked
@@ -111,7 +114,7 @@ def logout():
 @auth.bp.route("/logout/all", methods=["POST"])
 @flask_jwt_extended.jwt_refresh_token_required
 def logout_all():
-    username = flask_jwt_extended.get_current_user()
+    username = flask_jwt_extended.get_jwt_identity()
     user_count = user_model.User.query.filter_by(username=username).count()
 
     if user_count == 0:

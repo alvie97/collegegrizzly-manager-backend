@@ -1,10 +1,9 @@
 import os
-from datetime import timedelta
-
-from dotenv import load_dotenv
+import datetime
+import dotenv
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-load_dotenv(os.path.join(basedir, ".env"))
+dotenv.load_dotenv(os.path.join(basedir, ".env"))
 
 
 class Config(object):
@@ -16,15 +15,6 @@ class Config(object):
         SECRET_KEY: Application secret key for flask.
         SQLALCHEMY_DATABASE_URI: Uri to connect to the database.
         SQLALCHEMY_TRACK_MODIFICATIONS: ?.
-        SECURE_TOKEN_COOKIES: cookies secure flag
-        JWT_SECRET: jwt secret key
-        JWT_ALGORITHM: algorithm used for jwt tokens. 
-        ACCESS_TOKEN_COOKIE_NAME: name given to access "access token cookie"
-        ACCESS_TOKEN_DURATION: expiration time of access token
-        REFRESH_TOKEN_COOKIE_NAME: name given to access "refresh token cookie"
-        REFRESH_TOKEN_DURATION: expiration time of refresh token
-        CSRF_COOKIE_NAME: csrf cookie name 
-        CSRF_HEADER_NAME: csrf header name
         MAIL_SERVER: mail server 
         MAIL_PORT: mail port
         MAIL_USE_TLS: use mail tls
@@ -66,7 +56,11 @@ class Config(object):
         "ACCESS_TOKEN_COOKIE_NAME") or "actk"
     JWT_REFRESH_COOKIE_NAME = os.environ.get(
         "REFRESH_TOKEN_COOKIE_NAME") or "rftk"
-
+    JWT_ACCESS_TOKEN_EXPIRES = os.environ.get(
+        "JWT_ACCESS_TOKEN_EXPIRES") or datetime.timedelta(minutes=5)
+    JWT_REFRESH_TOKEN_EXPIRES = os.environ.get(
+        "JWT_ACCESS_TOKEN_EXPIRES") or datetime.timedelta(days=7)
+    JWT_SESSION_COOKIE = os.environ.get("JWT_SESSION_COOKIE") or True
     # endJWT
 
     MAIL_SERVER = os.environ.get("MAIL_SERVER")

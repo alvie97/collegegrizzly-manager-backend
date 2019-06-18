@@ -176,3 +176,17 @@ def options(app):
         for i in range(5):
             db.session.add(option_model.Option(name=f"option test {i}"))
             db.session.commit()
+
+
+@pytest.fixture
+def user(app):
+    with app.app_context():
+        user = User(
+            username="test",
+            email="test@test.com",
+            first_name="test name",
+            last_name="test last name",
+            password="test",
+            role="administrator")
+        db.session.add(user)
+        db.session.commit()
