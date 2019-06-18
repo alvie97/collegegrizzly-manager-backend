@@ -4,11 +4,13 @@ import flask_migrate
 import config
 import flask_cors
 import flask_uploads
+import flask_jwt_extended
 
 db = flask_sqlalchemy.SQLAlchemy()
 migrate = flask_migrate.Migrate()
 cors = flask_cors.CORS(resources={r"/api/*": {"origins": "*"}})
 photos = flask_uploads.UploadSet('photos', flask_uploads.IMAGES)
+jwt = flask_jwt_extended.JWTManager()
 
 
 def create_app(config_class=config.Config):
@@ -27,6 +29,7 @@ def create_app(config_class=config.Config):
     migrate.init_app(app, db)
     cors.init_app(app)
     flask_uploads.configure_uploads(app, photos)
+    jwt.init_app(app)
 
     from app.security import utils as security_utils
     from app import auth

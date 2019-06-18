@@ -1,17 +1,17 @@
 import flask
+import flask_jwt_extended
 import sqlalchemy
 
 import app
 from app import auth
 from app.auth import utils as auth_utils
-from app.models import refresh_token
+from app.models import token_blacklist
 from app.models import user as user_model
-# TODO: change this imports
+from app.api import errors
 from app import security
-from app.security import csrf, token_auth
 
 
-@auth.bp.route("/login", methods=["POST", "GET"])
+@auth.bp.route("/login", methods=["POST"])
 @auth_utils.user_not_logged
 def login():
     """ Loggs user to the application.
@@ -27,39 +27,56 @@ def login():
     Returns:
         redirects to application or loggin page if not successful
     """
-    if flask.request.method == "GET":
-        return flask.render_template(
-            "login.html", messages=flask.get_flashed_messages())
-
     id = flask.request.form["id"]
     password = flask.request.form["password"]
 
     if not id:
-        flask.flash("no username or email provided")
-        return flask.redirect(flask.url_for("auth.login")), 400
+        return errors.bad_request("no username or email provided")
 
     if not password:
-        flask.flash("no password provided")
-        return flask.redirect(flask.url_for("auth.login")), 400
+        return errors.bad_request("no password provided")
 
     user = user_model.User.query.filter(
         sqlalchemy.or_(user_model.User.username == id,
                        user_model.User.email == id)).first()
 
     if user is None:
-        flask.flash(f"no user with username or email {id} found")
-        return flask.redirect(flask.url_for("auth.login")), 404
+        return errors.not_found(f"no user with username or email {id} found")
 
     if not user.check_password(password):
-        flask.flash("invalid credentials")
-        return flask.redirect(flask.url_for("auth.login")), 401
+        return errors.unauthorized("invalid credentials")
 
-    response = flask.make_response(flask.redirect("/"))
-    token_auth.set_token_cookies(response, user.id, user.role)
+    response = flask.jsonify({"login": True})
+
+    access_token = flask_jwt_extended.create_access_token(
+        identity=user.username, user_claims={"role": user.role})
+
+    refresh_token = flask_jwt_extended.create_refresh_token(
+        identity=user.username, user_claims={"role": user.role})
+
+    security.add_token_to_database(refresh_token)
+
+    flask_jwt_extended.set_access_cookies(response, access_token)
+    flask_jwt_extended.set_refresh_cookies(response, refresh_token)
+
+    return response
+
+
+@auth.bp.route("/token/refresh")
+@flask_jwt_extended.jwt_refresh_token_required
+def refresh_token():
+    current_user = flask_jwt_extended.get_jwt_identity()
+    claims = flask_jwt_extended.get_jwt_claims()
+    access_token = flask_jwt_extended.create_access_token(
+        identity=current_user, user_claims=claims)
+
+    response = flask.jsonify({"refreshed": True})
+    flask_jwt_extended.set_access_cookies(response, access_token)
     return response
 
 
 @auth.bp.route("/logout", methods=["POST"])
+@flask_jwt_extended.jwt_refresh_token_required
 def logout():
     """Logs user out of the application.
 
@@ -68,28 +85,42 @@ def logout():
     Returns:
         Json response.
     """
+    username = flask_jwt_extended.get_current_user()
+    user_count = user_model.User.query.filter_by(username=username).count()
 
-    try:
-        token = token_auth.get_refresh_token_from_cookie()
-        token = refresh_token.RefreshToken.first(token=token)
+    if user_count == 0:
+        # if this occurs, the secret key got leaked
+        return errors.not_found("user not found")
 
-        if token is not None:
-            user_id = token.user_id
-        else:
-            user_id = security.get_current_user()
+    token_claims = flask_jwt_extended.get_jwt_claims()
+    token = token_blacklist.TokenBlacklist.query.filter_by(
+        jti=token_claims["jti"], user=username).first()
 
-    except KeyError:
-        user_id = security.get_current_user()
+    if token is None:
+        # if this occurs, the secret key got leaked
+        return errors.not_found("token not found")
 
-    if user_id is not None:
-        token_auth.revoke_user_tokens(user_id)
-        app.db.session.commit()
+    security.revoke_token(token)
+    app.db.session.commit()
 
-    response = flask.make_response(
-        flask.jsonify({
-            "message": "logout successful"
-        }))
-    token_auth.clear_token_cookies(response)
-    csrf.clear_csrf_token_cookies(response)
+    response = flask.jsonify({"logout": True})
+    flask_jwt_extended.unset_jwt_cookies(response)
+    return response
 
+
+@auth.bp.route("/logout/all", methods=["POST"])
+@flask_jwt_extended.jwt_refresh_token_required
+def logout_all():
+    username = flask_jwt_extended.get_current_user()
+    user_count = user_model.User.query.filter_by(username=username).count()
+
+    if user_count == 0:
+        # if this occurs, the secret key got leaked
+        return errors.not_found("user not found")
+
+    security.revoke_all_user_tokens(username)
+    app.db.session.commit()
+
+    response = flask.jsonify({"logout": True})
+    flask_jwt_extended.unset_jwt_cookies(response)
     return response

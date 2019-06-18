@@ -47,18 +47,28 @@ class Config(object):
     SQLALCHEMY_TRACK_MODIFICATIONS = os.environ.get(
         "SQLALCHEMY_TRACK_MODIFICATIONS") or False
     SECURE_TOKEN_COOKIES = os.environ.get("SECURE_TOKEN_COOKIES") or False
-    JWT_SECRET = os.environ.get("JWT_SECRET") or "my-secret-never-guess"
+
+    # JWT
+    JWT_TOKEN_LOCATION = os.environ.get("JWT_TOKEN_LOCATION") or ['cookies']
+    JWT_BLACKLIST_ENABLED = os.environ.get("JWT_BLACKLIST_ENABLED") or True
+    JWT_BLACKLIST_TOKEN_CHECKS = os.environ.get(
+        "JWT_BLACKLIST_TOKEN_CHECKS") or ['refresh']
+    JWT_SECRET_KEY = os.environ.get("JWT_SECRET") or "my-secret-never-guess"
     JWT_ALGORITHM = os.environ.get("JWT_ALGORITHM") or "HS256"
-    ACCESS_TOKEN_COOKIE_NAME = os.environ.get(
+    JWT_COOKIE_SECURE = os.environ.get("JWT_COOKIE_SECURE") or False
+    JWT_COOKIE_CSRF_PROTECT = os.environ.get(
+        "JWT_COOKIE_CSRF_PROTECT") or False
+    JWT_ACCESS_COOKIE_PATH = os.environ.get(
+        "JWT_ACCESS_COOKIE_PATH") or "/api/"
+    JWT_REFRESH_COOKIE_PATH = os.environ.get(
+        "JWT_REFRESH_COOKIE_PATH") or "/token/refresh"
+    JWT_ACCESS_COOKIE_NAME = os.environ.get(
         "ACCESS_TOKEN_COOKIE_NAME") or "actk"
-    ACCESS_TOKEN_DURATION = os.environ.get(
-        "ACCESS_TOKEN_DURATION") or timedelta(seconds=60)
-    REFRESH_TOKEN_COOKIE_NAME = os.environ.get(
+    JWT_REFRESH_COOKIE_NAME = os.environ.get(
         "REFRESH_TOKEN_COOKIE_NAME") or "rftk"
-    REFRESH_TOKEN_DURATION = os.environ.get(
-        "REFRESH_TOKEN_DURATION") or timedelta(days=30)
-    CSRF_COOKIE_NAME = os.environ.get("CSRF_COOKIE_NAME") or "X-CSRF-TOKEN"
-    CSRF_HEADER_NAME = os.environ.get("CSRF_HEADER_NAME") or "X-XSRF-TOKEN"
+
+    # endJWT
+
     MAIL_SERVER = os.environ.get("MAIL_SERVER")
     MAIL_PORT = int(os.environ.get("MAIL_PORT") or 25)
     MAIL_USE_TLS = os.environ.get("MAIL_USE_TLS") is not None
