@@ -51,7 +51,7 @@ class Config(object):
     JWT_ACCESS_COOKIE_PATH = os.environ.get(
         "JWT_ACCESS_COOKIE_PATH") or "/api/"
     JWT_REFRESH_COOKIE_PATH = os.environ.get(
-        "JWT_REFRESH_COOKIE_PATH") or "/token/refresh"
+        "JWT_REFRESH_COOKIE_PATH") or "/auth/token/refresh"
     JWT_ACCESS_COOKIE_NAME = os.environ.get(
         "ACCESS_TOKEN_COOKIE_NAME") or "actk"
     JWT_REFRESH_COOKIE_NAME = os.environ.get(

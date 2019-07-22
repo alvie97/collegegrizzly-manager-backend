@@ -2,6 +2,7 @@ import os
 import tempfile
 
 import pytest
+import datetime
 
 from app import create_app, db
 from app.utils import generate_public_id
@@ -30,6 +31,8 @@ def app():
         ACCESS_COOKIE_NAME = "access_token"
         REFRESH_COOKIE_NAME = "refresh_token"
         SQLALCHEMY_DATABASE_URI = "sqlite:///" + DB_URL
+        JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(seconds=1)
+        JWT_REFRESH_TOKEN_EXPIRES = datetime.timedelta(seconds=5)
 
     app = create_app(TestConfig)
 

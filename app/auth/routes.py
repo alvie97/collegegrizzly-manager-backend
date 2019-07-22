@@ -1,3 +1,4 @@
+# TODO: change documentation to convention
 import flask
 import flask_jwt_extended
 import sqlalchemy
@@ -27,8 +28,8 @@ def login():
     """
     data = flask.request.get_json() or {}
 
-    if not data:
-        return errors.bad_request("no data provided")
+    if not data or not isinstance(data, dict):
+        return errors.bad_request("no data provided or bad structure")
 
     id = data.get("id")
     password = data.get("password")
