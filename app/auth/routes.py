@@ -89,20 +89,10 @@ def logout():
     Returns:
         Json response.
     """
-    username = flask_jwt_extended.get_jwt_identity()
-    user_count = user_model.User.query.filter_by(username=username).count()
 
-    if user_count == 0:
-        # if this occurs, the secret key got leaked
-        return errors.not_found("user not found")
-
-    token = flask_jwt_extended.get_raw_jwt()
+    claims = flask_jwt_extended.get_raw_jwt()
     token = token_blacklist.TokenBlacklist.query.filter_by(
-        jti=token["jti"], user=username).first()
-
-    if token is None:
-        # if this occurs, the secret key got leaked
-        return errors.not_found("token not found")
+        jti=claims["jti"]).first()
 
     security.revoke_token(token)
     app.db.session.commit()
@@ -116,11 +106,6 @@ def logout():
 @flask_jwt_extended.jwt_refresh_token_required
 def logout_all():
     username = flask_jwt_extended.get_jwt_identity()
-    user_count = user_model.User.query.filter_by(username=username).count()
-
-    if user_count == 0:
-        # if this occurs, the secret key got leaked
-        return errors.not_found("user not found")
 
     security.revoke_all_user_tokens(username)
     app.db.session.commit()

@@ -1,12 +1,9 @@
-# TODO: add failure tests
-# TODO: test route protection with jwt
-# TODO: test util functions from app/security/utils.py
 # TODO: change imports
 import app as application
-from app.security import revoke_token
-from flask_jwt_extended import decode_token, set_refresh_cookies
+from app import security
+import flask_jwt_extended
 from app.models import token_blacklist
-from tests.helpers import get_cookie, get_raw_cookie
+from tests import helpers
 import time
 
 url = "/auth"
@@ -22,12 +19,14 @@ def test_login_success(app, client, user):
     assert response.status_code == 200
     assert response.get_json()["login"] == True
 
-    access_token = get_cookie(response, app.config["JWT_ACCESS_COOKIE_NAME"])
-    refresh_token = get_cookie(response, app.config["JWT_REFRESH_COOKIE_NAME"])
+    access_token = helpers.get_cookie(response,
+                                      app.config["JWT_ACCESS_COOKIE_NAME"])
+    refresh_token = helpers.get_cookie(response,
+                                       app.config["JWT_REFRESH_COOKIE_NAME"])
 
     with app.app_context():
-        access_token = decode_token(access_token)
-        refresh_token = decode_token(refresh_token)
+        access_token = flask_jwt_extended.decode_token(access_token)
+        refresh_token = flask_jwt_extended.decode_token(refresh_token)
 
         assert access_token[app.config["JWT_IDENTITY_CLAIM"]] == json["id"]
         assert refresh_token[app.config["JWT_IDENTITY_CLAIM"]] == json["id"]
@@ -83,22 +82,24 @@ def test_refresh_token(app, client, user):
     assert response.status_code == 200
     assert response.get_json()["login"] == True
 
-    access_token = get_cookie(response, app.config["JWT_ACCESS_COOKIE_NAME"])
+    access_token = helpers.get_cookie(response,
+                                      app.config["JWT_ACCESS_COOKIE_NAME"])
 
-    time.sleep(2)
+    time.sleep(1)
 
     response = client.post(url + "/token/refresh")
     assert response.status_code == 200
     assert response.get_json()["refreshed"] == True
 
-    refresh_access_token = get_cookie(response,
-                                      app.config["JWT_ACCESS_COOKIE_NAME"])
+    refresh_access_token = helpers.get_cookie(
+        response, app.config["JWT_ACCESS_COOKIE_NAME"])
 
     assert access_token != refresh_access_token
 
     with app.app_context():
-        access_token = decode_token(access_token)
-        refresh_access_token = decode_token(refresh_access_token)
+        access_token = flask_jwt_extended.decode_token(access_token)
+        refresh_access_token = flask_jwt_extended.decode_token(
+            refresh_access_token)
 
         assert access_token["jti"] != refresh_access_token["jti"]
         assert access_token["exp"] < refresh_access_token["exp"]
@@ -130,7 +131,8 @@ def test_refresh_token_failure(app, client, user):
     assert response.status_code == 200
     assert response.get_json()["login"] == True
 
-    refresh_token = get_cookie(response, app.config["JWT_REFRESH_COOKIE_NAME"])
+    refresh_token = helpers.get_cookie(response,
+                                       app.config["JWT_REFRESH_COOKIE_NAME"])
 
     client.set_cookie(
         "localhost",
@@ -160,10 +162,10 @@ def test_refresh_token_failure(app, client, user):
     assert response.get_json()["refreshed"] == True
 
     with app.app_context():
-        refresh_token = decode_token(refresh_token)
+        refresh_token = flask_jwt_extended.decode_token(refresh_token)
         token = token_blacklist.TokenBlacklist.query.filter_by(
             jti=refresh_token["jti"]).first()
-        revoke_token(token)
+        security.revoke_token(token)
         application.db.session.commit()
 
     response = client.post(url + "/token/refresh")
@@ -181,19 +183,21 @@ def test_logout_success(app, client, user):
     assert response.status_code == 200
     assert response.get_json()["login"] == True
 
-    refresh_token = get_cookie(response, app.config["JWT_REFRESH_COOKIE_NAME"])
+    refresh_token = helpers.get_cookie(response,
+                                       app.config["JWT_REFRESH_COOKIE_NAME"])
 
     response = client.post(url + "/logout")
     assert response.status_code == 200
     assert response.get_json()["logout"] == True
 
-    cookie = get_cookie(response, app.config["JWT_ACCESS_COOKIE_NAME"])
+    cookie = helpers.get_cookie(response, app.config["JWT_ACCESS_COOKIE_NAME"])
     assert cookie == ""
-    cookie = get_cookie(response, app.config["JWT_REFRESH_COOKIE_NAME"])
+    cookie = helpers.get_cookie(response,
+                                app.config["JWT_REFRESH_COOKIE_NAME"])
     assert cookie == ""
 
     with app.app_context():
-        refresh_token = decode_token(refresh_token)
+        refresh_token = flask_jwt_extended.decode_token(refresh_token)
 
         user_token = token_blacklist.TokenBlacklist.query.filter_by(
             user=json["id"], jti=refresh_token["jti"]).first()
@@ -224,9 +228,10 @@ def test_logout_all_success(app, client, user):
     assert response.status_code == 200
     assert response.get_json()["logout"] == True
 
-    cookie = get_cookie(response, app.config["JWT_ACCESS_COOKIE_NAME"])
+    cookie = helpers.get_cookie(response, app.config["JWT_ACCESS_COOKIE_NAME"])
     assert cookie == ""
-    cookie = get_cookie(response, app.config["JWT_REFRESH_COOKIE_NAME"])
+    cookie = helpers.get_cookie(response,
+                                app.config["JWT_REFRESH_COOKIE_NAME"])
     assert cookie == ""
 
     with app.app_context():
