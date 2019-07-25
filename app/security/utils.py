@@ -103,7 +103,7 @@ def unrevoke_token(token):
     Args:
         token (TokenBlacklist): token to unrevoke
     """
-    token.unrevoked = True
+    token.revoked = False
 
 
 def prune_database():
@@ -117,4 +117,3 @@ def prune_database():
 
     for token in expired:
         app.db.session.delete(token)
-    app.db.session.commit()

@@ -1,4 +1,3 @@
-# TODO: change imports
 import app as application
 from app import security
 import flask_jwt_extended

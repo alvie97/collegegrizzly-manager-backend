@@ -3,6 +3,7 @@ import tempfile
 
 import pytest
 import datetime
+import flask_jwt_extended
 
 from app import create_app, db
 from app.utils import generate_public_id
@@ -20,6 +21,7 @@ from app.models.qualification_round import QualificationRound
 from app.models.association_tables import ProgramRequirement
 from app.models import question as question_model
 from app.models import option as option_model
+from app import security
 
 
 @pytest.fixture
@@ -193,3 +195,13 @@ def user(app):
             role="administrator")
         db.session.add(user)
         db.session.commit()
+
+
+@pytest.fixture
+def token(app):
+    with app.app_context():
+        token = flask_jwt_extended.create_access_token("test")
+        security.add_token_to_database(token)
+        db.session.commit()
+
+    return token
