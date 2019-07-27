@@ -8,7 +8,14 @@ import flask_jwt_extended
 
 db = flask_sqlalchemy.SQLAlchemy()
 migrate = flask_migrate.Migrate()
-cors = flask_cors.CORS(resources={r"/api/*": {"origins": "*"}})
+cors = flask_cors.CORS(resources={
+    r"/api/*": {
+        "origins": "*"
+    },
+    r"/auth/*": {
+        "origins": "*"
+    }
+})
 photos = flask_uploads.UploadSet('photos', flask_uploads.IMAGES)
 jwt = flask_jwt_extended.JWTManager()
 
