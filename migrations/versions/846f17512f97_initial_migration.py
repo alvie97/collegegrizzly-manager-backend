@@ -1,8 +1,8 @@
 """initial migration
 
-Revision ID: 504f878c6f61
+Revision ID: 846f17512f97
 Revises: 
-Create Date: 2019-03-24 21:25:18.147483
+Create Date: 2019-07-28 17:09:39.420414
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '504f878c6f61'
+revision = '846f17512f97'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -29,8 +29,8 @@ def upgrade():
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=256), nullable=True),
-    sa.Column('max', sa.Numeric(precision=8, scale=2), nullable=True),
-    sa.Column('min', sa.Numeric(precision=8, scale=2), nullable=True),
+    sa.Column('max', sa.Numeric(precision=8, scale=2), nullable=False),
+    sa.Column('min', sa.Numeric(precision=8, scale=2), nullable=False),
     sa.Column('description', sa.String(length=256), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
@@ -44,6 +44,14 @@ def upgrade():
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_major_name'), 'major', ['name'], unique=True)
+    op.create_table('option',
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(length=256), nullable=True),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('name')
+    )
     op.create_table('program',
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
@@ -69,29 +77,29 @@ def upgrade():
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_question_name'), 'question', ['name'], unique=True)
-    op.create_table('refresh_token',
-    sa.Column('token', sa.String(length=256), nullable=False),
-    sa.Column('issued_at', sa.DateTime(), nullable=True),
-    sa.Column('expires_at', sa.DateTime(), nullable=True),
-    sa.Column('access_token_jti', sa.String(length=512), nullable=True),
-    sa.Column('user_id', sa.String(length=256), nullable=True),
+    op.create_table('token_blacklist',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('jti', sa.String(length=36), nullable=False),
+    sa.Column('user', sa.String(length=256), nullable=False),
     sa.Column('revoked', sa.Boolean(), nullable=True),
-    sa.PrimaryKeyConstraint('token')
+    sa.Column('expires', sa.DateTime(), nullable=False),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('jti')
     )
     op.create_table('user',
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('public_id', sa.String(length=50), nullable=True),
     sa.Column('username', sa.String(length=120), nullable=True),
     sa.Column('email', sa.String(length=120), nullable=True),
     sa.Column('password_hash', sa.String(length=128), nullable=True),
+    sa.Column('first_name', sa.String(length=256), nullable=True),
+    sa.Column('last_name', sa.String(length=256), nullable=True),
     sa.Column('last_session', sa.DateTime(), nullable=True),
     sa.Column('role', sa.String(length=256), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_user_email'), 'user', ['email'], unique=True)
-    op.create_index(op.f('ix_user_public_id'), 'user', ['public_id'], unique=True)
     op.create_index(op.f('ix_user_username'), 'user', ['username'], unique=True)
     op.create_table('college_details',
     sa.Column('created_at', sa.DateTime(), nullable=True),
@@ -124,6 +132,12 @@ def upgrade():
     sa.Column('qualification_round_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['program_id'], ['program.id'], ),
     sa.ForeignKeyConstraint(['qualification_round_id'], ['qualification_round.id'], )
+    )
+    op.create_table('question_option',
+    sa.Column('question_id', sa.Integer(), nullable=True),
+    sa.Column('option_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['option_id'], ['option.id'], ),
+    sa.ForeignKeyConstraint(['question_id'], ['question.id'], )
     )
     op.create_table('scholarship',
     sa.Column('created_at', sa.DateTime(), nullable=True),
@@ -186,6 +200,21 @@ def upgrade():
     sa.ForeignKeyConstraint(['scholarship_id'], ['scholarship.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_table('location',
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('state', sa.String(length=256), nullable=True),
+    sa.Column('county', sa.String(length=256), nullable=True),
+    sa.Column('place', sa.String(length=256), nullable=True),
+    sa.Column('zip_code', sa.String(length=256), nullable=True),
+    sa.Column('blacklist', sa.Boolean(), nullable=True),
+    sa.Column('scholarship_id', sa.Integer(), nullable=True),
+    sa.Column('college_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['college_id'], ['college.id'], ),
+    sa.ForeignKeyConstraint(['scholarship_id'], ['scholarship.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
     op.create_table('program_requirement',
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
@@ -218,11 +247,14 @@ def upgrade():
     sa.ForeignKeyConstraint(['needed_id'], ['scholarship.id'], ),
     sa.ForeignKeyConstraint(['needs_id'], ['scholarship.id'], )
     )
-    op.create_table('college_grade_requirement_group',
-    sa.Column('college_id', sa.Integer(), nullable=True),
-    sa.Column('grade_requirement_group_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['college_id'], ['college.id'], ),
-    sa.ForeignKeyConstraint(['grade_requirement_group_id'], ['grade_requirement_group.id'], )
+    op.create_table('selection_requirement',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('scholarship_id', sa.Integer(), nullable=True),
+    sa.Column('question_id', sa.Integer(), nullable=True),
+    sa.Column('description', sa.String(length=512), nullable=True),
+    sa.ForeignKeyConstraint(['question_id'], ['question.id'], ),
+    sa.ForeignKeyConstraint(['scholarship_id'], ['scholarship.id'], ),
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('grade_requirement',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -240,46 +272,48 @@ def upgrade():
     sa.ForeignKeyConstraint(['program_requirement_id'], ['program_requirement.id'], ),
     sa.ForeignKeyConstraint(['qualification_round_id'], ['qualification_round.id'], )
     )
-    op.create_table('scholarship_grade_requirement_group',
-    sa.Column('scholarship_id', sa.Integer(), nullable=True),
-    sa.Column('grade_requirement_group', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['grade_requirement_group'], ['grade_requirement_group.id'], ),
-    sa.ForeignKeyConstraint(['scholarship_id'], ['scholarship.id'], )
+    op.create_table('selection_requirement_option',
+    sa.Column('selection_requirement_id', sa.Integer(), nullable=True),
+    sa.Column('option_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['option_id'], ['option.id'], ),
+    sa.ForeignKeyConstraint(['selection_requirement_id'], ['selection_requirement.id'], )
     )
     # ### end Alembic commands ###
 
 
 def downgrade():
     # ### commands auto generated by Alembic - please adjust! ###
-    op.drop_table('scholarship_grade_requirement_group')
+    op.drop_table('selection_requirement_option')
     op.drop_table('program_requirement_qualification_round')
     op.drop_table('grade_requirement')
-    op.drop_table('college_grade_requirement_group')
+    op.drop_table('selection_requirement')
     op.drop_table('scholarships_needed')
     op.drop_index(op.f('ix_scholarship_details_name'), table_name='scholarship_details')
     op.drop_table('scholarship_details')
     op.drop_table('program_requirement')
+    op.drop_table('location')
     op.drop_table('grade_requirement_group')
     op.drop_table('detail')
     op.drop_table('chosen_college_requirement')
     op.drop_table('boolean_requirement')
     op.drop_table('submission')
     op.drop_table('scholarship')
+    op.drop_table('question_option')
     op.drop_table('program_qualification_round')
     op.drop_table('college_major')
     op.drop_index(op.f('ix_college_details_name'), table_name='college_details')
     op.drop_table('college_details')
     op.drop_index(op.f('ix_user_username'), table_name='user')
-    op.drop_index(op.f('ix_user_public_id'), table_name='user')
     op.drop_index(op.f('ix_user_email'), table_name='user')
     op.drop_table('user')
-    op.drop_table('refresh_token')
+    op.drop_table('token_blacklist')
     op.drop_index(op.f('ix_question_name'), table_name='question')
     op.drop_table('question')
     op.drop_index(op.f('ix_qualification_round_name'), table_name='qualification_round')
     op.drop_table('qualification_round')
     op.drop_index(op.f('ix_program_name'), table_name='program')
     op.drop_table('program')
+    op.drop_table('option')
     op.drop_index(op.f('ix_major_name'), table_name='major')
     op.drop_table('major')
     op.drop_index(op.f('ix_grade_name'), table_name='grade')

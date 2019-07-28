@@ -6,7 +6,7 @@ from app.models.grade import Grade
 from app.models.program import Program
 from app.models.question import Question
 from app.models.college_details import CollegeDetails
-from app.models.refresh_token import RefreshToken
+from app.models.token_blacklist import TokenBlacklist
 from app.models.submission import Submission
 from app.models.user import User
 from app.models.major import Major
@@ -25,7 +25,6 @@ def make_shell_context():
         "College": College,
         "Scholarship": Scholarship,
         "User": User,
-        "RefreshToken": RefreshToken,
         "CollegeDetails": CollegeDetails,
         "Submission": Submission,
         "Major": Major,
@@ -34,5 +33,6 @@ def make_shell_context():
         "Program": Program,
         "QualificationRound": QualificationRound,
         "ProgramRequirement": ProgramRequirement,
-        "Grade": Grade
+        "Grade": Grade,
+        "TokenBlacklist": TokenBlacklist
     }
