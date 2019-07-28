@@ -2,6 +2,7 @@
 import flask
 import flask_jwt_extended
 import sqlalchemy
+import flask_cors
 
 import app
 from app import auth
@@ -115,7 +116,7 @@ def logout_all():
     return response
 
 
-@auth.bp.route("/is_user_logged/")
+@auth.bp.route("/is_user_logged")
 @flask_jwt_extended.jwt_required
 def is_user_logged():
     return flask.jsonify({"logged": True})

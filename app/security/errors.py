@@ -25,7 +25,7 @@ def invalid_token_loader(token):
         Object (Flask response): error message and code.
     """
 
-    return flask.jsonify({"message": "invalid token"}), 422
+    return flask.jsonify({"message": "invalid token", "token": token}), 422
 
 
 @app.jwt.revoked_token_loader
@@ -48,4 +48,4 @@ def unauthorized_loader(src):
         Object (Flask response): error message and code.
     """
 
-    return flask.jsonify({"message": "invalid token"}), 422
+    return flask.jsonify({"message": "invalid token", "jwt": src}), 422

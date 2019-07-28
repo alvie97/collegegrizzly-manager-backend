@@ -48,8 +48,9 @@ class Config(object):
     JWT_COOKIE_SECURE = os.environ.get("JWT_COOKIE_SECURE") or False
     JWT_COOKIE_CSRF_PROTECT = os.environ.get(
         "JWT_COOKIE_CSRF_PROTECT") or False
-    JWT_ACCESS_COOKIE_PATH = os.environ.get(
-        "JWT_ACCESS_COOKIE_PATH") or "/api/"
+    JWT_ACCESS_COOKIE_PATH = os.environ.get("JWT_ACCESS_COOKIE_PATH") or [
+        "/api/", "/auth"
+    ]
     JWT_REFRESH_COOKIE_PATH = os.environ.get(
         "JWT_REFRESH_COOKIE_PATH") or "/auth/token/refresh"
     JWT_ACCESS_COOKIE_NAME = os.environ.get(
