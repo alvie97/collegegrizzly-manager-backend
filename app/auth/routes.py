@@ -113,3 +113,9 @@ def logout_all():
     response = flask.jsonify({"logout": True})
     flask_jwt_extended.unset_jwt_cookies(response)
     return response
+
+
+@auth.bp.route("/is_user_logged/")
+@flask_jwt_extended.jwt_required
+def is_user_logged():
+    return flask.jsonify({"logged": True})
